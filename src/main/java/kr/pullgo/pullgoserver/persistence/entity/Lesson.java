@@ -7,7 +7,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,8 +17,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class Lesson {
 
     @Id
@@ -33,4 +30,9 @@ public class Lesson {
     @ToString.Exclude
     @OneToOne
     private Schedule schedule;
+
+    @Builder
+    public Lesson(String name) {
+        this.name = name;
+    }
 }

@@ -6,7 +6,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,8 +15,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class Account {
 
     @Id
@@ -35,4 +32,12 @@ public class Account {
 
     @NotNull
     private String phone;
+
+    @Builder
+    public Account(String name, String password, String fullName, String phone) {
+        this.name = name;
+        this.password = password;
+        this.fullName = fullName;
+        this.phone = phone;
+    }
 }

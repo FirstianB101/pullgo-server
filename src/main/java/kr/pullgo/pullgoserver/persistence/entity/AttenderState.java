@@ -13,7 +13,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,8 +23,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class AttenderState {
 
     @Id
@@ -46,11 +43,16 @@ public class AttenderState {
     @NotNull
     private AttendingProgress progress;
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @OneToMany(mappedBy = "attenderState", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AttenderAnswer> answers = new HashSet<>();
 
     private int score;
+
+    @Builder
+    public AttenderState(AttendingProgress progress, int score) {
+        this.progress = progress;
+        this.score = score;
+    }
 }

@@ -12,7 +12,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,8 +22,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class Question {
 
     @Id
@@ -45,9 +42,16 @@ public class Question {
     @Convert(converter = AnswerConverter.class)
     private Answer answer;
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @ManyToMany
     private Set<AttenderAnswer> attenderAnswers = new HashSet<>();
+
+    @Builder
+    public Question(String content, String pictureUrl,
+        Answer answer) {
+        this.content = content;
+        this.pictureUrl = pictureUrl;
+        this.answer = answer;
+    }
 }

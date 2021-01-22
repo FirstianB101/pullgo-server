@@ -9,7 +9,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +19,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class AttenderAnswer {
 
     @Id
@@ -41,4 +38,9 @@ public class AttenderAnswer {
     @NotNull
     @Convert(converter = AnswerConverter.class)
     private Answer answer;
+
+    @Builder
+    public AttenderAnswer(Answer answer) {
+        this.answer = answer;
+    }
 }

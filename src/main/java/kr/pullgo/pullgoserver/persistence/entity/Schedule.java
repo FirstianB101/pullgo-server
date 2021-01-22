@@ -9,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +19,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class Schedule {
 
     @Id
@@ -41,4 +38,11 @@ public class Schedule {
 
     @NotNull
     private LocalTime endTime;
+
+    @Builder
+    public Schedule(DayOfWeek dayOfWeek, LocalTime beginTime, LocalTime endTime) {
+        this.dayOfWeek = dayOfWeek;
+        this.beginTime = beginTime;
+        this.endTime = endTime;
+    }
 }

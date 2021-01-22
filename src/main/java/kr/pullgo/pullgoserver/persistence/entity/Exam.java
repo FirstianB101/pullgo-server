@@ -13,7 +13,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,8 +23,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class Exam {
 
     @Id
@@ -56,15 +53,23 @@ public class Exam {
 
     private Integer passScore;
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Question> questions = new HashSet<>();
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AttenderState> attenderStates = new HashSet<>();
+
+    @Builder
+    public Exam(String name, LocalDateTime beginDateTime, LocalDateTime endDateTime,
+        Duration timeLimit, Integer passScore) {
+        this.name = name;
+        this.beginDateTime = beginDateTime;
+        this.endDateTime = endDateTime;
+        this.timeLimit = timeLimit;
+        this.passScore = passScore;
+    }
 }

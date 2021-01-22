@@ -9,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,8 +19,6 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-@Builder
-@AllArgsConstructor
 public class Academy {
 
     @Id
@@ -37,27 +34,30 @@ public class Academy {
     @NotNull
     private String address;
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @ManyToMany
     private Set<Student> students = new HashSet<>();
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @ManyToMany
     private Set<Teacher> teachers = new HashSet<>();
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @ManyToMany(mappedBy = "academies")
     private Set<Student> applyingStudents = new HashSet<>();
 
-    @Builder.Default
     @ToString.Exclude
     @NotNull
     @ManyToMany(mappedBy = "academies")
     private Set<Teacher> applyingTeachers = new HashSet<>();
+
+    @Builder
+    public Academy(String name, String phone, String address) {
+        this.name = name;
+        this.phone = phone;
+        this.address = address;
+    }
 }
