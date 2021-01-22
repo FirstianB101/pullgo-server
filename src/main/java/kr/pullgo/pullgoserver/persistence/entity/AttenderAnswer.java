@@ -1,13 +1,13 @@
 package kr.pullgo.pullgoserver.persistence.entity;
 
 import com.sun.istack.NotNull;
-import java.util.HashSet;
-import java.util.Set;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,6 +39,6 @@ public class AttenderAnswer {
     private Question question;
 
     @NotNull
-    @Builder.Default
-    private Set<Integer> answers = new HashSet<>();
+    @Convert(converter = AnswerConverter.class)
+    private Answer answer;
 }
