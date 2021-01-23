@@ -1,13 +1,13 @@
-package kr.pullgo.pullgoserver.persistence.entity;
+package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
-import javax.persistence.Convert;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
+import javax.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -19,28 +19,30 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-public class AttenderAnswer {
+public class Schedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ToString.Exclude
     @NotNull
-    @ManyToOne
-    private AttenderState State;
-
     @ToString.Exclude
-    @NotNull
-    @ManyToOne
-    private Question question;
+    @OneToOne(mappedBy = "schedule")
+    private Lesson lesson;
 
     @NotNull
-    @Convert(converter = AnswerConverter.class)
-    private Answer answer;
+    private DayOfWeek dayOfWeek;
+
+    @NotNull
+    private LocalTime beginTime;
+
+    @NotNull
+    private LocalTime endTime;
 
     @Builder
-    public AttenderAnswer(Answer answer) {
-        this.answer = answer;
+    public Schedule(DayOfWeek dayOfWeek, LocalTime beginTime, LocalTime endTime) {
+        this.dayOfWeek = dayOfWeek;
+        this.beginTime = beginTime;
+        this.endTime = endTime;
     }
 }

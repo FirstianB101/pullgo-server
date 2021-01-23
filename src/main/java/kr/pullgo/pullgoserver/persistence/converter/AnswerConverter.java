@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import kr.pullgo.pullgoserver.error.exception.AnswerJsonProcessingException;
-import kr.pullgo.pullgoserver.persistence.entity.Answer;
+import kr.pullgo.pullgoserver.persistence.model.Answer;
 
 @Converter
 public class AnswerConverter implements AttributeConverter<Answer, String> {

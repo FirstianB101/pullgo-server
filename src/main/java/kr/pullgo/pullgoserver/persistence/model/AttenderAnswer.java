@@ -1,11 +1,13 @@
-package kr.pullgo.pullgoserver.persistence.entity;
+package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
+import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -17,22 +19,28 @@ import lombok.ToString;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
-public class Lesson {
+public class AttenderAnswer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ToString.Exclude
     @NotNull
-    private String name;
+    @ManyToOne
+    private AttenderState State;
+
+    @ToString.Exclude
+    @NotNull
+    @ManyToOne
+    private Question question;
 
     @NotNull
-    @ToString.Exclude
-    @OneToOne
-    private Schedule schedule;
+    @Convert(converter = AnswerConverter.class)
+    private Answer answer;
 
     @Builder
-    public Lesson(String name) {
-        this.name = name;
+    public AttenderAnswer(Answer answer) {
+        this.answer = answer;
     }
 }

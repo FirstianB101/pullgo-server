@@ -1,4 +1,4 @@
-package kr.pullgo.pullgoserver.persistence.entity;
+package kr.pullgo.pullgoserver.persistence.model;
 
 import java.util.HashSet;
 import java.util.Set;

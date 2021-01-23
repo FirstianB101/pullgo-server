@@ -1,4 +1,4 @@
-package kr.pullgo.pullgoserver.persistence.entity;
+package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
 import javax.persistence.Entity;
