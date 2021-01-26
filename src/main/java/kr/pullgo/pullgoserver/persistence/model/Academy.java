@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -53,6 +54,11 @@ public class Academy {
     @NotNull
     @ManyToMany(mappedBy = "academies")
     private Set<Teacher> applyingTeachers = new HashSet<>();
+
+    @ToString.Exclude
+    @NotNull
+    @OneToMany(mappedBy = "academy")
+    private Set<Classroom> classrooms = new HashSet<>();
 
     @Builder
     public Academy(String name, String phone, String address) {

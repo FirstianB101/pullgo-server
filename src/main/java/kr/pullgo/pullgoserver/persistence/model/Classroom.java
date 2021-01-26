@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -59,6 +60,11 @@ public class Classroom {
     @NotNull
     @OneToMany(mappedBy = "classroom")
     private Set<Exam> exams = new HashSet<>();
+
+    @ToString.Exclude
+    @NotNull
+    @ManyToOne
+    private Academy academy;
 
     @Builder
     public Classroom(String name) {
