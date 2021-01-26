@@ -22,7 +22,7 @@ public class Account {
     private Long id;
 
     @NotNull
-    private String name;
+    private String username;
 
     @NotNull
     private String password;
@@ -34,8 +34,8 @@ public class Account {
     private String phone;
 
     @Builder
-    public Account(String name, String password, String fullName, String phone) {
-        this.name = name;
+    public Account(String username, String password, String fullName, String phone) {
+        this.username = username;
         this.password = password;
         this.fullName = fullName;
         this.phone = phone;
