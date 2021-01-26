@@ -47,12 +47,12 @@ public class Academy {
 
     @ToString.Exclude
     @NotNull
-    @ManyToMany(mappedBy = "academies")
+    @ManyToMany(mappedBy = "appliedAcademies")
     private Set<Student> applyingStudents = new HashSet<>();
 
     @ToString.Exclude
     @NotNull
-    @ManyToMany(mappedBy = "academies")
+    @ManyToMany(mappedBy = "appliedAcademies")
     private Set<Teacher> applyingTeachers = new HashSet<>();
 
     @ToString.Exclude

@@ -28,7 +28,7 @@ public class AttenderAnswer {
     @ToString.Exclude
     @NotNull
     @ManyToOne
-    private AttenderState State;
+    private AttenderState attenderState;
 
     @ToString.Exclude
     @NotNull
