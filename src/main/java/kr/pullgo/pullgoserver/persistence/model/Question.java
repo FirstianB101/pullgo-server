@@ -42,11 +42,6 @@ public class Question {
     @Convert(converter = AnswerConverter.class)
     private Answer answer;
 
-    @ToString.Exclude
-    @NotNull
-    @ManyToMany
-    private Set<AttenderAnswer> attenderAnswers = new HashSet<>();
-
     @Builder
     public Question(String content, String pictureUrl,
         Answer answer) {
