@@ -9,6 +9,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -65,5 +67,49 @@ public class Academy {
         this.name = name;
         this.phone = phone;
         this.address = address;
+    }
+
+    public void acceptStudent(Student student) {
+        if (!applyingStudents.contains(student)) {
+            throw new StudentNotFoundException();
+        }
+
+        addStudent(student);
+        student.removeAppliedAcademy(this);
+    }
+
+    private void addStudent(Student student) {
+        students.add(student);
+        student.getAcademies().add(this);
+    }
+
+    public void removeStudent(Student student) {
+        if (!students.contains(student)) {
+            throw new StudentNotFoundException();
+        }
+
+        students.remove(student);
+    }
+
+    public void acceptTeacher(Teacher teacher) {
+        if (!applyingTeachers.contains(teacher)) {
+            throw new TeacherNotFoundException();
+        }
+
+        addTeacher(teacher);
+        teacher.removeAppliedAcademy(this);
+    }
+
+    private void addTeacher(Teacher teacher) {
+        teachers.add(teacher);
+        teacher.getAcademies().add(this);
+    }
+
+    public void removeTeacher(Teacher teacher) {
+        if (!teachers.contains(teacher)) {
+            throw new TeacherNotFoundException();
+        }
+
+        teachers.remove(teacher);
     }
 }

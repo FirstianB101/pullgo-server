@@ -71,5 +71,25 @@ public class Student {
         this.schoolName = schoolName;
         this.schoolYear = schoolYear;
     }
+
+    public void removeAppliedAcademy(Academy academy){
+        this.appliedAcademies.remove(academy);
+        academy.getApplyingStudents().remove(this);
+    }
+
+    public void applyAcademy(Academy academy){
+        this.appliedAcademies.add(academy);
+        academy.getApplyingStudents().add(this);
+    }
+
+    public void removeAppliedClassroom(Classroom classroom){
+        this.appliedClassrooms.remove(classroom);
+        classroom.getApplyingStudents().remove(this);
+    }
+
+    public void applyClassroom(Classroom classroom){
+        this.appliedClassrooms.add(classroom);
+        classroom.getApplyingStudents().add(this);
+    }
 }
 

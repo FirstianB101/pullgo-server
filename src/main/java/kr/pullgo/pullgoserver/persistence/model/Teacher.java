@@ -46,4 +46,24 @@ public class Teacher {
     @NotNull
     @ManyToMany
     private Set<Classroom> appliedClassrooms = new HashSet<>();
+
+    public void removeAppliedAcademy(Academy academy){
+        appliedAcademies.remove(academy);
+        academy.getApplyingTeachers().remove(this);
+    }
+
+    public void applyAcademy(Academy academy){
+        this.appliedAcademies.add(academy);
+        academy.getApplyingTeachers().add(this);
+    }
+
+    public void removeAppliedClassroom(Classroom classroom){
+        this.appliedClassrooms.remove(classroom);
+        classroom.getApplyingTeachers().remove(this);
+    }
+
+    public void applyClassroom(Classroom classroom){
+        this.appliedClassrooms.add(classroom);
+        classroom.getApplyingTeachers().add(this);
+    }
 }
