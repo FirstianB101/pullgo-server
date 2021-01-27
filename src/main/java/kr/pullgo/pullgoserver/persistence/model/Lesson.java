@@ -41,4 +41,9 @@ public class Lesson {
     public Lesson(String name) {
         this.name = name;
     }
+
+    public void setSchedule(Schedule schedule) {
+        this.schedule = schedule;
+        schedule.setLesson(this);
+    }
 }

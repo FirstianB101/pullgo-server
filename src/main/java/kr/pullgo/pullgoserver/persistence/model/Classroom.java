@@ -116,4 +116,13 @@ public class Classroom {
 
         teachers.remove(teacher);
     }
+
+    public void addLesson(Lesson lesson) {
+        lessons.add(lesson);
+        lesson.setClassroom(this);
+    }
+
+    public void removeLesson(Lesson lesson) {
+        lessons.remove(lesson);
+    }
 }
