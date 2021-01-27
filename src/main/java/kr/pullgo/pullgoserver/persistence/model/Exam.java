@@ -71,4 +71,13 @@ public class Exam {
         this.timeLimit = timeLimit;
         this.passScore = passScore;
     }
+
+    public void addQuestion(Question question) {
+        questions.add(question);
+        question.setExam(this);
+    }
+
+    public void removeQuestion(Question question) {
+        questions.remove(question);
+    }
 }
