@@ -125,4 +125,14 @@ public class Classroom {
     public void removeLesson(Lesson lesson) {
         lessons.remove(lesson);
     }
+
+    public void addExam(Exam exam) {
+        exams.add(exam);
+        exam.setClassroom(this);
+    }
+
+    public void removeExam(Exam exam) {
+        exams.remove(exam);
+        exam.setClassroom(null);
+    }
 }

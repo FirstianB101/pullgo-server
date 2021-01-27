@@ -29,7 +29,6 @@ public class Exam {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
     @ToString.Exclude
     @ManyToOne
     private Classroom classroom;
