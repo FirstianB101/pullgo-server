@@ -59,7 +59,7 @@ public class Academy {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "academy")
+    @OneToMany(mappedBy = "academy", orphanRemoval = true)
     private Set<Classroom> classrooms = new HashSet<>();
 
     @Builder
@@ -111,5 +111,14 @@ public class Academy {
         }
 
         teachers.remove(teacher);
+    }
+
+    public void addClassroom(Classroom classroom) {
+        classrooms.add(classroom);
+        classroom.setAcademy(this);
+    }
+
+    public void removeClassroom(Classroom classroom) {
+        classrooms.remove(classroom);
     }
 }
