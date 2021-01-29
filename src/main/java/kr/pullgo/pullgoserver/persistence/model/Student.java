@@ -3,6 +3,7 @@ package kr.pullgo.pullgoserver.persistence.model;
 import com.sun.istack.NotNull;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -62,7 +63,7 @@ public class Student {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "attender")
+    @OneToMany(mappedBy = "attender", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AttenderState> attendingStates = new HashSet<>();
 
     @Builder

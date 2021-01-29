@@ -13,10 +13,10 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @EqualsAndHashCode(of = "id")
@@ -29,11 +29,13 @@ public class AttenderState {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter(AccessLevel.NONE)
     @ToString.Exclude
     @NotNull
     @ManyToOne
     private Student attender;
 
+    @Setter(AccessLevel.NONE)
     @ToString.Exclude
     @NotNull
     @ManyToOne
@@ -41,18 +43,22 @@ public class AttenderState {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    private AttendingProgress progress;
+    private AttendingProgress progress = AttendingProgress.BEFORE_EXAM;
 
     @ToString.Exclude
     @NotNull
     @OneToMany(mappedBy = "attenderState", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AttenderAnswer> answers = new HashSet<>();
 
-    private int score;
+    private Integer score = null;
 
-    @Builder
-    public AttenderState(AttendingProgress progress, int score) {
-        this.progress = progress;
-        this.score = score;
+    public void setAttender(Student attender) {
+        this.attender = attender;
+        attender.getAttendingStates().add(this);
+    }
+
+    public void setExam(Exam exam) {
+        this.exam = exam;
+        exam.getAttenderStates().add(this);
     }
 }

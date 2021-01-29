@@ -5,20 +5,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
-import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.internal.util.collections.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 @DataJpaTest
-class ExamTest {
+class AttenderStateTest {
 
     @Autowired
     AccountRepository accountRepository;
@@ -32,37 +28,8 @@ class ExamTest {
     @Autowired
     ExamRepository examRepository;
 
-    @Autowired
-    QuestionRepository questionRepository;
-
     @Test
-    void removeQuestion() {
-        Exam exam = examRepository.save(
-            Exam.builder()
-                .name("Test")
-                .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-                .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-                .timeLimit(Duration.ZERO)
-                .build()
-        );
-
-        Question question = questionRepository.save(
-            Question.builder()
-                .content("Test question")
-                .answer(new Answer(1))
-                .build()
-        );
-        exam.addQuestion(question);
-        examRepository.flush();
-
-        exam.removeQuestion(question);
-
-        assertThat(exam.getQuestions()).isEmpty();
-        assertThat(questionRepository.findAll()).isEmpty();
-    }
-
-    @Test
-    void removeAttenderState() {
+    void createAttenderState() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -92,12 +59,9 @@ class ExamTest {
         attenderState.setAttender(student);
         attenderState.setExam(exam);
 
-        attenderStateRepository.flush();
-
-        exam.removeAttenderState(attenderState);
-
-        assertThat(exam.getAttenderStates()).isEmpty();
-        assertThat(student.getAttendingStates()).isEmpty();
-        assertThat(attenderStateRepository.findAll()).isEmpty();
+        assertThat(attenderState.getAttender()).isNotNull();
+        assertThat(attenderState.getExam()).isNotNull();
+        assertThat(student.getAttendingStates()).isNotEmpty();
+        assertThat(exam.getAttenderStates()).isNotEmpty();
     }
 }
