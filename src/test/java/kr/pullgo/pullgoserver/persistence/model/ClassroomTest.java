@@ -2,8 +2,11 @@ package kr.pullgo.pullgoserver.persistence.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
+import kr.pullgo.pullgoserver.persistence.repository.ScheduleRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -17,12 +20,15 @@ class ClassroomTest {
     @Autowired
     LessonRepository lessonRepository;
 
+    @Autowired
+    ScheduleRepository scheduleRepository;
+
     @Test
     void removeLesson() {
         Classroom classroom = classroomRepository.save(
             Classroom.builder()
-            .name("Test")
-            .build()
+                .name("Test")
+                .build()
         );
 
         Lesson lesson = lessonRepository.save(
@@ -36,5 +42,36 @@ class ClassroomTest {
         classroom.removeLesson(lesson);
 
         assertThat(lessonRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void removeClassroom_LessenAdded_LessonAndScheduleDeleted() {
+        Classroom classroom = classroomRepository.save(
+            Classroom.builder()
+                .name("Test")
+                .build()
+        );
+
+        Lesson lesson = lessonRepository.save(
+            Lesson.builder()
+                .name("Test")
+                .build()
+        );
+        Schedule schedule = scheduleRepository.save(
+            Schedule.builder()
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .beginTime(LocalTime.of(16, 0))
+                .endTime(LocalTime.of(17, 0))
+                .build()
+        );
+        lesson.setSchedule(schedule);
+
+        classroom.addLesson(lesson);
+        classroomRepository.flush();
+
+        classroomRepository.delete(classroom);
+
+        assertThat(lessonRepository.findAll()).isEmpty();
+        assertThat(scheduleRepository.findAll()).isEmpty();
     }
 }

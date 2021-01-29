@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,7 +35,7 @@ public class Lesson {
 
     @NotNull
     @ToString.Exclude
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private Schedule schedule;
 
     @Builder
