@@ -63,7 +63,7 @@ public class Student {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "attender", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "attender", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Set<AttenderState> attendingStates = new HashSet<>();
 
     @Builder

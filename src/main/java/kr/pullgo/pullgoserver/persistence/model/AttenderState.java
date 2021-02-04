@@ -47,7 +47,7 @@ public class AttenderState {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "attenderState", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "attenderState", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Set<AttenderAnswer> answers = new HashSet<>();
 
     private Integer score = null;

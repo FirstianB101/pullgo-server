@@ -54,12 +54,12 @@ public class Exam {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "exam", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Set<Question> questions = new HashSet<>();
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "exam", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Set<AttenderState> attenderStates = new HashSet<>();
 
     @Builder
