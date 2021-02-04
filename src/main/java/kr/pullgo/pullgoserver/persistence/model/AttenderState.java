@@ -61,4 +61,14 @@ public class AttenderState {
         this.exam = exam;
         exam.getAttenderStates().add(this);
     }
+
+    public void addAnswer(AttenderAnswer attenderAnswer) {
+        this.answers.add(attenderAnswer);
+        attenderAnswer.setAttenderState(this);
+    }
+
+    public void removeAnswer(AttenderAnswer attenderAnswer) {
+        this.answers.remove(attenderAnswer);
+        attenderAnswer.setAttenderState(null);
+    }
 }
