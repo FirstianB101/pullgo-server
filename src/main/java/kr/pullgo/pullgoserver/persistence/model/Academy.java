@@ -91,6 +91,7 @@ public class Academy {
         }
 
         students.remove(student);
+        student.getAcademies().remove(this);
     }
 
     public void acceptTeacher(Teacher teacher) {
@@ -113,6 +114,7 @@ public class Academy {
         }
 
         teachers.remove(teacher);
+        teacher.getAcademies().remove(this);
     }
 
     public void addClassroom(Classroom classroom) {

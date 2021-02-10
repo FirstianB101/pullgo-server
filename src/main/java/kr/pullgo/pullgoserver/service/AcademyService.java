@@ -76,11 +76,11 @@ public class AcademyService {
     }
 
     @Transactional
-    public void acceptTeacher(Long academyId, Long teacherId) {
+    public void acceptTeacher(Long academyId, AcademyDto.AcceptTeacher dto) {
         Academy academy = academyRepository.findById(academyId).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
 
-        Teacher teacher = teacherRepository.findById(teacherId).orElseThrow(
+        Teacher teacher = teacherRepository.findById(dto.getTeacherId()).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found"));
 
         try {
@@ -91,11 +91,11 @@ public class AcademyService {
     }
 
     @Transactional
-    public void kickTeacher(Long academyId, Long teacherId) {
+    public void kickTeacher(Long academyId, AcademyDto.KickTeacher dto) {
         Academy academy = academyRepository.findById(academyId).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
 
-        Teacher teacher = teacherRepository.findById(teacherId).orElseThrow(
+        Teacher teacher = teacherRepository.findById(dto.getTeacherId()).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found"));
 
         try {
@@ -106,11 +106,11 @@ public class AcademyService {
     }
 
     @Transactional
-    public void acceptStudent(Long academyId, Long studentId) {
+    public void acceptStudent(Long academyId, AcademyDto.AcceptStudent dto) {
         Academy academy = academyRepository.findById(academyId).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
 
-        Student student = studentRepository.findById(studentId).orElseThrow(
+        Student student = studentRepository.findById(dto.getStudentId()).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found"));
 
         try {
@@ -121,11 +121,11 @@ public class AcademyService {
     }
 
     @Transactional
-    public void kickStudent(Long academyId, Long studentId) {
+    public void kickStudent(Long academyId, AcademyDto.KickStudent dto) {
         Academy academy = academyRepository.findById(academyId).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
 
-        Student student = studentRepository.findById(studentId).orElseThrow(
+        Student student = studentRepository.findById(dto.getStudentId()).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found"));
 
         try {

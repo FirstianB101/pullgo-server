@@ -2,7 +2,6 @@ package kr.pullgo.pullgoserver.presentation.controller;
 
 
 import java.util.List;
-import java.util.Map;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.service.AcademyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,26 +54,26 @@ public class AcademyController {
 
     @PostMapping("/academies/{id}/accept-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void acceptTeacher(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        academyService.acceptTeacher(id, (Long) body.get("teacherId"));
+    public void acceptTeacher(@PathVariable Long id, @RequestBody AcademyDto.AcceptTeacher dto) {
+        academyService.acceptTeacher(id, dto);
     }
 
     @PostMapping("/academies/{id}/kick-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void kickTeacher(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        academyService.kickTeacher(id, (Long) body.get("teacherId"));
+    public void kickTeacher(@PathVariable Long id, @RequestBody AcademyDto.KickTeacher dto) {
+        academyService.kickTeacher(id, dto);
     }
 
 
     @PostMapping("/academies/{id}/accept-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void acceptStudent(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        academyService.acceptStudent(id, (Long) body.get("studentId"));
+    public void acceptStudent(@PathVariable Long id, @RequestBody AcademyDto.AcceptStudent dto) {
+        academyService.acceptStudent(id, dto);
     }
 
     @PostMapping("/academies/{id}/kick-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void kickStudent(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        academyService.kickStudent(id, (Long) body.get("studentId"));
+    public void kickStudent(@PathVariable Long id, @RequestBody AcademyDto.KickStudent dto) {
+        academyService.kickStudent(id, dto);
     }
 }
