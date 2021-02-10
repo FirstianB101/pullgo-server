@@ -1,26 +1,24 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
-import java.util.HashSet;
-import java.util.Set;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
-@EqualsAndHashCode(of = "id")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Data
+@Getter
+@Setter
+@ToString
 @Entity
 public class Question {
 
