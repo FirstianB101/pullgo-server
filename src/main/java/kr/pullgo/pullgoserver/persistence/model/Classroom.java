@@ -55,7 +55,7 @@ public class Classroom {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "classroom", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "classroom", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Lesson> lessons = new HashSet<>();
 
     @ToString.Exclude

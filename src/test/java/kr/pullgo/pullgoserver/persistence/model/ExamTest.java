@@ -35,6 +35,9 @@ class ExamTest {
     @Autowired
     QuestionRepository questionRepository;
 
+    @PersistenceContext
+    EntityManager em;
+
     @Test
     void removeQuestion() {
         Exam exam = examRepository.save(
@@ -62,7 +65,7 @@ class ExamTest {
     }
 
     @Test
-    void removeAttenderState() {
+    void deleteAttenderState() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -94,7 +97,11 @@ class ExamTest {
 
         attenderStateRepository.flush();
 
-        exam.removeAttenderState(attenderState);
+        attenderStateRepository.delete(attenderState);
+        attenderStateRepository.flush();
+
+        em.refresh(exam);
+        em.refresh(student);
 
         assertThat(exam.getAttenderStates()).isEmpty();
         assertThat(student.getAttendingStates()).isEmpty();

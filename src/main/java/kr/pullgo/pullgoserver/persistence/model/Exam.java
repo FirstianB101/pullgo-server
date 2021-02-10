@@ -54,12 +54,12 @@ public class Exam {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "exam", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Question> questions = new HashSet<>();
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "exam", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "exam", cascade = CascadeType.REMOVE)
     private Set<AttenderState> attenderStates = new HashSet<>();
 
     @Builder
@@ -79,12 +79,5 @@ public class Exam {
 
     public void removeQuestion(Question question) {
         questions.remove(question);
-    }
-
-    public void removeAttenderState(AttenderState attenderState) {
-        Student attender = attenderState.getAttender();
-
-        attenderStates.remove(attenderState);
-        attender.getAttendingStates().remove(attenderState);
     }
 }

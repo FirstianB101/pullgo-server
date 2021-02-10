@@ -60,7 +60,7 @@ public class Academy {
 
     @ToString.Exclude
     @NotNull
-    @OneToMany(mappedBy = "academy", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "academy", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Classroom> classrooms = new HashSet<>();
 
     @Builder
