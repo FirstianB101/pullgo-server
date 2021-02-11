@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
 import lombok.AccessLevel;
@@ -72,9 +73,7 @@ public class Academy {
     }
 
     public void acceptStudent(Student student) {
-        if (!applyingStudents.contains(student)) {
-            throw new StudentNotFoundException();
-        }
+        if (!applyingStudents.contains(student)) { throw new StudentNotFoundException(); }
 
         addStudent(student);
         student.removeAppliedAcademy(this);
@@ -86,18 +85,14 @@ public class Academy {
     }
 
     public void removeStudent(Student student) {
-        if (!students.contains(student)) {
-            throw new StudentNotFoundException();
-        }
+        if (!students.contains(student)) { throw new StudentNotFoundException(); }
 
         students.remove(student);
         student.getAcademies().remove(this);
     }
 
     public void acceptTeacher(Teacher teacher) {
-        if (!applyingTeachers.contains(teacher)) {
-            throw new TeacherNotFoundException();
-        }
+        if (!applyingTeachers.contains(teacher)) { throw new TeacherNotFoundException(); }
 
         addTeacher(teacher);
         teacher.removeAppliedAcademy(this);
@@ -109,9 +104,7 @@ public class Academy {
     }
 
     public void removeTeacher(Teacher teacher) {
-        if (!teachers.contains(teacher)) {
-            throw new TeacherNotFoundException();
-        }
+        if (!teachers.contains(teacher)) { throw new TeacherNotFoundException(); }
 
         teachers.remove(teacher);
         teacher.getAcademies().remove(this);
@@ -123,6 +116,8 @@ public class Academy {
     }
 
     public void removeClassroom(Classroom classroom) {
+        if (!classrooms.contains(classroom)) { throw new ClassroomNotFoundException(); }
+
         classrooms.remove(classroom);
     }
 }

@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import kr.pullgo.pullgoserver.error.exception.ExamNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.LessonNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
 import lombok.AccessLevel;
@@ -124,6 +126,8 @@ public class Classroom {
     }
 
     public void removeLesson(Lesson lesson) {
+        if (!lessons.contains(lesson)) { throw new LessonNotFoundException(); }
+
         lessons.remove(lesson);
     }
 
@@ -133,6 +137,8 @@ public class Classroom {
     }
 
     public void removeExam(Exam exam) {
+        if (!exams.contains(exam)) { throw new ExamNotFoundException(); }
+
         exams.remove(exam);
         exam.setClassroom(null);
     }

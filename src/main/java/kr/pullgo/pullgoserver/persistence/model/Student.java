@@ -11,6 +11,9 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.StudentAlreadyEnrolledException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -74,22 +77,30 @@ public class Student {
         this.schoolYear = schoolYear;
     }
 
-    public void removeAppliedAcademy(Academy academy){
+    public void removeAppliedAcademy(Academy academy) {
+        if (!appliedAcademies.contains(academy)) { throw new AcademyNotFoundException(); }
+
         this.appliedAcademies.remove(academy);
         academy.getApplyingStudents().remove(this);
     }
 
-    public void applyAcademy(Academy academy){
+    public void applyAcademy(Academy academy) {
+        if (academies.contains(academy)) { throw new StudentAlreadyEnrolledException(); }
+
         this.appliedAcademies.add(academy);
         academy.getApplyingStudents().add(this);
     }
 
-    public void removeAppliedClassroom(Classroom classroom){
+    public void removeAppliedClassroom(Classroom classroom) {
+        if (!appliedClassrooms.contains(classroom)) { throw new ClassroomNotFoundException(); }
+
         this.appliedClassrooms.remove(classroom);
         classroom.getApplyingStudents().remove(this);
     }
 
-    public void applyClassroom(Classroom classroom){
+    public void applyClassroom(Classroom classroom) {
+        if (classrooms.contains(classroom)) { throw new StudentAlreadyEnrolledException(); }
+
         this.appliedClassrooms.add(classroom);
         classroom.getApplyingStudents().add(this);
     }

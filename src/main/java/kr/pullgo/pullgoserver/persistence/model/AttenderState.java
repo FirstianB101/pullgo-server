@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import kr.pullgo.pullgoserver.error.exception.AttenderAnswerNotFoundException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -68,6 +69,8 @@ public class AttenderState {
     }
 
     public void removeAnswer(AttenderAnswer attenderAnswer) {
+        if (!answers.contains(attenderAnswer)) { throw new AttenderAnswerNotFoundException(); }
+
         this.answers.remove(attenderAnswer);
         attenderAnswer.setAttenderState(null);
     }
