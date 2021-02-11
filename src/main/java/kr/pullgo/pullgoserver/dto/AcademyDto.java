@@ -10,9 +10,9 @@ public interface AcademyDto {
 
     static Academy mapToEntity(AcademyDto.Create dto) {
         return Academy.builder()
-            .name(dto.name)
-            .phone(dto.phone)
-            .address(dto.address)
+            .name(dto.getName())
+            .phone(dto.getPhone())
+            .address(dto.getAddress())
             .build();
     }
 
