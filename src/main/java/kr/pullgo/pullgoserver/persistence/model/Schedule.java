@@ -1,7 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
-import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -32,7 +32,7 @@ public class Schedule {
     private Lesson lesson;
 
     @NotNull
-    private DayOfWeek dayOfWeek;
+    private LocalDate date;
 
     @NotNull
     private LocalTime beginTime;
@@ -41,8 +41,8 @@ public class Schedule {
     private LocalTime endTime;
 
     @Builder
-    public Schedule(DayOfWeek dayOfWeek, LocalTime beginTime, LocalTime endTime) {
-        this.dayOfWeek = dayOfWeek;
+    public Schedule(LocalDate date, LocalTime beginTime, LocalTime endTime) {
+        this.date = date;
         this.beginTime = beginTime;
         this.endTime = endTime;
     }

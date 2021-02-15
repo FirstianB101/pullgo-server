@@ -2,7 +2,7 @@ package kr.pullgo.pullgoserver.persistence.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
@@ -59,7 +59,7 @@ class ClassroomTest {
         );
         Schedule schedule = scheduleRepository.save(
             Schedule.builder()
-                .dayOfWeek(DayOfWeek.MONDAY)
+                .date(LocalDate.of(2021, 2, 15))
                 .beginTime(LocalTime.of(16, 0))
                 .endTime(LocalTime.of(17, 0))
                 .build()
