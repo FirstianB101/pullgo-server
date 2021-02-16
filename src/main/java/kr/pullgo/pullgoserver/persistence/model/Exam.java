@@ -53,6 +53,10 @@ public class Exam {
 
     private Integer passScore;
 
+    private boolean cancelled = false;
+
+    private boolean finished = false;
+
     @ToString.Exclude
     @NotNull
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true)
