@@ -8,17 +8,17 @@ import lombok.NonNull;
 
 public interface ClassroomDto {
 
-    static Classroom mapToEntity(ClassroomDto.Create dto) {
-        return Classroom.builder()
-            .name(dto.getName())
-            .build();
-    }
-
     static ClassroomDto.Result mapFromEntity(Classroom classroom) {
         return Result.builder()
             .id(classroom.getId())
             .name(classroom.getName())
             .academyId(classroom.getAcademy().getId())
+            .build();
+    }
+
+    static Classroom mapToEntity(ClassroomDto.Create dto) {
+        return Classroom.builder()
+            .name(dto.getName())
             .build();
     }
 
