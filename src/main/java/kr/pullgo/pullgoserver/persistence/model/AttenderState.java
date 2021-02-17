@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @Getter
 @Setter
 @ToString
@@ -52,6 +52,8 @@ public class AttenderState {
     private Set<AttenderAnswer> answers = new HashSet<>();
 
     private Integer score = null;
+
+    private boolean submitted = false;
 
     public void setAttender(Student attender) {
         this.attender = attender;
