@@ -3,10 +3,10 @@ package kr.pullgo.pullgoserver.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
-import kr.pullgo.pullgoserver.dto.QuestionDto.Update;
+import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
-import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderAnswerRepository;
+import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,11 +17,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class AttenderAnswerService {
 
     private final AttenderAnswerRepository attenderAnswerRepository;
+    private final QuestionRepository questionRepository;
 
     @Autowired
     public AttenderAnswerService(
-        AttenderAnswerRepository attenderAnswerRepository) {
+        AttenderAnswerRepository attenderAnswerRepository,
+        QuestionRepository questionRepository) {
         this.attenderAnswerRepository = attenderAnswerRepository;
+        this.questionRepository = questionRepository;
     }
 
     @Transactional
@@ -36,19 +39,8 @@ public class AttenderAnswerService {
         AttenderAnswer attenderAnswer = attenderAnswerRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "AttenderAnswer id was not found"));
-        Update dtoQuestion = dto.getQuestion();
-        Question entityQuestion = attenderAnswer.getQuestion();
-        if (dtoQuestion != null) {
-            if (dtoQuestion.getAnswer() != null) {
-                entityQuestion.setAnswer(dtoQuestion.getAnswer());
-            }
-            if (dtoQuestion.getContent() != null) {
-                entityQuestion.setContent(dtoQuestion.getContent());
-            }
-            if (dtoQuestion.getPictureUrl() != null) {
-                entityQuestion.setPictureUrl(dtoQuestion.getPictureUrl());
-            }
-        }
+
+        if (dto.getAnswer() != null) { attenderAnswer.setAnswer(new Answer(dto.getAnswer())); }
         attenderAnswer = attenderAnswerRepository.save(attenderAnswer);
         return AttenderAnswerDto.mapFromEntity(attenderAnswer);
     }

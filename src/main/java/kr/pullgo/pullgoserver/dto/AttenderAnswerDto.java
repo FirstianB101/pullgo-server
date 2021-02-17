@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
+import java.util.Set;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
 import lombok.Builder;
@@ -12,17 +13,15 @@ public interface AttenderAnswerDto {
         return AttenderAnswerDto.Result.builder()
             .id(attenderAnswer.getId())
             .attenderStateId(attenderAnswer.getAttenderState().getId())
-            .question(QuestionDto.mapFromEntity(attenderAnswer.getQuestion()))
+            .questionId(attenderAnswer.getQuestion().getId())
             .answer(attenderAnswer.getAnswer())
             .build();
     }
 
     static AttenderAnswer mapToEntity(AttenderAnswerDto.Create dto) {
-        AttenderAnswer attenderAnswer = AttenderAnswer.builder()
-            .answer(dto.getAnswer())
+        return AttenderAnswer.builder()
+            .answer(new Answer(dto.getAnswer()))
             .build();
-        attenderAnswer.setQuestion(QuestionDto.mapToEntity(dto.getQuestion()));
-        return attenderAnswer;
     }
 
     @Data
@@ -33,17 +32,17 @@ public interface AttenderAnswerDto {
         private Long attenderStateId;
 
         @NonNull
-        private QuestionDto.Create question;
+        private Long questionId;
 
         @NonNull
-        private Answer answer;
+        private Set<Integer> answer;
     }
 
     @Data
     @Builder
     class Update {
 
-        private QuestionDto.Update question;
+        private Set<Integer> answer;
     }
 
     @Data
@@ -57,7 +56,7 @@ public interface AttenderAnswerDto {
         private Long attenderStateId;
 
         @NonNull
-        private QuestionDto.Result question;
+        private Long questionId;
 
         @NonNull
         private Answer answer;
