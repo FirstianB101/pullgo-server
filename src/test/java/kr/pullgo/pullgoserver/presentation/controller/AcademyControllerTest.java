@@ -8,7 +8,6 @@ import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDtoWithTe
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickStudentDtoWithStudentId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickTeacherDtoWithTeacherId;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -55,7 +54,7 @@ class AcademyControllerTest {
             .address("Seoul")
             .build();
 
-        given(academyService.getAcademy(anyLong()))
+        given(academyService.getAcademy(eq(0L)))
             .willReturn(result);
 
         // When
@@ -92,7 +91,7 @@ class AcademyControllerTest {
     @Test
     void patchAcademy() throws Exception {
         // Given
-        given(academyService.updateAcademy(anyLong(), any()))
+        given(academyService.updateAcademy(eq(0L), any()))
             .willReturn(academyDtoResultWithId(0L));
 
         // When

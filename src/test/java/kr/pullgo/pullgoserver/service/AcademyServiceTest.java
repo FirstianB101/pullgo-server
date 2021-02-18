@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.verify;
 
 import java.util.Optional;
@@ -86,7 +85,7 @@ class AcademyServiceTest {
             .build();
         entity.setId(0L);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(entity));
 
         given(academyRepository.save(any()))
@@ -106,7 +105,7 @@ class AcademyServiceTest {
         // Given
         AcademyDto.Update dto = academyUpdateDto();
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(1L))
             .willReturn(Optional.empty());
 
         // When
@@ -119,7 +118,7 @@ class AcademyServiceTest {
     @Test
     void deleteAcademy() {
         // Given
-        given(academyRepository.removeById(anyLong()))
+        given(academyRepository.removeById(1L))
             .willReturn(1);
 
         // When
@@ -132,7 +131,7 @@ class AcademyServiceTest {
     @Test
     void deleteAcademy_InvalidAcademyId_ExceptionThrown() {
         // Given
-        given(academyRepository.removeById(anyLong()))
+        given(academyRepository.removeById(1L))
             .willReturn(0);
 
         // When
@@ -152,7 +151,7 @@ class AcademyServiceTest {
             .build();
         entity.setId(0L);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(entity));
 
         // When
@@ -167,7 +166,7 @@ class AcademyServiceTest {
     @Test
     void getAcademy_InvalidAcademyId_ExceptionThrown() {
         // Given
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.empty());
 
         // When
@@ -185,10 +184,10 @@ class AcademyServiceTest {
 
         teacher.applyAcademy(academy);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(teacherRepository.findById(anyLong()))
+        given(teacherRepository.findById(0L))
             .willReturn(Optional.of(teacher));
 
         // When
@@ -209,10 +208,10 @@ class AcademyServiceTest {
         Academy academy = academyWithId(0L);
         Teacher teacher = teacherWithId(0L);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(teacherRepository.findById(anyLong()))
+        given(teacherRepository.findById(0L))
             .willReturn(Optional.of(teacher));
 
         // When
@@ -233,10 +232,10 @@ class AcademyServiceTest {
         teacher.applyAcademy(academy);
         academy.acceptTeacher(teacher);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(teacherRepository.findById(anyLong()))
+        given(teacherRepository.findById(0L))
             .willReturn(Optional.of(teacher));
 
         // When
@@ -254,10 +253,10 @@ class AcademyServiceTest {
         Academy academy = academyWithId(0L);
         Teacher teacher = teacherWithId(0L);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(teacherRepository.findById(anyLong()))
+        given(teacherRepository.findById(0L))
             .willReturn(Optional.of(teacher));
 
         // When
@@ -277,10 +276,10 @@ class AcademyServiceTest {
 
         student.applyAcademy(academy);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(studentRepository.findById(anyLong()))
+        given(studentRepository.findById(0L))
             .willReturn(Optional.of(student));
 
         // When
@@ -301,10 +300,10 @@ class AcademyServiceTest {
         Academy academy = academyWithId(0L);
         Student student = studentWithId(0L);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(studentRepository.findById(anyLong()))
+        given(studentRepository.findById(0L))
             .willReturn(Optional.of(student));
 
         // When
@@ -325,10 +324,10 @@ class AcademyServiceTest {
         student.applyAcademy(academy);
         academy.acceptStudent(student);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(studentRepository.findById(anyLong()))
+        given(studentRepository.findById(0L))
             .willReturn(Optional.of(student));
 
         // When
@@ -346,10 +345,10 @@ class AcademyServiceTest {
         Academy academy = academyWithId(0L);
         Student student = studentWithId(0L);
 
-        given(academyRepository.findById(anyLong()))
+        given(academyRepository.findById(0L))
             .willReturn(Optional.of(academy));
 
-        given(studentRepository.findById(anyLong()))
+        given(studentRepository.findById(0L))
             .willReturn(Optional.of(student));
 
         // When
