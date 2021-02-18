@@ -33,19 +33,21 @@ class StudentTest {
 
     @Test
     void deleteExam_StudentAttendedExam_StudentAttendingStatesUpdated() {
+        // Given
         Student student = createAndSaveStudent();
         Exam exam = createAndSaveExam();
 
         AttenderState attenderState = attenderStateRepository.save(new AttenderState());
         attenderState.setAttender(student);
         attenderState.setExam(exam);
-
         attenderStateRepository.flush();
 
+        // When
         examRepository.delete(exam);
         examRepository.flush();
         em.refresh(student);
 
+        // Then
         assertThat(examRepository.findAll()).isEmpty();
         assertThat(attenderStateRepository.findAll()).isEmpty();
         assertThat(student.getAttendingStates()).isEmpty();

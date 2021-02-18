@@ -38,36 +38,40 @@ class ExamTest {
 
     @Test
     void removeQuestion() {
+        // Given
         Exam exam = createAndSaveExam();
         Question question = createAndSaveQuestion();
 
         exam.addQuestion(question);
-
         examRepository.flush();
 
+        // When
         exam.removeQuestion(question);
 
+        // Then
         assertThat(exam.getQuestions()).isEmpty();
         assertThat(questionRepository.findAll()).isEmpty();
     }
 
     @Test
     void deleteAttenderState() {
+        // When
         Student student = createAndSaveStudent();
         Exam exam = createAndSaveExam();
 
         AttenderState attenderState = attenderStateRepository.save(new AttenderState());
         attenderState.setAttender(student);
         attenderState.setExam(exam);
-
         attenderStateRepository.flush();
 
+        // When
         attenderStateRepository.delete(attenderState);
         attenderStateRepository.flush();
 
         em.refresh(exam);
         em.refresh(student);
 
+        // Then
         assertThat(exam.getAttenderStates()).isEmpty();
         assertThat(student.getAttendingStates()).isEmpty();
         assertThat(attenderStateRepository.findAll()).isEmpty();

@@ -29,13 +29,16 @@ class AttenderStateTest {
 
     @Test
     void createAttenderState() {
+        // Given
         Student student = createAndSaveStudent();
         Exam exam = createAndSaveExam();
 
+        // When
         AttenderState attenderState = attenderStateRepository.save(new AttenderState());
         attenderState.setAttender(student);
         attenderState.setExam(exam);
 
+        // Then
         assertThat(attenderState.getAttender().getId())
             .isEqualTo(student.getId());
         assertThat(attenderState.getExam().getId())

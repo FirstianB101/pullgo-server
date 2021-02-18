@@ -1,7 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
@@ -30,12 +30,16 @@ class AcademyTest {
 
     @Test
     void acceptStudent() {
+        // Given
         Student student = createAndSaveStudent();
         Academy academy = createAndSaveAcademy();
 
         student.applyAcademy(academy);
+
+        // When
         academy.acceptStudent(student);
 
+        // Then
         assertThat(academy.getStudents())
             .contains(student);
         assertThat(academy.getApplyingStudents())
@@ -44,21 +48,29 @@ class AcademyTest {
 
     @Test
     void acceptStudent_NotApplied_ExceptionThrown() {
+        // Given
         Student student = createAndSaveStudent();
         Academy academy = createAndSaveAcademy();
 
-        assertThatThrownBy(() -> academy.acceptStudent(student))
-            .isInstanceOf(StudentNotFoundException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> academy.acceptStudent(student));
+
+        // Then
+        assertThat(thrown).isInstanceOf(StudentNotFoundException.class);
     }
 
     @Test
     void acceptTeacher() {
+        // Given
         Teacher teacher = createAndSaveTeacher();
         Academy academy = createAndSaveAcademy();
 
         teacher.applyAcademy(academy);
+
+        // When
         academy.acceptTeacher(teacher);
 
+        // Then
         assertThat(academy.getTeachers())
             .contains(teacher);
         assertThat(academy.getApplyingTeachers())
@@ -67,11 +79,15 @@ class AcademyTest {
 
     @Test
     void acceptTeacher_NotApplied_ExceptionThrown() {
+        // Given
         Teacher teacher = createAndSaveTeacher();
         Academy academy = createAndSaveAcademy();
 
-        assertThatThrownBy(() -> academy.acceptTeacher(teacher))
-            .isInstanceOf(TeacherNotFoundException.class);
+        // When
+        Throwable thrown = catchThrowable(() -> academy.acceptTeacher(teacher));
+
+        // Then
+        assertThat(thrown).isInstanceOf(TeacherNotFoundException.class);
     }
 
     private Academy createAndSaveAcademy() {

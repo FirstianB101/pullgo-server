@@ -72,12 +72,6 @@ class AcademyServiceTest {
     @Test
     void updateAcademy() {
         // Given
-        AcademyDto.Update dto = AcademyDto.Update.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-
         Academy entity = Academy.builder()
             .name("Before")
             .phone("010-0000-0000")
@@ -92,6 +86,12 @@ class AcademyServiceTest {
             .will(i -> i.getArgument(0));
 
         // When
+        AcademyDto.Update dto = AcademyDto.Update.builder()
+            .name("Test academy")
+            .phone("010-1234-5678")
+            .address("Seoul")
+            .build();
+
         AcademyDto.Result result = academyService.updateAcademy(0L, dto);
 
         // Then

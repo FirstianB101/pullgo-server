@@ -25,30 +25,35 @@ class ClassroomTest {
 
     @Test
     void removeLesson() {
+        // Given
         Classroom classroom = createAndSaveClassroom();
         Lesson lesson = createAndSaveLesson();
-        classroom.addLesson(lesson);
 
+        classroom.addLesson(lesson);
         classroomRepository.flush();
 
+        // When
         classroom.removeLesson(lesson);
 
+        // Then
         assertThat(lessonRepository.findAll()).isEmpty();
     }
 
     @Test
     void removeClassroom_LessenAdded_LessonAndScheduleDeleted() {
+        // Given
         Classroom classroom = createAndSaveClassroom();
         Lesson lesson = createAndSaveLesson();
         Schedule schedule = createAndSaveSchedule();
 
         lesson.setSchedule(schedule);
         classroom.addLesson(lesson);
-
         classroomRepository.flush();
 
+        // When
         classroomRepository.delete(classroom);
 
+        // Then
         assertThat(lessonRepository.findAll()).isEmpty();
         assertThat(scheduleRepository.findAll()).isEmpty();
     }
