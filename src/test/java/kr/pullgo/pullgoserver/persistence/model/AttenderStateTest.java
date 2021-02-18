@@ -36,10 +36,15 @@ class AttenderStateTest {
         attenderState.setAttender(student);
         attenderState.setExam(exam);
 
-        assertThat(attenderState.getAttender()).isNotNull();
-        assertThat(attenderState.getExam()).isNotNull();
-        assertThat(student.getAttendingStates()).isNotEmpty();
-        assertThat(exam.getAttenderStates()).isNotEmpty();
+        assertThat(attenderState.getAttender().getId())
+            .isEqualTo(student.getId());
+        assertThat(attenderState.getExam().getId())
+            .isEqualTo(exam.getId());
+
+        assertThat(student.getAttendingStates())
+            .containsOnly(attenderState);
+        assertThat(exam.getAttenderStates())
+            .containsOnly(attenderState);
     }
 
     private Student createAndSaveStudent() {

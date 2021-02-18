@@ -36,8 +36,10 @@ class AcademyTest {
         student.applyAcademy(academy);
         academy.acceptStudent(student);
 
-        assertThat(academy.getStudents().contains(student)).isTrue();
-        assertThat(academy.getApplyingStudents().contains(student)).isFalse();
+        assertThat(academy.getStudents())
+            .contains(student);
+        assertThat(academy.getApplyingStudents())
+            .doesNotContain(student);
     }
 
     @Test
@@ -57,8 +59,10 @@ class AcademyTest {
         teacher.applyAcademy(academy);
         academy.acceptTeacher(teacher);
 
-        assertThat(academy.getTeachers().contains(teacher)).isTrue();
-        assertThat(academy.getApplyingTeachers().contains(teacher)).isFalse();
+        assertThat(academy.getTeachers())
+            .contains(teacher);
+        assertThat(academy.getApplyingTeachers())
+            .doesNotContain(teacher);
     }
 
     @Test
