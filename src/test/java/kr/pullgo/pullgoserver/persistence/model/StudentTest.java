@@ -17,19 +17,19 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 class StudentTest {
 
     @Autowired
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Autowired
-    StudentRepository studentRepository;
+    private StudentRepository studentRepository;
 
     @Autowired
-    ExamRepository examRepository;
+    private ExamRepository examRepository;
 
     @Autowired
-    AttenderStateRepository attenderStateRepository;
+    private AttenderStateRepository attenderStateRepository;
 
     @Autowired
-    EntityManager em;
+    private EntityManager em;
 
     @Test
     void deleteExam_StudentAttendedExam_StudentAttendingStatesUpdated() {

@@ -15,13 +15,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 class ClassroomTest {
 
     @Autowired
-    ClassroomRepository classroomRepository;
+    private ClassroomRepository classroomRepository;
 
     @Autowired
-    LessonRepository lessonRepository;
+    private LessonRepository lessonRepository;
 
     @Autowired
-    ScheduleRepository scheduleRepository;
+    private ScheduleRepository scheduleRepository;
 
     @Test
     void removeLesson() {

@@ -19,22 +19,22 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 class ExamTest {
 
     @Autowired
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Autowired
-    StudentRepository studentRepository;
+    private StudentRepository studentRepository;
 
     @Autowired
-    AttenderStateRepository attenderStateRepository;
+    private AttenderStateRepository attenderStateRepository;
 
     @Autowired
-    ExamRepository examRepository;
+    private ExamRepository examRepository;
 
     @Autowired
-    QuestionRepository questionRepository;
+    private QuestionRepository questionRepository;
 
     @PersistenceContext
-    EntityManager em;
+    private EntityManager em;
 
     @Test
     void removeQuestion() {

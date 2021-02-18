@@ -17,16 +17,16 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 class AcademyTest {
 
     @Autowired
-    AcademyRepository academyRepository;
+    private AcademyRepository academyRepository;
 
     @Autowired
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Autowired
-    StudentRepository studentRepository;
+    private StudentRepository studentRepository;
 
     @Autowired
-    TeacherRepository teacherRepository;
+    private TeacherRepository teacherRepository;
 
     @Test
     void acceptStudent() {
