@@ -39,10 +39,11 @@ class AcademyControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
     private AcademyService academyService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void getAcademy() throws Exception {
