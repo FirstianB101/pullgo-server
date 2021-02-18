@@ -25,7 +25,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @Entity
-public class Academy {
+public class Academy extends TimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

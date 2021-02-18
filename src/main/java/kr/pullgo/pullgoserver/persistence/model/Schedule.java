@@ -20,7 +20,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @Entity
-public class Schedule {
+public class Schedule extends TimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
