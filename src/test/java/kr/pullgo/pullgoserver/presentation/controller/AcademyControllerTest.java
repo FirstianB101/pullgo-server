@@ -51,7 +51,7 @@ class AcademyControllerTest {
         AcademyDto.Result result = AcademyDto.Result.builder()
             .id(0L)
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
 
@@ -67,7 +67,7 @@ class AcademyControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(0L))
             .andExpect(jsonPath("$.name").value("Test academy"))
-            .andExpect(jsonPath("$.phone").value("010-1234-5678"))
+            .andExpect(jsonPath("$.phone").value("01012345678"))
             .andExpect(jsonPath("$.address").value("Seoul"));
     }
 

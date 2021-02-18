@@ -53,7 +53,7 @@ class AcademyServiceTest {
         // Given
         AcademyDto.Create dto = AcademyDto.Create.builder()
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
 
@@ -65,7 +65,7 @@ class AcademyServiceTest {
 
         // Then
         assertThat(result.getName()).isEqualTo("Test academy");
-        assertThat(result.getPhone()).isEqualTo("010-1234-5678");
+        assertThat(result.getPhone()).isEqualTo("01012345678");
         assertThat(result.getAddress()).isEqualTo("Seoul");
     }
 
@@ -74,7 +74,7 @@ class AcademyServiceTest {
         // Given
         Academy entity = Academy.builder()
             .name("Before")
-            .phone("010-0000-0000")
+            .phone("01000000000")
             .address("Zottopia")
             .build();
         entity.setId(0L);
@@ -88,7 +88,7 @@ class AcademyServiceTest {
         // When
         AcademyDto.Update dto = AcademyDto.Update.builder()
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
 
@@ -96,7 +96,7 @@ class AcademyServiceTest {
 
         // Then
         assertThat(result.getName()).isEqualTo("Test academy");
-        assertThat(result.getPhone()).isEqualTo("010-1234-5678");
+        assertThat(result.getPhone()).isEqualTo("01012345678");
         assertThat(result.getAddress()).isEqualTo("Seoul");
     }
 
@@ -146,7 +146,7 @@ class AcademyServiceTest {
         // Given
         Academy entity = Academy.builder()
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
         entity.setId(0L);
@@ -159,7 +159,7 @@ class AcademyServiceTest {
 
         // Then
         assertThat(result.getName()).isEqualTo("Test academy");
-        assertThat(result.getPhone()).isEqualTo("010-1234-5678");
+        assertThat(result.getPhone()).isEqualTo("01012345678");
         assertThat(result.getAddress()).isEqualTo("Seoul");
     }
 

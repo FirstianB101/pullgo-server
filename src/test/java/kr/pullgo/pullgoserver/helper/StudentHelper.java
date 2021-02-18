@@ -6,7 +6,7 @@ public class StudentHelper {
 
     public static Student studentWithId(Long id) {
         Student student = Student.builder()
-            .parentPhone("010-0000-1111")
+            .parentPhone("01012345678")
             .schoolName("KwangWoon")
             .schoolYear(3)
             .build();

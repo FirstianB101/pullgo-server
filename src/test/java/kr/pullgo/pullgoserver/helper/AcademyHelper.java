@@ -20,7 +20,7 @@ public class AcademyHelper {
         return Result.builder()
             .id(id)
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
     }
@@ -28,7 +28,7 @@ public class AcademyHelper {
     public static Create academyCreateDto() {
         return Create.builder()
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
     }
@@ -36,7 +36,7 @@ public class AcademyHelper {
     public static Update academyUpdateDto() {
         return Update.builder()
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
     }
@@ -44,7 +44,7 @@ public class AcademyHelper {
     public static Academy academyWithId(Long id) {
         Academy academy = Academy.builder()
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
         academy.setId(id);
