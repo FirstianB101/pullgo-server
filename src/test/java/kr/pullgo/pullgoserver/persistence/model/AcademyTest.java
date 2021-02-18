@@ -9,6 +9,7 @@ import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -28,66 +29,74 @@ class AcademyTest {
     @Autowired
     private TeacherRepository teacherRepository;
 
-    @Test
-    void acceptStudent() {
-        // Given
-        Student student = createAndSaveStudent();
-        Academy academy = createAndSaveAcademy();
+    @Nested
+    class AcceptStudent {
 
-        student.applyAcademy(academy);
+        @Test
+        void acceptStudent() {
+            // Given
+            Student student = createAndSaveStudent();
+            Academy academy = createAndSaveAcademy();
 
-        // When
-        academy.acceptStudent(student);
+            student.applyAcademy(academy);
 
-        // Then
-        assertThat(academy.getStudents())
-            .contains(student);
-        assertThat(academy.getApplyingStudents())
-            .doesNotContain(student);
+            // When
+            academy.acceptStudent(student);
+
+            // Then
+            assertThat(academy.getStudents())
+                .contains(student);
+            assertThat(academy.getApplyingStudents())
+                .doesNotContain(student);
+        }
+
+        @Test
+        void acceptStudent_NotApplied_ExceptionThrown() {
+            // Given
+            Student student = createAndSaveStudent();
+            Academy academy = createAndSaveAcademy();
+
+            // When
+            Throwable thrown = catchThrowable(() -> academy.acceptStudent(student));
+
+            // Then
+            assertThat(thrown).isInstanceOf(StudentNotFoundException.class);
+        }
     }
 
-    @Test
-    void acceptStudent_NotApplied_ExceptionThrown() {
-        // Given
-        Student student = createAndSaveStudent();
-        Academy academy = createAndSaveAcademy();
+    @Nested
+    class AcceptTeacher {
 
-        // When
-        Throwable thrown = catchThrowable(() -> academy.acceptStudent(student));
+        @Test
+        void acceptTeacher() {
+            // Given
+            Teacher teacher = createAndSaveTeacher();
+            Academy academy = createAndSaveAcademy();
 
-        // Then
-        assertThat(thrown).isInstanceOf(StudentNotFoundException.class);
-    }
+            teacher.applyAcademy(academy);
 
-    @Test
-    void acceptTeacher() {
-        // Given
-        Teacher teacher = createAndSaveTeacher();
-        Academy academy = createAndSaveAcademy();
+            // When
+            academy.acceptTeacher(teacher);
 
-        teacher.applyAcademy(academy);
+            // Then
+            assertThat(academy.getTeachers())
+                .contains(teacher);
+            assertThat(academy.getApplyingTeachers())
+                .doesNotContain(teacher);
+        }
 
-        // When
-        academy.acceptTeacher(teacher);
+        @Test
+        void acceptTeacher_NotApplied_ExceptionThrown() {
+            // Given
+            Teacher teacher = createAndSaveTeacher();
+            Academy academy = createAndSaveAcademy();
 
-        // Then
-        assertThat(academy.getTeachers())
-            .contains(teacher);
-        assertThat(academy.getApplyingTeachers())
-            .doesNotContain(teacher);
-    }
+            // When
+            Throwable thrown = catchThrowable(() -> academy.acceptTeacher(teacher));
 
-    @Test
-    void acceptTeacher_NotApplied_ExceptionThrown() {
-        // Given
-        Teacher teacher = createAndSaveTeacher();
-        Academy academy = createAndSaveAcademy();
-
-        // When
-        Throwable thrown = catchThrowable(() -> academy.acceptTeacher(teacher));
-
-        // Then
-        assertThat(thrown).isInstanceOf(TeacherNotFoundException.class);
+            // Then
+            assertThat(thrown).isInstanceOf(TeacherNotFoundException.class);
+        }
     }
 
     private Academy createAndSaveAcademy() {

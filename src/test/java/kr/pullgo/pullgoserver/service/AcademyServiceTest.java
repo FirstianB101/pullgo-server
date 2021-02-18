@@ -17,15 +17,13 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Optional;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
-import kr.pullgo.pullgoserver.dto.AcademyDto.AcceptStudent;
-import kr.pullgo.pullgoserver.dto.AcademyDto.KickStudent;
-import kr.pullgo.pullgoserver.dto.AcademyDto.KickTeacher;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,315 +46,348 @@ class AcademyServiceTest {
     @InjectMocks
     private AcademyService academyService;
 
-    @Test
-    void createAcademy() {
-        // Given
-        AcademyDto.Create dto = AcademyDto.Create.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .build();
+    @Nested
+    class Create {
 
-        given(academyRepository.save(any()))
-            .will(i -> withId(i.getArgument(0), 0L));
+        @Test
+        void createAcademy() {
+            // Given
+            AcademyDto.Create dto = AcademyDto.Create.builder()
+                .name("Test academy")
+                .phone("01012345678")
+                .address("Seoul")
+                .build();
 
-        // When
-        AcademyDto.Result result = academyService.createAcademy(dto);
+            given(academyRepository.save(any()))
+                .will(i -> withId(i.getArgument(0), 0L));
 
-        // Then
-        assertThat(result.getName()).isEqualTo("Test academy");
-        assertThat(result.getPhone()).isEqualTo("01012345678");
-        assertThat(result.getAddress()).isEqualTo("Seoul");
+            // When
+            AcademyDto.Result result = academyService.createAcademy(dto);
+
+            // Then
+            assertThat(result.getName()).isEqualTo("Test academy");
+            assertThat(result.getPhone()).isEqualTo("01012345678");
+            assertThat(result.getAddress()).isEqualTo("Seoul");
+        }
     }
 
-    @Test
-    void updateAcademy() {
-        // Given
-        Academy entity = Academy.builder()
-            .name("Before")
-            .phone("01000000000")
-            .address("Zottopia")
-            .build();
-        entity.setId(0L);
+    @Nested
+    class Update {
 
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(entity));
+        @Test
+        void updateAcademy() {
+            // Given
+            Academy entity = Academy.builder()
+                .name("Before")
+                .phone("01000000000")
+                .address("Zottopia")
+                .build();
+            entity.setId(0L);
 
-        given(academyRepository.save(any()))
-            .will(i -> i.getArgument(0));
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(entity));
 
-        // When
-        AcademyDto.Update dto = AcademyDto.Update.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .build();
+            given(academyRepository.save(any()))
+                .will(i -> i.getArgument(0));
 
-        AcademyDto.Result result = academyService.updateAcademy(0L, dto);
+            // When
+            AcademyDto.Update dto = AcademyDto.Update.builder()
+                .name("Test academy")
+                .phone("01012345678")
+                .address("Seoul")
+                .build();
 
-        // Then
-        assertThat(result.getName()).isEqualTo("Test academy");
-        assertThat(result.getPhone()).isEqualTo("01012345678");
-        assertThat(result.getAddress()).isEqualTo("Seoul");
+            AcademyDto.Result result = academyService.updateAcademy(0L, dto);
+
+            // Then
+            assertThat(result.getName()).isEqualTo("Test academy");
+            assertThat(result.getPhone()).isEqualTo("01012345678");
+            assertThat(result.getAddress()).isEqualTo("Seoul");
+        }
+
+        @Test
+        void updateAcademy_InvalidAcademyId_ExceptionThrown() {
+            // Given
+            AcademyDto.Update dto = academyUpdateDto();
+
+            given(academyRepository.findById(1L))
+                .willReturn(Optional.empty());
+
+            // When
+            Throwable thrown = catchThrowable(() -> academyService.updateAcademy(1L, dto));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+        }
     }
 
-    @Test
-    void updateAcademy_InvalidAcademyId_ExceptionThrown() {
-        // Given
-        AcademyDto.Update dto = academyUpdateDto();
+    @Nested
+    class Delete {
 
-        given(academyRepository.findById(1L))
-            .willReturn(Optional.empty());
+        @Test
+        void deleteAcademy() {
+            // Given
+            given(academyRepository.removeById(1L))
+                .willReturn(1);
 
-        // When
-        Throwable thrown = catchThrowable(() -> academyService.updateAcademy(1L, dto));
+            // When
+            academyService.deleteAcademy(1L);
 
-        // Then
-        assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+            // Then
+            verify(academyRepository).removeById(1L);
+        }
+
+        @Test
+        void deleteAcademy_InvalidAcademyId_ExceptionThrown() {
+            // Given
+            given(academyRepository.removeById(1L))
+                .willReturn(0);
+
+            // When
+            Throwable thrown = catchThrowable(() -> academyService.deleteAcademy(1L));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+        }
     }
 
-    @Test
-    void deleteAcademy() {
-        // Given
-        given(academyRepository.removeById(1L))
-            .willReturn(1);
+    @Nested
+    class Get {
 
-        // When
-        academyService.deleteAcademy(1L);
+        @Test
+        void getAcademy() {
+            // Given
+            Academy entity = Academy.builder()
+                .name("Test academy")
+                .phone("01012345678")
+                .address("Seoul")
+                .build();
+            entity.setId(0L);
 
-        // Then
-        verify(academyRepository).removeById(1L);
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(entity));
+
+            // When
+            AcademyDto.Result result = academyService.getAcademy(0L);
+
+            // Then
+            assertThat(result.getName()).isEqualTo("Test academy");
+            assertThat(result.getPhone()).isEqualTo("01012345678");
+            assertThat(result.getAddress()).isEqualTo("Seoul");
+        }
+
+        @Test
+        void getAcademy_InvalidAcademyId_ExceptionThrown() {
+            // Given
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.empty());
+
+            // When
+            Throwable thrown = catchThrowable(() -> academyService.getAcademy(0L));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+        }
     }
 
-    @Test
-    void deleteAcademy_InvalidAcademyId_ExceptionThrown() {
-        // Given
-        given(academyRepository.removeById(1L))
-            .willReturn(0);
+    @Nested
+    class AcceptTeacher {
 
-        // When
-        Throwable thrown = catchThrowable(() -> academyService.deleteAcademy(1L));
 
-        // Then
-        assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+        @Test
+        void acceptTeacher() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Teacher teacher = teacherWithId(0L);
+
+            teacher.applyAcademy(academy);
+
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
+
+            given(teacherRepository.findById(0L))
+                .willReturn(Optional.of(teacher));
+
+            // When
+            AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
+            academyService.acceptTeacher(0L, dto);
+
+            // Then
+            assertThat(academy.getTeachers()).containsOnly(teacher);
+            assertThat(academy.getApplyingTeachers()).doesNotContain(teacher);
+
+            assertThat(teacher.getAcademies()).containsOnly(academy);
+            assertThat(teacher.getAppliedAcademies()).doesNotContain(academy);
+        }
+
+        @Test
+        void acceptTeacher_TeacherNotApplied_ExceptionThrown() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Teacher teacher = teacherWithId(0L);
+
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
+
+            given(teacherRepository.findById(0L))
+                .willReturn(Optional.of(teacher));
+
+            // When
+            AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
+            Throwable thrown = catchThrowable(() -> academyService.acceptTeacher(0L, dto));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Not applied teacher");
+        }
     }
 
-    @Test
-    void getAcademy() {
-        // Given
-        Academy entity = Academy.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .build();
-        entity.setId(0L);
+    @Nested
+    class KickTeacher {
 
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(entity));
+        @Test
+        void kickTeacher() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Teacher teacher = teacherWithId(0L);
 
-        // When
-        AcademyDto.Result result = academyService.getAcademy(0L);
+            teacher.applyAcademy(academy);
+            academy.acceptTeacher(teacher);
 
-        // Then
-        assertThat(result.getName()).isEqualTo("Test academy");
-        assertThat(result.getPhone()).isEqualTo("01012345678");
-        assertThat(result.getAddress()).isEqualTo("Seoul");
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
+
+            given(teacherRepository.findById(0L))
+                .willReturn(Optional.of(teacher));
+
+            // When
+            AcademyDto.KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
+            academyService.kickTeacher(0L, dto);
+
+            // Then
+            assertThat(academy.getTeachers()).doesNotContain(teacher);
+            assertThat(teacher.getAcademies()).doesNotContain(academy);
+        }
+
+        @Test
+        void kickTeacher_TeacherNotEnrolled_ExceptionThrown() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Teacher teacher = teacherWithId(0L);
+
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
+
+            given(teacherRepository.findById(0L))
+                .willReturn(Optional.of(teacher));
+
+            // When
+            AcademyDto.KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
+            Throwable thrown = catchThrowable(() -> academyService.kickTeacher(0L, dto));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Not enrolled teacher");
+        }
     }
 
-    @Test
-    void getAcademy_InvalidAcademyId_ExceptionThrown() {
-        // Given
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.empty());
+    @Nested
+    class AcceptStudent {
 
-        // When
-        Throwable thrown = catchThrowable(() -> academyService.getAcademy(0L));
+        @Test
+        void acceptStudent() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Student student = studentWithId(0L);
 
-        // Then
-        assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+            student.applyAcademy(academy);
+
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
+
+            given(studentRepository.findById(0L))
+                .willReturn(Optional.of(student));
+
+            // When
+            AcademyDto.AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
+            academyService.acceptStudent(0L, dto);
+
+            // Then
+            assertThat(academy.getStudents()).containsOnly(student);
+            assertThat(academy.getApplyingStudents()).doesNotContain(student);
+
+            assertThat(student.getAcademies()).containsOnly(academy);
+            assertThat(student.getAppliedAcademies()).doesNotContain(academy);
+        }
+
+        @Test
+        void acceptStudent_StudentNotApplied_ExceptionThrown() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Student student = studentWithId(0L);
+
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
+
+            given(studentRepository.findById(0L))
+                .willReturn(Optional.of(student));
+
+            // When
+            AcademyDto.AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
+            Throwable thrown = catchThrowable(() -> academyService.acceptStudent(0L, dto));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Not applied student");
+        }
     }
 
-    @Test
-    void acceptTeacher() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Teacher teacher = teacherWithId(0L);
+    @Nested
+    class KickStudent {
 
-        teacher.applyAcademy(academy);
+        @Test
+        void kickStudent() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Student student = studentWithId(0L);
 
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
+            student.applyAcademy(academy);
+            academy.acceptStudent(student);
 
-        given(teacherRepository.findById(0L))
-            .willReturn(Optional.of(teacher));
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
 
-        // When
-        AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
-        academyService.acceptTeacher(0L, dto);
+            given(studentRepository.findById(0L))
+                .willReturn(Optional.of(student));
 
-        // Then
-        assertThat(academy.getTeachers()).containsOnly(teacher);
-        assertThat(academy.getApplyingTeachers()).doesNotContain(teacher);
+            // When
+            AcademyDto.KickStudent dto = kickStudentDtoWithStudentId(0L);
+            academyService.kickStudent(0L, dto);
 
-        assertThat(teacher.getAcademies()).containsOnly(academy);
-        assertThat(teacher.getAppliedAcademies()).doesNotContain(academy);
-    }
+            // Then
+            assertThat(academy.getStudents()).doesNotContain(student);
+            assertThat(student.getAcademies()).doesNotContain(academy);
+        }
 
-    @Test
-    void acceptTeacher_TeacherNotApplied_ExceptionThrown() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Teacher teacher = teacherWithId(0L);
+        @Test
+        void kickStudent_StudentNotEnrolled_ExceptionThrown() {
+            // Given
+            Academy academy = academyWithId(0L);
+            Student student = studentWithId(0L);
 
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(academy));
 
-        given(teacherRepository.findById(0L))
-            .willReturn(Optional.of(teacher));
+            given(studentRepository.findById(0L))
+                .willReturn(Optional.of(student));
 
-        // When
-        AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
-        Throwable thrown = catchThrowable(() -> academyService.acceptTeacher(0L, dto));
+            // When
+            AcademyDto.KickStudent dto = kickStudentDtoWithStudentId(0L);
+            Throwable thrown = catchThrowable(() -> academyService.kickStudent(0L, dto));
 
-        // Then
-        assertThat(thrown).isInstanceOf(ResponseStatusException.class)
-            .hasMessageContaining("Not applied teacher");
-    }
-
-    @Test
-    void kickTeacher() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Teacher teacher = teacherWithId(0L);
-
-        teacher.applyAcademy(academy);
-        academy.acceptTeacher(teacher);
-
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
-
-        given(teacherRepository.findById(0L))
-            .willReturn(Optional.of(teacher));
-
-        // When
-        KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
-        academyService.kickTeacher(0L, dto);
-
-        // Then
-        assertThat(academy.getTeachers()).doesNotContain(teacher);
-        assertThat(teacher.getAcademies()).doesNotContain(academy);
-    }
-
-    @Test
-    void kickTeacher_TeacherNotEnrolled_ExceptionThrown() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Teacher teacher = teacherWithId(0L);
-
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
-
-        given(teacherRepository.findById(0L))
-            .willReturn(Optional.of(teacher));
-
-        // When
-        KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
-        Throwable thrown = catchThrowable(() -> academyService.kickTeacher(0L, dto));
-
-        // Then
-        assertThat(thrown).isInstanceOf(ResponseStatusException.class)
-            .hasMessageContaining("Not enrolled teacher");
-    }
-
-    @Test
-    void acceptStudent() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Student student = studentWithId(0L);
-
-        student.applyAcademy(academy);
-
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
-
-        given(studentRepository.findById(0L))
-            .willReturn(Optional.of(student));
-
-        // When
-        AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
-        academyService.acceptStudent(0L, dto);
-
-        // Then
-        assertThat(academy.getStudents()).containsOnly(student);
-        assertThat(academy.getApplyingStudents()).doesNotContain(student);
-
-        assertThat(student.getAcademies()).containsOnly(academy);
-        assertThat(student.getAppliedAcademies()).doesNotContain(academy);
-    }
-
-    @Test
-    void acceptStudent_StudentNotApplied_ExceptionThrown() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Student student = studentWithId(0L);
-
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
-
-        given(studentRepository.findById(0L))
-            .willReturn(Optional.of(student));
-
-        // When
-        AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
-        Throwable thrown = catchThrowable(() -> academyService.acceptStudent(0L, dto));
-
-        // Then
-        assertThat(thrown).isInstanceOf(ResponseStatusException.class)
-            .hasMessageContaining("Not applied student");
-    }
-
-    @Test
-    void kickStudent() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Student student = studentWithId(0L);
-
-        student.applyAcademy(academy);
-        academy.acceptStudent(student);
-
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
-
-        given(studentRepository.findById(0L))
-            .willReturn(Optional.of(student));
-
-        // When
-        KickStudent dto = kickStudentDtoWithStudentId(0L);
-        academyService.kickStudent(0L, dto);
-
-        // Then
-        assertThat(academy.getStudents()).doesNotContain(student);
-        assertThat(student.getAcademies()).doesNotContain(academy);
-    }
-
-    @Test
-    void kickStudent_StudentNotEnrolled_ExceptionThrown() {
-        // Given
-        Academy academy = academyWithId(0L);
-        Student student = studentWithId(0L);
-
-        given(academyRepository.findById(0L))
-            .willReturn(Optional.of(academy));
-
-        given(studentRepository.findById(0L))
-            .willReturn(Optional.of(student));
-
-        // When
-        KickStudent dto = kickStudentDtoWithStudentId(0L);
-        Throwable thrown = catchThrowable(() -> academyService.kickStudent(0L, dto));
-
-        // Then
-        assertThat(thrown).isInstanceOf(ResponseStatusException.class)
-            .hasMessageContaining("Not enrolled student");
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Not enrolled student");
+        }
     }
 }
