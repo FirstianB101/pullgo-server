@@ -16,7 +16,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.verify;
 
-import java.util.List;
 import java.util.Optional;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.AcademyDto.AcceptStudent;
@@ -28,7 +27,6 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
-import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -177,42 +175,6 @@ class AcademyServiceTest {
 
         // Then
         assertThat(thrown).isInstanceOf(ResponseStatusException.class);
-    }
-
-    @Test
-    void getAcademies() {
-        // Given
-        Academy entityA = Academy.builder()
-            .name("A")
-            .phone("010-1111-1111")
-            .address("Aeoul")
-            .build();
-        entityA.setId(0L);
-
-        Academy entityB = Academy.builder()
-            .name("B")
-            .phone("010-2222-2222")
-            .address("Beoul")
-            .build();
-        entityB.setId(1L);
-
-        List<Academy> entities = Lists.list(entityA, entityB);
-
-        given(academyRepository.findAll())
-            .willReturn(entities);
-
-        // When
-        List<AcademyDto.Result> results = academyService.getAcademies();
-
-        // Then
-        for (int i = 0; i < entities.size(); i++) {
-            Academy entity = entities.get(i);
-            AcademyDto.Result result = results.get(i);
-
-            assertThat(result.getName()).isEqualTo(entity.getName());
-            assertThat(result.getPhone()).isEqualTo(entity.getPhone());
-            assertThat(result.getAddress()).isEqualTo(entity.getAddress());
-        }
     }
 
     @Test
