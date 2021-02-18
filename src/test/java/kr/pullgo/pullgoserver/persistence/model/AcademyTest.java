@@ -30,28 +30,9 @@ class AcademyTest {
 
     @Test
     void acceptStudent() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-        Academy academy = academyRepository.save(
-            Academy.builder()
-                .name("name")
-                .phone("phone")
-                .address("address")
-                .build()
-        );
+        Student student = createAndSaveStudent();
+        Academy academy = createAndSaveAcademy();
+
         student.applyAcademy(academy);
         academy.acceptStudent(student);
 
@@ -61,6 +42,45 @@ class AcademyTest {
 
     @Test
     void acceptStudent_NotApplied_ExceptionThrown() {
+        Student student = createAndSaveStudent();
+        Academy academy = createAndSaveAcademy();
+
+        assertThatThrownBy(() -> academy.acceptStudent(student))
+            .isInstanceOf(StudentNotFoundException.class);
+    }
+
+    @Test
+    void acceptTeacher() {
+        Teacher teacher = createAndSaveTeacher();
+        Academy academy = createAndSaveAcademy();
+
+        teacher.applyAcademy(academy);
+        academy.acceptTeacher(teacher);
+
+        assertThat(academy.getTeachers().contains(teacher)).isTrue();
+        assertThat(academy.getApplyingTeachers().contains(teacher)).isFalse();
+    }
+
+    @Test
+    void acceptTeacher_NotApplied_ExceptionThrown() {
+        Teacher teacher = createAndSaveTeacher();
+        Academy academy = createAndSaveAcademy();
+
+        assertThatThrownBy(() -> academy.acceptTeacher(teacher))
+            .isInstanceOf(TeacherNotFoundException.class);
+    }
+
+    private Academy createAndSaveAcademy() {
+        return academyRepository.save(
+            Academy.builder()
+                .name("name")
+                .phone("phone")
+                .address("address")
+                .build()
+        );
+    }
+
+    private Student createAndSaveStudent() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -76,47 +96,10 @@ class AcademyTest {
                 .build()
         );
         student.setAccount(account);
-        Academy academy = academyRepository.save(
-            Academy.builder()
-                .name("name")
-                .phone("phone")
-                .address("address")
-                .build()
-        );
-
-        assertThatThrownBy(() -> academy.acceptStudent(student))
-            .isInstanceOf(StudentNotFoundException.class);
+        return student;
     }
 
-    @Test
-    void acceptTeacher() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Teacher teacher = teacherRepository.save(
-          new Teacher()
-        );
-        teacher.setAccount(account);
-        Academy academy = academyRepository.save(
-            Academy.builder()
-                .name("name")
-                .phone("phone")
-                .address("address")
-                .build()
-        );
-        teacher.applyAcademy(academy);
-        academy.acceptTeacher(teacher);
-
-        assertThat(academy.getTeachers().contains(teacher)).isTrue();
-        assertThat(academy.getApplyingTeachers().contains(teacher)).isFalse();
-    }
-
-    @Test
-    void acceptTeacher_NotApplied_ExceptionThrown() {
+    private Teacher createAndSaveTeacher() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -128,15 +111,6 @@ class AcademyTest {
             new Teacher()
         );
         teacher.setAccount(account);
-        Academy academy = academyRepository.save(
-            Academy.builder()
-                .name("name")
-                .phone("phone")
-                .address("address")
-                .build()
-        );
-
-        assertThatThrownBy(() -> academy.acceptTeacher(teacher))
-            .isInstanceOf(TeacherNotFoundException.class);
+        return teacher;
     }
 }

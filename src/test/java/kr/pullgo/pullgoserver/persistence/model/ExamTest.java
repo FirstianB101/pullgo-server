@@ -38,22 +38,11 @@ class ExamTest {
 
     @Test
     void removeQuestion() {
-        Exam exam = examRepository.save(
-            Exam.builder()
-                .name("Test")
-                .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-                .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-                .timeLimit(Duration.ZERO)
-                .build()
-        );
+        Exam exam = createAndSaveExam();
+        Question question = createAndSaveQuestion();
 
-        Question question = questionRepository.save(
-            Question.builder()
-                .content("Test question")
-                .answer(new Answer(1))
-                .build()
-        );
         exam.addQuestion(question);
+
         examRepository.flush();
 
         exam.removeQuestion(question);
@@ -64,30 +53,8 @@ class ExamTest {
 
     @Test
     void deleteAttenderState() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-
-        Exam exam = examRepository.save(
-            Exam.builder()
-                .name("Test")
-                .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-                .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-                .timeLimit(Duration.ZERO)
-                .build()
-        );
+        Student student = createAndSaveStudent();
+        Exam exam = createAndSaveExam();
 
         AttenderState attenderState = attenderStateRepository.save(new AttenderState());
         attenderState.setAttender(student);
@@ -104,5 +71,44 @@ class ExamTest {
         assertThat(exam.getAttenderStates()).isEmpty();
         assertThat(student.getAttendingStates()).isEmpty();
         assertThat(attenderStateRepository.findAll()).isEmpty();
+    }
+
+    private Exam createAndSaveExam() {
+        return examRepository.save(
+            Exam.builder()
+                .name("Test")
+                .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
+                .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
+                .timeLimit(Duration.ZERO)
+                .build()
+        );
+    }
+
+    private Question createAndSaveQuestion() {
+        return questionRepository.save(
+            Question.builder()
+                .content("Test question")
+                .answer(new Answer(1))
+                .build()
+        );
+    }
+
+    private Student createAndSaveStudent() {
+        Account account = accountRepository.save(
+            Account.builder()
+                .username("JottsungE")
+                .fullName("Kim eun seong")
+                .password("mincho")
+                .build()
+        );
+        Student student = studentRepository.save(
+            Student.builder()
+                .parentPhone("01000000000")
+                .schoolName("asdf")
+                .schoolYear(1)
+                .build()
+        );
+        student.setAccount(account);
+        return student;
     }
 }

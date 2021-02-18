@@ -33,6 +33,25 @@ class StudentTest {
 
     @Test
     void deleteExam_StudentAttendedExam_StudentAttendingStatesUpdated() {
+        Student student = createAndSaveStudent();
+        Exam exam = createAndSaveExam();
+
+        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
+        attenderState.setAttender(student);
+        attenderState.setExam(exam);
+
+        attenderStateRepository.flush();
+
+        examRepository.delete(exam);
+        examRepository.flush();
+        em.refresh(student);
+
+        assertThat(examRepository.findAll()).isEmpty();
+        assertThat(attenderStateRepository.findAll()).isEmpty();
+        assertThat(student.getAttendingStates()).isEmpty();
+    }
+
+    private Student createAndSaveStudent() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -48,27 +67,17 @@ class StudentTest {
                 .build()
         );
         student.setAccount(account);
-        Exam exam = examRepository.save(
+        return student;
+    }
+
+    private Exam createAndSaveExam() {
+        return examRepository.save(
             Exam.builder()
-                .name("My Exam")
-                .beginDateTime(LocalDateTime.of(2020, 1, 1, 0, 0))
-                .endDateTime(LocalDateTime.of(2020, 1, 2, 0, 0))
+                .name("Test")
+                .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
+                .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
                 .timeLimit(Duration.ZERO)
-                .passScore(100)
                 .build()
         );
-
-        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
-        attenderState.setAttender(student);
-        attenderState.setExam(exam);
-        attenderStateRepository.flush();
-
-        examRepository.delete(exam);
-        examRepository.flush();
-        em.refresh(student);
-
-        assertThat(examRepository.findAll()).isEmpty();
-        assertThat(attenderStateRepository.findAll()).isEmpty();
-        assertThat(student.getAttendingStates()).isEmpty();
     }
 }

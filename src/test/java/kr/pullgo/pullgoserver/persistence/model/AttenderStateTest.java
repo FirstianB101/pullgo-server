@@ -29,6 +29,20 @@ class AttenderStateTest {
 
     @Test
     void createAttenderState() {
+        Student student = createAndSaveStudent();
+        Exam exam = createAndSaveExam();
+
+        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
+        attenderState.setAttender(student);
+        attenderState.setExam(exam);
+
+        assertThat(attenderState.getAttender()).isNotNull();
+        assertThat(attenderState.getExam()).isNotNull();
+        assertThat(student.getAttendingStates()).isNotEmpty();
+        assertThat(exam.getAttenderStates()).isNotEmpty();
+    }
+
+    private Student createAndSaveStudent() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -44,8 +58,11 @@ class AttenderStateTest {
                 .build()
         );
         student.setAccount(account);
+        return student;
+    }
 
-        Exam exam = examRepository.save(
+    private Exam createAndSaveExam() {
+        return examRepository.save(
             Exam.builder()
                 .name("Test")
                 .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
@@ -53,14 +70,5 @@ class AttenderStateTest {
                 .timeLimit(Duration.ZERO)
                 .build()
         );
-
-        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
-        attenderState.setAttender(student);
-        attenderState.setExam(exam);
-
-        assertThat(attenderState.getAttender()).isNotNull();
-        assertThat(attenderState.getExam()).isNotNull();
-        assertThat(student.getAttendingStates()).isNotEmpty();
-        assertThat(exam.getAttenderStates()).isNotEmpty();
     }
 }

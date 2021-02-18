@@ -1,18 +1,25 @@
 package kr.pullgo.pullgoserver.service;
 
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyWithId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDtoWithStudentId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDtoWithTeacherId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickStudentDtoWithStudentId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickTeacherDtoWithTeacherId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.withId;
+import static kr.pullgo.pullgoserver.helper.StudentHelper.studentWithId;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
 import java.util.Optional;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.AcademyDto.AcceptStudent;
-import kr.pullgo.pullgoserver.dto.AcademyDto.AcceptTeacher;
 import kr.pullgo.pullgoserver.dto.AcademyDto.KickStudent;
 import kr.pullgo.pullgoserver.dto.AcademyDto.KickTeacher;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
@@ -22,25 +29,27 @@ import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import org.assertj.core.util.Lists;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
+@ExtendWith(MockitoExtension.class)
 class AcademyServiceTest {
 
-    private AcademyService academyService;
+    @Mock
     private AcademyRepository academyRepository;
+
+    @Mock
     private TeacherRepository teacherRepository;
+
+    @Mock
     private StudentRepository studentRepository;
 
-    @BeforeEach
-    void beforeEach() {
-        academyRepository = mock(AcademyRepository.class);
-        teacherRepository = mock(TeacherRepository.class);
-        studentRepository = mock(StudentRepository.class);
-        academyService = new AcademyService(academyRepository, teacherRepository,
-            studentRepository);
-    }
+    @InjectMocks
+    private AcademyService academyService;
 
     @Test
     void createAcademy() {
@@ -52,11 +61,7 @@ class AcademyServiceTest {
             .build();
 
         given(academyRepository.save(any()))
-            .will(i -> {
-                Academy entity = i.getArgument(0);
-                entity.setId(0L);
-                return entity;
-            });
+            .will(i -> withId(i.getArgument(0), 0L));
 
         // When
         AcademyDto.Result result = academyService.createAcademy(dto);
@@ -101,11 +106,7 @@ class AcademyServiceTest {
     @Test
     void updateAcademy_InvalidAcademyId_ExceptionThrown() {
         // Given
-        AcademyDto.Update dto = AcademyDto.Update.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
+        AcademyDto.Update dto = academyUpdateDto();
 
         given(academyRepository.findById(anyLong()))
             .willReturn(Optional.empty());
@@ -217,15 +218,9 @@ class AcademyServiceTest {
     @Test
     void acceptTeacher() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
+        Academy academy = academyWithId(0L);
+        Teacher teacher = teacherWithId(0L);
 
-        Teacher teacher = new Teacher();
-        teacher.setId(0L);
         teacher.applyAcademy(academy);
 
         given(academyRepository.findById(anyLong()))
@@ -235,9 +230,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(teacher));
 
         // When
-        AcademyDto.AcceptTeacher dto = AcceptTeacher.builder()
-            .teacherId(0L)
-            .build();
+        AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
         academyService.acceptTeacher(0L, dto);
 
         // Then
@@ -250,15 +243,8 @@ class AcademyServiceTest {
     @Test
     void acceptTeacher_TeacherNotApplied_ExceptionThrown() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
-
-        Teacher teacher = new Teacher();
-        teacher.setId(0L);
+        Academy academy = academyWithId(0L);
+        Teacher teacher = teacherWithId(0L);
 
         given(academyRepository.findById(anyLong()))
             .willReturn(Optional.of(academy));
@@ -267,9 +253,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(teacher));
 
         // When
-        AcademyDto.AcceptTeacher dto = AcceptTeacher.builder()
-            .teacherId(0L)
-            .build();
+        AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
         Throwable thrown = catchThrowable(() -> academyService.acceptTeacher(0L, dto));
 
         // Then
@@ -280,15 +264,8 @@ class AcademyServiceTest {
     @Test
     void kickTeacher() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
-
-        Teacher teacher = new Teacher();
-        teacher.setId(0L);
+        Academy academy = academyWithId(0L);
+        Teacher teacher = teacherWithId(0L);
 
         teacher.applyAcademy(academy);
         academy.acceptTeacher(teacher);
@@ -300,9 +277,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(teacher));
 
         // When
-        AcademyDto.KickTeacher dto = KickTeacher.builder()
-            .teacherId(0L)
-            .build();
+        KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
         academyService.kickTeacher(0L, dto);
 
         // Then
@@ -313,15 +288,8 @@ class AcademyServiceTest {
     @Test
     void kickTeacher_TeacherNotEnrolled_ExceptionThrown() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
-
-        Teacher teacher = new Teacher();
-        teacher.setId(0L);
+        Academy academy = academyWithId(0L);
+        Teacher teacher = teacherWithId(0L);
 
         given(academyRepository.findById(anyLong()))
             .willReturn(Optional.of(academy));
@@ -330,9 +298,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(teacher));
 
         // When
-        AcademyDto.KickTeacher dto = KickTeacher.builder()
-            .teacherId(0L)
-            .build();
+        KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
         Throwable thrown = catchThrowable(() -> academyService.kickTeacher(0L, dto));
 
         // Then
@@ -343,19 +309,9 @@ class AcademyServiceTest {
     @Test
     void acceptStudent() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
+        Academy academy = academyWithId(0L);
+        Student student = studentWithId(0L);
 
-        Student student = Student.builder()
-            .parentPhone("010-0000-1111")
-            .schoolName("KwangWoon")
-            .schoolYear(3)
-            .build();
-        student.setId(0L);
         student.applyAcademy(academy);
 
         given(academyRepository.findById(anyLong()))
@@ -365,9 +321,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(student));
 
         // When
-        AcademyDto.AcceptStudent dto = AcceptStudent.builder()
-            .studentId(0L)
-            .build();
+        AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
         academyService.acceptStudent(0L, dto);
 
         // Then
@@ -380,19 +334,8 @@ class AcademyServiceTest {
     @Test
     void acceptStudent_StudentNotApplied_ExceptionThrown() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
-
-        Student student = Student.builder()
-            .parentPhone("010-0000-1111")
-            .schoolName("KwangWoon")
-            .schoolYear(3)
-            .build();
-        student.setId(0L);
+        Academy academy = academyWithId(0L);
+        Student student = studentWithId(0L);
 
         given(academyRepository.findById(anyLong()))
             .willReturn(Optional.of(academy));
@@ -401,9 +344,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(student));
 
         // When
-        AcademyDto.AcceptStudent dto = AcceptStudent.builder()
-            .studentId(0L)
-            .build();
+        AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
         Throwable thrown = catchThrowable(() -> academyService.acceptStudent(0L, dto));
 
         // Then
@@ -414,19 +355,8 @@ class AcademyServiceTest {
     @Test
     void kickStudent() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
-
-        Student student = Student.builder()
-            .parentPhone("010-0000-1111")
-            .schoolName("KwangWoon")
-            .schoolYear(3)
-            .build();
-        student.setId(0L);
+        Academy academy = academyWithId(0L);
+        Student student = studentWithId(0L);
 
         student.applyAcademy(academy);
         academy.acceptStudent(student);
@@ -438,9 +368,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(student));
 
         // When
-        AcademyDto.KickStudent dto = KickStudent.builder()
-            .studentId(0L)
-            .build();
+        KickStudent dto = kickStudentDtoWithStudentId(0L);
         academyService.kickStudent(0L, dto);
 
         // Then
@@ -451,19 +379,8 @@ class AcademyServiceTest {
     @Test
     void kickStudent_StudentNotEnrolled_ExceptionThrown() {
         // Given
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-        academy.setId(0L);
-
-        Student student = Student.builder()
-            .parentPhone("010-0000-1111")
-            .schoolName("KwangWoon")
-            .schoolYear(3)
-            .build();
-        student.setId(0L);
+        Academy academy = academyWithId(0L);
+        Student student = studentWithId(0L);
 
         given(academyRepository.findById(anyLong()))
             .willReturn(Optional.of(academy));
@@ -472,9 +389,7 @@ class AcademyServiceTest {
             .willReturn(Optional.of(student));
 
         // When
-        AcademyDto.KickStudent dto = KickStudent.builder()
-            .studentId(0L)
-            .build();
+        KickStudent dto = kickStudentDtoWithStudentId(0L);
         Throwable thrown = catchThrowable(() -> academyService.kickStudent(0L, dto));
 
         // Then
