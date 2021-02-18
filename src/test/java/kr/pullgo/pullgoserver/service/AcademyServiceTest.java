@@ -65,9 +65,9 @@ class AcademyServiceTest {
         AcademyDto.Result result = academyService.createAcademy(dto);
 
         // Then
-        assertThat(result.getName()).isEqualTo(dto.getName());
-        assertThat(result.getPhone()).isEqualTo(dto.getPhone());
-        assertThat(result.getAddress()).isEqualTo(dto.getAddress());
+        assertThat(result.getName()).isEqualTo("Test academy");
+        assertThat(result.getPhone()).isEqualTo("010-1234-5678");
+        assertThat(result.getAddress()).isEqualTo("Seoul");
     }
 
     @Test
@@ -96,9 +96,9 @@ class AcademyServiceTest {
         AcademyDto.Result result = academyService.updateAcademy(0L, dto);
 
         // Then
-        assertThat(result.getName()).isEqualTo(dto.getName());
-        assertThat(result.getPhone()).isEqualTo(dto.getPhone());
-        assertThat(result.getAddress()).isEqualTo(dto.getAddress());
+        assertThat(result.getName()).isEqualTo("Test academy");
+        assertThat(result.getPhone()).isEqualTo("010-1234-5678");
+        assertThat(result.getAddress()).isEqualTo("Seoul");
     }
 
     @Test
@@ -159,9 +159,9 @@ class AcademyServiceTest {
         AcademyDto.Result result = academyService.getAcademy(0L);
 
         // Then
-        assertThat(result.getName()).isEqualTo(entity.getName());
-        assertThat(result.getPhone()).isEqualTo(entity.getPhone());
-        assertThat(result.getAddress()).isEqualTo(entity.getAddress());
+        assertThat(result.getName()).isEqualTo("Test academy");
+        assertThat(result.getPhone()).isEqualTo("010-1234-5678");
+        assertThat(result.getAddress()).isEqualTo("Seoul");
     }
 
     @Test
@@ -198,6 +198,7 @@ class AcademyServiceTest {
         // Then
         assertThat(academy.getTeachers()).containsOnly(teacher);
         assertThat(academy.getApplyingTeachers()).doesNotContain(teacher);
+
         assertThat(teacher.getAcademies()).containsOnly(academy);
         assertThat(teacher.getAppliedAcademies()).doesNotContain(academy);
     }
@@ -289,6 +290,7 @@ class AcademyServiceTest {
         // Then
         assertThat(academy.getStudents()).containsOnly(student);
         assertThat(academy.getApplyingStudents()).doesNotContain(student);
+
         assertThat(student.getAcademies()).containsOnly(academy);
         assertThat(student.getAppliedAcademies()).doesNotContain(academy);
     }
