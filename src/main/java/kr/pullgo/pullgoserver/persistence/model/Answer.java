@@ -3,13 +3,11 @@ package kr.pullgo.pullgoserver.persistence.model;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 @Data
-public class Answer extends TimeEntity {
+public class Answer {
 
     private Set<Integer> objectiveNumbers = new HashSet<>();
 
