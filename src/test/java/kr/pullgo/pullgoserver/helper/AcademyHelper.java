@@ -16,7 +16,7 @@ public class AcademyHelper {
         return entity;
     }
 
-    public static Result academyDtoResultWithId(Long id) {
+    public static Result academyResultDtoWithId(Long id) {
         return Result.builder()
             .id(id)
             .name("Test academy")

@@ -1,7 +1,7 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyCreateDto;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyDtoResultWithId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyResultDtoWithId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDtoWithStudentId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDtoWithTeacherId;
@@ -75,7 +75,7 @@ class AcademyControllerTest {
     void postAcademy() throws Exception {
         // Given
         given(academyService.createAcademy(any()))
-            .willReturn(academyDtoResultWithId(0L));
+            .willReturn(academyResultDtoWithId(0L));
 
         // When
         ResultActions actions = mockMvc.perform(post("/academies")
@@ -93,7 +93,7 @@ class AcademyControllerTest {
     void patchAcademy() throws Exception {
         // Given
         given(academyService.updateAcademy(eq(0L), any()))
-            .willReturn(academyDtoResultWithId(0L));
+            .willReturn(academyResultDtoWithId(0L));
 
         // When
         ResultActions actions = mockMvc.perform(patch("/academies/0")
