@@ -26,13 +26,16 @@ class TimeEntityTest {
 
     @Test
     void findDummy_DummySaved_CreatedDateNotChanged() {
+        // Given
         Dummy savedDummy = new Dummy();
         em.persist(savedDummy);
         em.flush();
         em.clear();
 
+        // When
         Dummy loadedDummy = em.find(Dummy.class, savedDummy.getId());
 
+        // Then
         assertThat(savedDummy.getCreatedDate()).isNotNull();
         assertThat(loadedDummy.getCreatedDate())
             .isEqualTo(savedDummy.getCreatedDate());
@@ -40,6 +43,7 @@ class TimeEntityTest {
 
     @Test
     void findDummy_DummyModified_ModifiedDateNotChanged() {
+        // Given
         Dummy savedDummy = new Dummy();
         savedDummy.setContext("first context");
         em.persist(savedDummy);
@@ -49,8 +53,10 @@ class TimeEntityTest {
         em.flush();
         em.clear();
 
+        // When
         Dummy loadedDummy = em.find(Dummy.class, savedDummy.getId());
 
+        // Then
         assertThat(savedDummy.getModifiedDate()).isNotNull();
         assertThat(loadedDummy.getModifiedDate())
             .isEqualTo(savedDummy.getModifiedDate());

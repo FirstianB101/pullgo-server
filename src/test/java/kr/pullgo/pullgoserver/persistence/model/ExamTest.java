@@ -1,7 +1,6 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -13,7 +12,6 @@ import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.internal.util.collections.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
@@ -21,26 +19,66 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 class ExamTest {
 
     @Autowired
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Autowired
-    StudentRepository studentRepository;
+    private StudentRepository studentRepository;
 
     @Autowired
-    AttenderStateRepository attenderStateRepository;
+    private AttenderStateRepository attenderStateRepository;
 
     @Autowired
-    ExamRepository examRepository;
+    private ExamRepository examRepository;
 
     @Autowired
-    QuestionRepository questionRepository;
+    private QuestionRepository questionRepository;
 
     @PersistenceContext
-    EntityManager em;
+    private EntityManager em;
 
     @Test
     void removeQuestion() {
-        Exam exam = examRepository.save(
+        // Given
+        Exam exam = createAndSaveExam();
+        Question question = createAndSaveQuestion();
+
+        exam.addQuestion(question);
+        examRepository.flush();
+
+        // When
+        exam.removeQuestion(question);
+
+        // Then
+        assertThat(exam.getQuestions()).isEmpty();
+        assertThat(questionRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void deleteAttenderState() {
+        // When
+        Student student = createAndSaveStudent();
+        Exam exam = createAndSaveExam();
+
+        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
+        attenderState.setAttender(student);
+        attenderState.setExam(exam);
+        attenderStateRepository.flush();
+
+        // When
+        attenderStateRepository.delete(attenderState);
+        attenderStateRepository.flush();
+
+        em.refresh(exam);
+        em.refresh(student);
+
+        // Then
+        assertThat(exam.getAttenderStates()).isEmpty();
+        assertThat(student.getAttendingStates()).isEmpty();
+        assertThat(attenderStateRepository.findAll()).isEmpty();
+    }
+
+    private Exam createAndSaveExam() {
+        return examRepository.save(
             Exam.builder()
                 .name("Test")
                 .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
@@ -48,24 +86,18 @@ class ExamTest {
                 .timeLimit(Duration.ZERO)
                 .build()
         );
+    }
 
-        Question question = questionRepository.save(
+    private Question createAndSaveQuestion() {
+        return questionRepository.save(
             Question.builder()
                 .content("Test question")
                 .answer(new Answer(1))
                 .build()
         );
-        exam.addQuestion(question);
-        examRepository.flush();
-
-        exam.removeQuestion(question);
-
-        assertThat(exam.getQuestions()).isEmpty();
-        assertThat(questionRepository.findAll()).isEmpty();
     }
 
-    @Test
-    void deleteAttenderState() {
+    private Student createAndSaveStudent() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -81,30 +113,6 @@ class ExamTest {
                 .build()
         );
         student.setAccount(account);
-
-        Exam exam = examRepository.save(
-            Exam.builder()
-                .name("Test")
-                .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-                .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-                .timeLimit(Duration.ZERO)
-                .build()
-        );
-
-        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
-        attenderState.setAttender(student);
-        attenderState.setExam(exam);
-
-        attenderStateRepository.flush();
-
-        attenderStateRepository.delete(attenderState);
-        attenderStateRepository.flush();
-
-        em.refresh(exam);
-        em.refresh(student);
-
-        assertThat(exam.getAttenderStates()).isEmpty();
-        assertThat(student.getAttendingStates()).isEmpty();
-        assertThat(attenderStateRepository.findAll()).isEmpty();
+        return student;
     }
 }

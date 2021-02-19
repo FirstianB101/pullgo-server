@@ -1,7 +1,13 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyCreateDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyResultDtoWithId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDtoWithStudentId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDtoWithTeacherId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickStudentDtoWithStudentId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickTeacherDtoWithTeacherId;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -13,9 +19,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
-import kr.pullgo.pullgoserver.dto.AcademyDto.KickStudent;
 import kr.pullgo.pullgoserver.service.AcademyService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,10 +39,11 @@ class AcademyControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockBean
     private AcademyService academyService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void getAcademy() throws Exception {
@@ -44,11 +51,11 @@ class AcademyControllerTest {
         AcademyDto.Result result = AcademyDto.Result.builder()
             .id(0L)
             .name("Test academy")
-            .phone("010-1234-5678")
+            .phone("01012345678")
             .address("Seoul")
             .build();
 
-        given(academyService.getAcademy(anyLong()))
+        given(academyService.getAcademy(eq(0L)))
             .willReturn(result);
 
         // When
@@ -60,7 +67,7 @@ class AcademyControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(0L))
             .andExpect(jsonPath("$.name").value("Test academy"))
-            .andExpect(jsonPath("$.phone").value("010-1234-5678"))
+            .andExpect(jsonPath("$.phone").value("01012345678"))
             .andExpect(jsonPath("$.address").value("Seoul"));
     }
 
@@ -68,23 +75,12 @@ class AcademyControllerTest {
     void postAcademy() throws Exception {
         // Given
         given(academyService.createAcademy(any()))
-            .willReturn(AcademyDto.Result.builder()
-                .id(0L)
-                .name("Test academy")
-                .phone("010-1234-5678")
-                .address("Seoul")
-                .build());
+            .willReturn(academyResultDtoWithId(0L));
 
         // When
-        AcademyDto.Create body = AcademyDto.Create.builder()
-            .name("Test academy")
-            .phone("010-1234-5678")
-            .address("Seoul")
-            .build();
-
         ResultActions actions = mockMvc.perform(post("/academies")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+            .content(toJson(academyCreateDto())))
             .andDo(print());
 
         // Then
@@ -96,22 +92,13 @@ class AcademyControllerTest {
     @Test
     void patchAcademy() throws Exception {
         // Given
-        given(academyService.updateAcademy(anyLong(), any()))
-            .willReturn(AcademyDto.Result.builder()
-                .id(0L)
-                .name("Test academy")
-                .phone("010-1234-5678")
-                .address("Seoul")
-                .build());
+        given(academyService.updateAcademy(eq(0L), any()))
+            .willReturn(academyResultDtoWithId(0L));
 
         // When
-        AcademyDto.Update body = AcademyDto.Update.builder()
-            .name("Test academy")
-            .build();
-
         ResultActions actions = mockMvc.perform(patch("/academies/0")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+            .content(toJson(academyUpdateDto())))
             .andDo(print());
 
         // Then
@@ -138,7 +125,7 @@ class AcademyControllerTest {
         // When
         ResultActions actions = mockMvc.perform(post("/academies/0/accept-teacher")
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"teacherId\":0}"))
+            .content(toJson(acceptTeacherDtoWithTeacherId(0L))))
             .andDo(print());
 
         // Then
@@ -153,7 +140,7 @@ class AcademyControllerTest {
         // When
         ResultActions actions = mockMvc.perform(post("/academies/0/kick-teacher")
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"teacherId\":0}"))
+            .content(toJson(kickTeacherDtoWithTeacherId(0L))))
             .andDo(print());
 
         // Then
@@ -168,7 +155,7 @@ class AcademyControllerTest {
         // When
         ResultActions actions = mockMvc.perform(post("/academies/0/accept-student")
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"studentId\":0}"))
+            .content(toJson(acceptStudentDtoWithStudentId(0L))))
             .andDo(print());
 
         // Then
@@ -181,13 +168,9 @@ class AcademyControllerTest {
     @Test
     void kickStudent() throws Exception {
         // When
-        AcademyDto.KickStudent body = KickStudent.builder()
-            .studentId(0L)
-            .build();
-
         ResultActions actions = mockMvc.perform(post("/academies/0/kick-student")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(body)))
+            .content(toJson(kickStudentDtoWithStudentId(0L))))
             .andDo(print());
 
         // Then
@@ -195,5 +178,9 @@ class AcademyControllerTest {
 
         actions
             .andExpect(status().isNoContent());
+    }
+
+    private String toJson(Object object) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(object);
     }
 }

@@ -1,7 +1,6 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -17,19 +16,41 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 class AttenderStateTest {
 
     @Autowired
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Autowired
-    StudentRepository studentRepository;
+    private StudentRepository studentRepository;
 
     @Autowired
-    AttenderStateRepository attenderStateRepository;
+    private AttenderStateRepository attenderStateRepository;
 
     @Autowired
-    ExamRepository examRepository;
+    private ExamRepository examRepository;
 
     @Test
     void createAttenderState() {
+        // Given
+        Student student = createAndSaveStudent();
+        Exam exam = createAndSaveExam();
+
+        // When
+        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
+        attenderState.setAttender(student);
+        attenderState.setExam(exam);
+
+        // Then
+        assertThat(attenderState.getAttender().getId())
+            .isEqualTo(student.getId());
+        assertThat(attenderState.getExam().getId())
+            .isEqualTo(exam.getId());
+
+        assertThat(student.getAttendingStates())
+            .containsOnly(attenderState);
+        assertThat(exam.getAttenderStates())
+            .containsOnly(attenderState);
+    }
+
+    private Student createAndSaveStudent() {
         Account account = accountRepository.save(
             Account.builder()
                 .username("JottsungE")
@@ -45,8 +66,11 @@ class AttenderStateTest {
                 .build()
         );
         student.setAccount(account);
+        return student;
+    }
 
-        Exam exam = examRepository.save(
+    private Exam createAndSaveExam() {
+        return examRepository.save(
             Exam.builder()
                 .name("Test")
                 .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
@@ -54,14 +78,5 @@ class AttenderStateTest {
                 .timeLimit(Duration.ZERO)
                 .build()
         );
-
-        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
-        attenderState.setAttender(student);
-        attenderState.setExam(exam);
-
-        assertThat(attenderState.getAttender()).isNotNull();
-        assertThat(attenderState.getExam()).isNotNull();
-        assertThat(student.getAttendingStates()).isNotEmpty();
-        assertThat(exam.getAttenderStates()).isNotEmpty();
     }
 }
