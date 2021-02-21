@@ -1,29 +1,11 @@
 package kr.pullgo.pullgoserver.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import kr.pullgo.pullgoserver.persistence.model.Academy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
 public interface AcademyDto {
-
-    static Academy mapToEntity(AcademyDto.Create dto) {
-        return Academy.builder()
-            .name(dto.getName())
-            .phone(dto.getPhone())
-            .address(dto.getAddress())
-            .build();
-    }
-
-    static AcademyDto.Result mapFromEntity(Academy academy) {
-        return Result.builder()
-            .id(academy.getId())
-            .name(academy.getName())
-            .phone(academy.getPhone())
-            .address(academy.getAddress())
-            .build();
-    }
 
     @Data
     @Builder

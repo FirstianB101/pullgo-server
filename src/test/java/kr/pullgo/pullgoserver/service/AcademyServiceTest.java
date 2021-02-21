@@ -17,16 +17,17 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Optional;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
+import kr.pullgo.pullgoserver.dto.mapper.AcademyDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,8 +44,13 @@ class AcademyServiceTest {
     @Mock
     private StudentRepository studentRepository;
 
-    @InjectMocks
     private AcademyService academyService;
+
+    @BeforeEach
+    void setUp() {
+        academyService = new AcademyService(new AcademyDtoMapper(), academyRepository,
+            teacherRepository, studentRepository);
+    }
 
     @Nested
     class Create {

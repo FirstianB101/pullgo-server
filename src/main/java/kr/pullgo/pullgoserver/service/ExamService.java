@@ -3,6 +3,7 @@ package kr.pullgo.pullgoserver.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.ExamDto;
+import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +15,20 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class ExamService {
 
+    private final ExamDtoMapper dtoMapper;
     private final ExamRepository examRepository;
 
     @Autowired
-    public ExamService(
+    public ExamService(ExamDtoMapper dtoMapper,
         ExamRepository examRepository) {
+        this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
     }
 
     @Transactional
     public ExamDto.Result createExam(ExamDto.Create dto) {
-        Exam exam = examRepository.save(ExamDto.mapToEntity(dto));
-        return ExamDto.mapFromEntity(exam);
+        Exam exam = examRepository.save(dtoMapper.asEntity(dto));
+        return dtoMapper.asResultDto(exam);
     }
 
     @Transactional
@@ -39,7 +42,7 @@ public class ExamService {
         if (dto.getPassScore() != null) { exam.setPassScore(dto.getPassScore()); }
 
         exam = examRepository.save(exam);
-        return ExamDto.mapFromEntity(exam);
+        return dtoMapper.asResultDto(exam);
     }
 
     @Transactional
@@ -54,14 +57,14 @@ public class ExamService {
     public ExamDto.Result getExam(Long id) {
         Exam exam = examRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam id was not found"));
-        return ExamDto.mapFromEntity(exam);
+        return dtoMapper.asResultDto(exam);
     }
 
     @Transactional
     public List<ExamDto.Result> getExams() {
         List<Exam> exams = examRepository.findAll();
         return exams.stream()
-            .map(ExamDto::mapFromEntity)
+            .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
 
