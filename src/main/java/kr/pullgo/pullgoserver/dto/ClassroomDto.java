@@ -1,26 +1,11 @@
 package kr.pullgo.pullgoserver.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
 public interface ClassroomDto {
-
-    static ClassroomDto.Result mapFromEntity(Classroom classroom) {
-        return Result.builder()
-            .id(classroom.getId())
-            .name(classroom.getName())
-            .academyId(classroom.getAcademy().getId())
-            .build();
-    }
-
-    static Classroom mapToEntity(ClassroomDto.Create dto) {
-        return Classroom.builder()
-            .name(dto.getName())
-            .build();
-    }
 
     @Data
     @Builder

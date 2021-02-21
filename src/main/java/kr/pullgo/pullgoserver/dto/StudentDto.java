@@ -2,34 +2,11 @@ package kr.pullgo.pullgoserver.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.sun.istack.NotNull;
-import kr.pullgo.pullgoserver.persistence.model.Student;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
 public interface StudentDto {
-
-
-    static StudentDto.Result mapFromEntity(Student student) {
-        return StudentDto.Result.builder()
-            .id(student.getId())
-            .account(AccountDto.mapFromEntity(student.getAccount()))
-            .parentPhone(student.getParentPhone())
-            .schoolName(student.getSchoolName())
-            .schoolYear(student.getSchoolYear())
-            .build();
-    }
-
-    static Student mapToEntity(StudentDto.Create dto) {
-        Student student = Student.builder()
-            .parentPhone(dto.getParentPhone())
-            .schoolName(dto.getSchoolName())
-            .schoolYear(dto.getSchoolYear())
-            .build();
-        student.setAccount(AccountDto.mapToEntity(dto.getAccount()));
-        return student;
-    }
-
 
     @Data
     @Builder

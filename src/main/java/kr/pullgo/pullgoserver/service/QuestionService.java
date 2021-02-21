@@ -3,6 +3,7 @@ package kr.pullgo.pullgoserver.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
+import kr.pullgo.pullgoserver.dto.mapper.QuestionDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +15,20 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class QuestionService {
 
+    private final QuestionDtoMapper dtoMapper;
     private final QuestionRepository questionRepository;
 
     @Autowired
-    public QuestionService(
+    public QuestionService(QuestionDtoMapper dtoMapper,
         QuestionRepository questionRepository) {
+        this.dtoMapper = dtoMapper;
         this.questionRepository = questionRepository;
     }
 
     @Transactional
     public QuestionDto.Result createQuestion(QuestionDto.Create dto) {
-        Question question = questionRepository.save(QuestionDto.mapToEntity(dto));
-        return QuestionDto.mapFromEntity(question);
+        Question question = questionRepository.save(dtoMapper.asEntity(dto));
+        return dtoMapper.asResultDto(question);
     }
 
     @Transactional
@@ -38,7 +41,7 @@ public class QuestionService {
         if (dto.getAnswer() != null) { question.setAnswer(dto.getAnswer()); }
 
         question = questionRepository.save(question);
-        return QuestionDto.mapFromEntity(question);
+        return dtoMapper.asResultDto(question);
     }
 
     @Transactional
@@ -53,14 +56,14 @@ public class QuestionService {
     public QuestionDto.Result getQuestion(Long id) {
         Question question = questionRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question id was not found"));
-        return QuestionDto.mapFromEntity(question);
+        return dtoMapper.asResultDto(question);
     }
 
     @Transactional
     public List<QuestionDto.Result> getQuestions() {
         List<Question> questions = questionRepository.findAll();
         return questions.stream()
-            .map(QuestionDto::mapFromEntity)
+            .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
 }

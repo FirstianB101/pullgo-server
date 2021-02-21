@@ -1,29 +1,11 @@
 package kr.pullgo.pullgoserver.dto;
 
 import com.sun.istack.NotNull;
-import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
 public interface LessonDto {
-
-    static LessonDto.Result mapFromEntity(Lesson lesson) {
-        return Result.builder()
-            .id(lesson.getId())
-            .schedule(ScheduleDto.mapFromEntity(lesson.getSchedule()))
-            .name(lesson.getName())
-            .classroomId(lesson.getClassroom().getId())
-            .build();
-    }
-
-    static Lesson mapToEntity(LessonDto.Create dto) {
-        Lesson lesson = Lesson.builder()
-            .name(dto.getName())
-            .build();
-        lesson.setSchedule(ScheduleDto.mapToEntity(dto.getSchedule()));
-        return lesson;
-    }
 
     @Data
     @Builder

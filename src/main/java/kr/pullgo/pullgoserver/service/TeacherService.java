@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
+import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
@@ -23,16 +24,17 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class TeacherService {
 
+    private final TeacherDtoMapper dtoMapper;
     private final TeacherRepository teacherRepository;
     private final AcademyRepository academyRepository;
     private final ClassroomRepository classroomRepository;
 
     @Autowired
-    public TeacherService(
+    public TeacherService(TeacherDtoMapper dtoMapper,
         TeacherRepository teacherRepository,
         AcademyRepository academyRepository,
-        ClassroomRepository classroomRepository
-    ) {
+        ClassroomRepository classroomRepository) {
+        this.dtoMapper = dtoMapper;
         this.teacherRepository = teacherRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
@@ -40,8 +42,8 @@ public class TeacherService {
 
     @Transactional
     public TeacherDto.Result createTeacher(TeacherDto.Create dto) {
-        Teacher teacher = teacherRepository.save(TeacherDto.mapToEntity(dto));
-        return TeacherDto.mapFromEntity(teacher);
+        Teacher teacher = teacherRepository.save(dtoMapper.asEntity(dto));
+        return dtoMapper.asResultDto(teacher);
     }
 
     @Transactional
@@ -61,7 +63,7 @@ public class TeacherService {
             if (dtoAccount.getPhone() != null) { entityAccount.setPhone(dtoAccount.getPhone()); }
         }
         teacher = teacherRepository.save(teacher);
-        return TeacherDto.mapFromEntity(teacher);
+        return dtoMapper.asResultDto(teacher);
     }
 
     @Transactional
@@ -76,14 +78,14 @@ public class TeacherService {
     public TeacherDto.Result getTeacher(Long id) {
         Teacher teacher = teacherRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found"));
-        return TeacherDto.mapFromEntity(teacher);
+        return dtoMapper.asResultDto(teacher);
     }
 
     @Transactional
     public List<TeacherDto.Result> getTeachers() {
         List<Teacher> teachers = teacherRepository.findAll();
         return teachers.stream()
-            .map(TeacherDto::mapFromEntity)
+            .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.LessonDto;
 import kr.pullgo.pullgoserver.dto.ScheduleDto;
+import kr.pullgo.pullgoserver.dto.mapper.LessonDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
@@ -16,18 +17,20 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class LessonService {
 
+    private final LessonDtoMapper dtoMapper;
     private final LessonRepository lessonRepository;
 
     @Autowired
-    public LessonService(
+    public LessonService(LessonDtoMapper dtoMapper,
         LessonRepository lessonRepository) {
+        this.dtoMapper = dtoMapper;
         this.lessonRepository = lessonRepository;
     }
 
     @Transactional
     public LessonDto.Result createLesson(LessonDto.Create dto) {
-        Lesson lesson = lessonRepository.save(LessonDto.mapToEntity(dto));
-        return LessonDto.mapFromEntity(lesson);
+        Lesson lesson = lessonRepository.save(dtoMapper.asEntity(dto));
+        return dtoMapper.asResultDto(lesson);
     }
 
     @Transactional
@@ -48,7 +51,7 @@ public class LessonService {
             }
         }
         lesson = lessonRepository.save(lesson);
-        return LessonDto.mapFromEntity(lesson);
+        return dtoMapper.asResultDto(lesson);
     }
 
     @Transactional
@@ -63,14 +66,14 @@ public class LessonService {
     public LessonDto.Result getLesson(Long id) {
         Lesson lesson = lessonRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lesson id was not found"));
-        return LessonDto.mapFromEntity(lesson);
+        return dtoMapper.asResultDto(lesson);
     }
 
     @Transactional
     public List<LessonDto.Result> getLessons() {
         List<Lesson> lessons = lessonRepository.findAll();
         return lessons.stream()
-            .map(LessonDto::mapFromEntity)
+            .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
 }

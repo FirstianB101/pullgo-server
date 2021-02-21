@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto.Result;
+import kr.pullgo.pullgoserver.dto.mapper.AttenderStateDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
@@ -19,16 +20,17 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AttenderStateService {
 
-
+    private final AttenderStateDtoMapper dtoMapper;
     private final AttenderStateRepository attenderStateRepository;
     private final StudentRepository studentRepository;
     private final ExamRepository examRepository;
 
     @Autowired
-    public AttenderStateService(
+    public AttenderStateService(AttenderStateDtoMapper dtoMapper,
         AttenderStateRepository attenderStateRepository,
         StudentRepository studentRepository,
         ExamRepository examRepository) {
+        this.dtoMapper = dtoMapper;
         this.attenderStateRepository = attenderStateRepository;
         this.studentRepository = studentRepository;
         this.examRepository = examRepository;
@@ -48,7 +50,7 @@ public class AttenderStateService {
         attenderState.setExam(dtoExam);
 
         attenderState = attenderStateRepository.save(attenderState);
-        return AttenderStateDto.mapFromEntity(attenderState);
+        return dtoMapper.asResultDto(attenderState);
     }
 
     @Transactional
@@ -61,7 +63,7 @@ public class AttenderStateService {
         if (dto.getScore() != null) { attenderState.setScore(dto.getScore()); }
 
         attenderState = attenderStateRepository.save(attenderState);
-        return AttenderStateDto.mapFromEntity(attenderState);
+        return dtoMapper.asResultDto(attenderState);
     }
 
     @Transactional
@@ -78,14 +80,14 @@ public class AttenderStateService {
         AttenderState attenderState = attenderStateRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "AttenderState id was not found"));
-        return AttenderStateDto.mapFromEntity(attenderState);
+        return dtoMapper.asResultDto(attenderState);
     }
 
     @Transactional
     public List<Result> getAttenderStates() {
         List<AttenderState> attenderStates = attenderStateRepository.findAll();
         return attenderStates.stream()
-            .map(AttenderStateDto::mapFromEntity)
+            .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
 

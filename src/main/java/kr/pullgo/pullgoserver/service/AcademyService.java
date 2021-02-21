@@ -3,6 +3,7 @@ package kr.pullgo.pullgoserver.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
+import kr.pullgo.pullgoserver.dto.mapper.AcademyDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
@@ -20,16 +21,17 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AcademyService {
 
+    private final AcademyDtoMapper dtoMapper;
     private final AcademyRepository academyRepository;
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
 
     @Autowired
-    public AcademyService(
+    public AcademyService(AcademyDtoMapper academyDtoMapper,
         AcademyRepository academyRepository,
         TeacherRepository teacherRepository,
-        StudentRepository studentRepository
-    ) {
+        StudentRepository studentRepository) {
+        this.dtoMapper = academyDtoMapper;
         this.academyRepository = academyRepository;
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
@@ -37,8 +39,8 @@ public class AcademyService {
 
     @Transactional
     public AcademyDto.Result createAcademy(AcademyDto.Create dto) {
-        Academy academy = academyRepository.save(AcademyDto.mapToEntity(dto));
-        return AcademyDto.mapFromEntity(academy);
+        Academy academy = academyRepository.save(dtoMapper.asEntity(dto));
+        return dtoMapper.asResultDto(academy);
     }
 
     @Transactional
@@ -49,7 +51,7 @@ public class AcademyService {
         if (dto.getPhone() != null) { academy.setPhone(dto.getPhone()); }
         if (dto.getAddress() != null) { academy.setAddress(dto.getAddress()); }
         academy = academyRepository.save(academy);
-        return AcademyDto.mapFromEntity(academy);
+        return dtoMapper.asResultDto(academy);
     }
 
     @Transactional
@@ -64,14 +66,14 @@ public class AcademyService {
     public AcademyDto.Result getAcademy(Long id) {
         Academy academy = academyRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
-        return AcademyDto.mapFromEntity(academy);
+        return dtoMapper.asResultDto(academy);
     }
 
     @Transactional
     public List<AcademyDto.Result> getAcademies() {
         List<Academy> academies = academyRepository.findAll();
         return academies.stream()
-            .map(AcademyDto::mapFromEntity)
+            .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
 

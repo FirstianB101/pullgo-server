@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.StudentDto;
+import kr.pullgo.pullgoserver.dto.mapper.StudentDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
@@ -23,16 +24,17 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class StudentService {
 
+    private final StudentDtoMapper dtoMapper;
     private final StudentRepository studentRepository;
     private final AcademyRepository academyRepository;
     private final ClassroomRepository classroomRepository;
 
     @Autowired
-    public StudentService(
+    public StudentService(StudentDtoMapper dtoMapper,
         StudentRepository studentRepository,
         AcademyRepository academyRepository,
-        ClassroomRepository classroomRepository
-    ) {
+        ClassroomRepository classroomRepository) {
+        this.dtoMapper = dtoMapper;
         this.studentRepository = studentRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
@@ -40,8 +42,8 @@ public class StudentService {
 
     @Transactional
     public StudentDto.Result createStudent(StudentDto.Create dto) {
-        Student student = studentRepository.save(StudentDto.mapToEntity(dto));
-        return StudentDto.mapFromEntity(student);
+        Student student = studentRepository.save(dtoMapper.asEntity(dto));
+        return dtoMapper.asResultDto(student);
     }
 
     @Transactional
@@ -65,7 +67,7 @@ public class StudentService {
         if (dto.getSchoolYear() != null) { student.setSchoolYear(dto.getSchoolYear()); }
 
         student = studentRepository.save(student);
-        return StudentDto.mapFromEntity(student);
+        return dtoMapper.asResultDto(student);
     }
 
     @Transactional
@@ -80,14 +82,14 @@ public class StudentService {
     public StudentDto.Result getStudent(Long id) {
         Student student = studentRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found"));
-        return StudentDto.mapFromEntity(student);
+        return dtoMapper.asResultDto(student);
     }
 
     @Transactional
     public List<StudentDto.Result> getStudents() {
         List<Student> students = studentRepository.findAll();
         return students.stream()
-            .map(StudentDto::mapFromEntity)
+            .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
 

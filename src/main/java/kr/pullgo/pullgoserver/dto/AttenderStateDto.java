@@ -1,23 +1,11 @@
 package kr.pullgo.pullgoserver.dto;
 
-import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 
 public interface AttenderStateDto {
-
-    static AttenderStateDto.Result mapFromEntity(AttenderState attenderState) {
-        return AttenderStateDto.Result.builder()
-            .id(attenderState.getId())
-            .attenderId(attenderState.getAttender().getId())
-            .examId(attenderState.getExam().getId())
-            .progress(attenderState.getProgress())
-            .score(attenderState.getScore())
-            .submitted(attenderState.isSubmitted())
-            .build();
-    }
 
     @Data
     @Builder
