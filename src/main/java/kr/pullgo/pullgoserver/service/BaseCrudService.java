@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.mapper.DtoMapper;
 import kr.pullgo.pullgoserver.persistence.repository.BaseRepository;
-import org.springframework.http.HttpStatus;
+import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -71,7 +71,7 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
     @Transactional
     public RESULT_DTO read(ID id) {
         E entity = repository.findById(id)
-            .orElseThrow(this::notFoundException);
+            .orElseThrow(this::notFoundResponseStatusException);
         return dtoMapper.asResultDto(entity);
     }
 
@@ -98,7 +98,7 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
     @Transactional
     public RESULT_DTO update(ID id, UPDATE_DTO dto) {
         E entity = repository.findById(id)
-            .orElseThrow(this::notFoundException);
+            .orElseThrow(this::notFoundResponseStatusException);
         entity = updateOnDB(entity, dto);
         return dtoMapper.asResultDto(entity);
     }
@@ -121,16 +121,11 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
     public void delete(ID id) {
         int cnt = repository.removeById(id);
         if (cnt == 0) {
-            throw notFoundException();
+            throw notFoundResponseStatusException();
         }
     }
 
-    private ResponseStatusException notFoundException() {
-        String reason = resourceName() + " id was not found";
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, reason);
-    }
-
-    private String resourceName() {
-        return entityClass.getName();
+    private ResponseStatusException notFoundResponseStatusException() {
+        return ResponseStatusExceptions.notFound(entityClass);
     }
 }
