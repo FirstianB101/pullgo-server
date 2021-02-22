@@ -29,7 +29,7 @@ public class ExamDtoMapper implements DtoMapper<Exam, ExamDto.Create, ExamDto.Re
     public ExamDto.Result asResultDto(Exam exam) {
         return ExamDto.Result.builder()
             .id(exam.getId())
-            .classroomId(exam.getId())
+            .classroomId(exam.getClassroom().getId())
             .creator(teacherDtoMapper.asResultDto(exam.getCreator()))
             .name(exam.getName())
             .beginDateTime(exam.getBeginDateTime())
