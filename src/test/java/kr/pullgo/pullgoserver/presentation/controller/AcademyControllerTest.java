@@ -55,7 +55,7 @@ class AcademyControllerTest {
             .address("Seoul")
             .build();
 
-        given(academyService.getAcademy(eq(0L)))
+        given(academyService.read(eq(0L)))
             .willReturn(result);
 
         // When
@@ -74,7 +74,7 @@ class AcademyControllerTest {
     @Test
     void postAcademy() throws Exception {
         // Given
-        given(academyService.createAcademy(any()))
+        given(academyService.create(any()))
             .willReturn(academyResultDtoWithId(0L));
 
         // When
@@ -92,7 +92,7 @@ class AcademyControllerTest {
     @Test
     void patchAcademy() throws Exception {
         // Given
-        given(academyService.updateAcademy(eq(0L), any()))
+        given(academyService.update(eq(0L), any()))
             .willReturn(academyResultDtoWithId(0L));
 
         // When
@@ -114,7 +114,7 @@ class AcademyControllerTest {
             .andDo(print());
 
         // Then
-        verify(academyService).deleteAcademy(0L);
+        verify(academyService).delete(0L);
 
         actions
             .andExpect(status().isNoContent());

@@ -1,7 +1,5 @@
 package kr.pullgo.pullgoserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.StudentDto;
 import kr.pullgo.pullgoserver.dto.mapper.StudentDtoMapper;
@@ -22,7 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class StudentService {
+public class StudentService extends
+    BaseCrudService<Student, Long, StudentDto.Create, StudentDto.Update, StudentDto.Result> {
 
     private final StudentDtoMapper dtoMapper;
     private final StudentRepository studentRepository;
@@ -34,25 +33,22 @@ public class StudentService {
         StudentRepository studentRepository,
         AcademyRepository academyRepository,
         ClassroomRepository classroomRepository) {
+        super(Student.class, dtoMapper, studentRepository);
         this.dtoMapper = dtoMapper;
         this.studentRepository = studentRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
     }
 
-    @Transactional
-    public StudentDto.Result createStudent(StudentDto.Create dto) {
-        Student student = studentRepository.save(dtoMapper.asEntity(dto));
-        return dtoMapper.asResultDto(student);
+    @Override
+    Student createOnDB(StudentDto.Create dto) {
+        return studentRepository.save(dtoMapper.asEntity(dto));
     }
 
-    @Transactional
-    public StudentDto.Result updateStudent(Long id, StudentDto.Update dto) {
-        Student student = studentRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found"));
-
+    @Override
+    Student updateOnDB(Student entity, StudentDto.Update dto) {
         AccountDto.Update dtoAccount = dto.getAccount();
-        Account entityAccount = student.getAccount();
+        Account entityAccount = entity.getAccount();
         if (dtoAccount != null) {
             if (dtoAccount.getPassword() != null) {
                 entityAccount.setPassword(dtoAccount.getPassword());
@@ -60,37 +56,20 @@ public class StudentService {
             if (dtoAccount.getFullName() != null) {
                 entityAccount.setFullName(dtoAccount.getFullName());
             }
-            if (dtoAccount.getPhone() != null) { entityAccount.setPhone(dtoAccount.getPhone()); }
+            if (dtoAccount.getPhone() != null) {
+                entityAccount.setPhone(dtoAccount.getPhone());
+            }
         }
-        if (dto.getParentPhone() != null) { student.setParentPhone(dto.getParentPhone()); }
-        if (dto.getSchoolName() != null) { student.setSchoolName(dto.getSchoolName()); }
-        if (dto.getSchoolYear() != null) { student.setSchoolYear(dto.getSchoolYear()); }
-
-        student = studentRepository.save(student);
-        return dtoMapper.asResultDto(student);
-    }
-
-    @Transactional
-    public void deleteStudent(Long id) {
-        int deleteResult = studentRepository.removeById(id);
-        if (deleteResult == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found");
+        if (dto.getParentPhone() != null) {
+            entity.setParentPhone(dto.getParentPhone());
         }
-    }
-
-    @Transactional
-    public StudentDto.Result getStudent(Long id) {
-        Student student = studentRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found"));
-        return dtoMapper.asResultDto(student);
-    }
-
-    @Transactional
-    public List<StudentDto.Result> getStudents() {
-        List<Student> students = studentRepository.findAll();
-        return students.stream()
-            .map(dtoMapper::asResultDto)
-            .collect(Collectors.toList());
+        if (dto.getSchoolName() != null) {
+            entity.setSchoolName(dto.getSchoolName());
+        }
+        if (dto.getSchoolYear() != null) {
+            entity.setSchoolYear(dto.getSchoolYear());
+        }
+        return studentRepository.save(entity);
     }
 
     @Transactional

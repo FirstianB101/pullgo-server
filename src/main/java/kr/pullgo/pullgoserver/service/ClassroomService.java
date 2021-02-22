@@ -1,7 +1,5 @@
 package kr.pullgo.pullgoserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
 import kr.pullgo.pullgoserver.dto.mapper.ClassroomDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
@@ -21,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class ClassroomService {
+public class ClassroomService extends
+    BaseCrudService<Classroom, Long, ClassroomDto.Create,
+        ClassroomDto.Update, ClassroomDto.Result> {
 
     private final ClassroomDtoMapper dtoMapper;
     private final ClassroomRepository classroomRepository;
@@ -35,6 +35,7 @@ public class ClassroomService {
         TeacherRepository teacherRepository,
         StudentRepository studentRepository,
         AcademyRepository academyRepository) {
+        super(Classroom.class, dtoMapper, classroomRepository);
         this.dtoMapper = dtoMapper;
         this.classroomRepository = classroomRepository;
         this.teacherRepository = teacherRepository;
@@ -42,47 +43,21 @@ public class ClassroomService {
         this.academyRepository = academyRepository;
     }
 
-    @Transactional
-    public ClassroomDto.Result createClassroom(ClassroomDto.Create dto) {
+    @Override
+    Classroom createOnDB(ClassroomDto.Create dto) {
         Classroom classroom = dtoMapper.asEntity(dto);
         Academy academy = academyRepository.findById(dto.getAcademyId()).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
         academy.addClassroom(classroom);
-        classroom = classroomRepository.save(classroom);
-        return dtoMapper.asResultDto(classroom);
+        return classroomRepository.save(classroom);
     }
 
-    @Transactional
-    public ClassroomDto.Result updateClassroom(Long id, ClassroomDto.Update dto) {
-        Classroom classroom = classroomRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Classroom id was not found"));
-        if (dto.getName() != null) { classroom.setName(dto.getName()); }
-
-        classroom = classroomRepository.save(classroom);
-        return dtoMapper.asResultDto(classroom);
-    }
-
-    @Transactional
-    public void deleteClassroom(Long id) {
-        int deleteResult = classroomRepository.removeById(id);
-        if (deleteResult == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Classroom id was not found");
+    @Override
+    Classroom updateOnDB(Classroom entity, ClassroomDto.Update dto) {
+        if (dto.getName() != null) {
+            entity.setName(dto.getName());
         }
-    }
-
-    @Transactional
-    public ClassroomDto.Result getClassroom(Long id) {
-        Classroom classroom = classroomRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Classroom id was not found"));
-        return dtoMapper.asResultDto(classroom);
-    }
-
-    @Transactional
-    public List<ClassroomDto.Result> getClassrooms() {
-        List<Classroom> classrooms = classroomRepository.findAll();
-        return classrooms.stream()
-            .map(dtoMapper::asResultDto)
-            .collect(Collectors.toList());
+        return classroomRepository.save(entity);
     }
 
     @Transactional

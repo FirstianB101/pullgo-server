@@ -27,28 +27,28 @@ public class ExamController {
     @PostMapping("/exams")
     @ResponseStatus(HttpStatus.CREATED)
     public ExamDto.Result post(@RequestBody ExamDto.Create dto) {
-        return examService.createExam(dto);
+        return examService.create(dto);
     }
 
     @GetMapping("/exams")
     public List<ExamDto.Result> list() {
-        return examService.getExams();
+        return examService.search();
     }
 
     @GetMapping("/exams/{id}")
     public ExamDto.Result get(@PathVariable Long id) {
-        return examService.getExam(id);
+        return examService.read(id);
     }
 
     @DeleteMapping("/exams/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        examService.deleteExam(id);
+        examService.delete(id);
     }
 
     @PatchMapping("/exams/{id}")
     public ExamDto.Result patch(@PathVariable Long id, @RequestBody ExamDto.Update dto) {
-        return examService.updateExam(id, dto);
+        return examService.update(id, dto);
     }
 
     @PostMapping("/exams/{id}/cancel")

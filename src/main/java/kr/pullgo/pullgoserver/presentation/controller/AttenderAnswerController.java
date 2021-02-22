@@ -28,29 +28,29 @@ public class AttenderAnswerController {
     @PostMapping("/exam/attender-state/answers")
     @ResponseStatus(HttpStatus.CREATED)
     public AttenderAnswerDto.Result post(@RequestBody AttenderAnswerDto.Create dto) {
-        return attenderAnswerService.createAttenderAnswer(dto);
+        return attenderAnswerService.create(dto);
     }
 
     @GetMapping("/exam/attender-state/answers")
     public List<Result> list() {
-        return attenderAnswerService.getAttenderAnswers();
+        return attenderAnswerService.search();
     }
 
     @GetMapping("/exam/attender-state/answers/{id}")
     public AttenderAnswerDto.Result get(@PathVariable Long id) {
-        return attenderAnswerService.getAttenderAnswer(id);
+        return attenderAnswerService.read(id);
     }
 
     @DeleteMapping("/exam/attender-state/answers/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        attenderAnswerService.deleteAttenderAnswer(id);
+        attenderAnswerService.delete(id);
     }
 
     @PatchMapping("/exam/attender-state/answers/{id}")
     public AttenderAnswerDto.Result patch(@PathVariable Long id,
         @RequestBody AttenderAnswerDto.Update dto) {
-        return attenderAnswerService.updateAttenderAnswer(id, dto);
+        return attenderAnswerService.update(id, dto);
     }
 
 }

@@ -27,29 +27,29 @@ public class AcademyController {
 
     @GetMapping("/academies")
     public List<AcademyDto.Result> list() {
-        return academyService.getAcademies();
+        return academyService.search();
     }
 
     @GetMapping("/academies/{id}")
     public AcademyDto.Result get(@PathVariable Long id) {
-        return academyService.getAcademy(id);
+        return academyService.read(id);
     }
 
     @PostMapping("/academies")
     @ResponseStatus(HttpStatus.CREATED)
     public AcademyDto.Result post(@RequestBody AcademyDto.Create dto) {
-        return academyService.createAcademy(dto);
+        return academyService.create(dto);
     }
 
     @PatchMapping("/academies/{id}")
     public AcademyDto.Result patch(@PathVariable Long id, @RequestBody AcademyDto.Update dto) {
-        return academyService.updateAcademy(id, dto);
+        return academyService.update(id, dto);
     }
 
     @DeleteMapping("/academies/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        academyService.deleteAcademy(id);
+        academyService.delete(id);
     }
 
     @PostMapping("/academies/{id}/accept-teacher")

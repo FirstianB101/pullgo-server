@@ -68,7 +68,7 @@ class AcademyServiceTest {
                 .will(i -> withId(i.getArgument(0), 0L));
 
             // When
-            AcademyDto.Result result = academyService.createAcademy(dto);
+            AcademyDto.Result result = academyService.create(dto);
 
             // Then
             assertThat(result.getName()).isEqualTo("Test academy");
@@ -103,7 +103,7 @@ class AcademyServiceTest {
                 .address("Seoul")
                 .build();
 
-            AcademyDto.Result result = academyService.updateAcademy(0L, dto);
+            AcademyDto.Result result = academyService.update(0L, dto);
 
             // Then
             assertThat(result.getName()).isEqualTo("Test academy");
@@ -120,7 +120,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.empty());
 
             // When
-            Throwable thrown = catchThrowable(() -> academyService.updateAcademy(1L, dto));
+            Throwable thrown = catchThrowable(() -> academyService.update(1L, dto));
 
             // Then
             assertThat(thrown).isInstanceOf(ResponseStatusException.class);
@@ -137,7 +137,7 @@ class AcademyServiceTest {
                 .willReturn(1);
 
             // When
-            academyService.deleteAcademy(1L);
+            academyService.delete(1L);
 
             // Then
             verify(academyRepository).removeById(1L);
@@ -150,7 +150,7 @@ class AcademyServiceTest {
                 .willReturn(0);
 
             // When
-            Throwable thrown = catchThrowable(() -> academyService.deleteAcademy(1L));
+            Throwable thrown = catchThrowable(() -> academyService.delete(1L));
 
             // Then
             assertThat(thrown).isInstanceOf(ResponseStatusException.class);
@@ -174,7 +174,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(entity));
 
             // When
-            AcademyDto.Result result = academyService.getAcademy(0L);
+            AcademyDto.Result result = academyService.read(0L);
 
             // Then
             assertThat(result.getName()).isEqualTo("Test academy");
@@ -189,7 +189,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.empty());
 
             // When
-            Throwable thrown = catchThrowable(() -> academyService.getAcademy(0L));
+            Throwable thrown = catchThrowable(() -> academyService.read(0L));
 
             // Then
             assertThat(thrown).isInstanceOf(ResponseStatusException.class);

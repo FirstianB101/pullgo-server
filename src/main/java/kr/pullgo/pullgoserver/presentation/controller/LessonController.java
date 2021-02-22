@@ -27,28 +27,28 @@ public class LessonController {
     @PostMapping("/academy/classroom/lessons")
     @ResponseStatus(HttpStatus.CREATED)
     public LessonDto.Result post(@RequestBody LessonDto.Create dto) {
-        return lessonService.createLesson(dto);
+        return lessonService.create(dto);
     }
 
     @GetMapping("/academy/classroom/lessons")
     public List<LessonDto.Result> list() {
-        return lessonService.getLessons();
+        return lessonService.search();
     }
 
     @GetMapping("/academy/classroom/lessons/{id}")
     public LessonDto.Result get(@PathVariable Long id) {
-        return lessonService.getLesson(id);
+        return lessonService.read(id);
     }
 
     @DeleteMapping("/academy/classroom/lessons/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        lessonService.deleteLesson(id);
+        lessonService.delete(id);
     }
 
     @PatchMapping("/academy/classroom/lessons/{id}")
     public LessonDto.Result patch(@PathVariable Long id, @RequestBody LessonDto.Update dto) {
-        return lessonService.updateLesson(id, dto);
+        return lessonService.update(id, dto);
     }
 
 }

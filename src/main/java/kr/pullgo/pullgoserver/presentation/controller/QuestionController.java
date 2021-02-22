@@ -27,28 +27,28 @@ public class QuestionController {
     @PostMapping("/exam/questions")
     @ResponseStatus(HttpStatus.CREATED)
     public QuestionDto.Result post(@RequestBody QuestionDto.Create dto) {
-        return questionService.createQuestion(dto);
+        return questionService.create(dto);
     }
 
     @GetMapping("/exam/questions")
     public List<QuestionDto.Result> list() {
-        return questionService.getQuestions();
+        return questionService.search();
     }
 
     @GetMapping("/exam/questions/{id}")
     public QuestionDto.Result get(@PathVariable Long id) {
-        return questionService.getQuestion(id);
+        return questionService.read(id);
     }
 
     @DeleteMapping("/exam/questions/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        questionService.deleteQuestion(id);
+        questionService.delete(id);
     }
 
     @PatchMapping("/exam/questions/{id}")
     public QuestionDto.Result patch(@PathVariable Long id, @RequestBody QuestionDto.Update dto) {
-        return questionService.updateQuestion(id, dto);
+        return questionService.update(id, dto);
     }
 
 }
