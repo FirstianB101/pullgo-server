@@ -27,28 +27,28 @@ public class StudentController {
     @PostMapping("/students")
     @ResponseStatus(HttpStatus.CREATED)
     public StudentDto.Result post(@RequestBody StudentDto.Create dto) {
-        return studentService.createStudent(dto);
+        return studentService.create(dto);
     }
 
     @GetMapping("/students")
     public List<StudentDto.Result> list() {
-        return studentService.getStudents();
+        return studentService.search();
     }
 
     @GetMapping("students/{id}")
     public StudentDto.Result get(@PathVariable Long id) {
-        return studentService.getStudent(id);
+        return studentService.read(id);
     }
 
     @DeleteMapping("/student/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        studentService.deleteStudent(id);
+        studentService.delete(id);
     }
 
     @PatchMapping("/students/{id}")
     public StudentDto.Result patch(@PathVariable Long id, @RequestBody StudentDto.Update dto) {
-        return studentService.updateStudent(id, dto);
+        return studentService.update(id, dto);
     }
 
     @PostMapping("/students/{id}/apply-academy")

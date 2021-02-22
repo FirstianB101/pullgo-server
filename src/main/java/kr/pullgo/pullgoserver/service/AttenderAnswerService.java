@@ -1,7 +1,5 @@
 package kr.pullgo.pullgoserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
 import kr.pullgo.pullgoserver.dto.mapper.AttenderAnswerDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
@@ -9,13 +7,12 @@ import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderAnswerRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class AttenderAnswerService {
+public class AttenderAnswerService extends
+    BaseCrudService<AttenderAnswer, Long, AttenderAnswerDto.Create,
+        AttenderAnswerDto.Update, AttenderAnswerDto.Result> {
 
     private final AttenderAnswerDtoMapper dtoMapper;
     private final AttenderAnswerRepository attenderAnswerRepository;
@@ -25,51 +22,22 @@ public class AttenderAnswerService {
     public AttenderAnswerService(AttenderAnswerDtoMapper dtoMapper,
         AttenderAnswerRepository attenderAnswerRepository,
         QuestionRepository questionRepository) {
+        super(AttenderAnswer.class, dtoMapper, attenderAnswerRepository);
         this.dtoMapper = dtoMapper;
         this.attenderAnswerRepository = attenderAnswerRepository;
         this.questionRepository = questionRepository;
     }
 
-    @Transactional
-    public AttenderAnswerDto.Result createAttenderAnswer(AttenderAnswerDto.Create dto) {
-        AttenderAnswer attenderAnswer = attenderAnswerRepository
-            .save(dtoMapper.asEntity(dto));
-        return dtoMapper.asResultDto(attenderAnswer);
+    @Override
+    AttenderAnswer createOnDB(AttenderAnswerDto.Create dto) {
+        return attenderAnswerRepository.save(dtoMapper.asEntity(dto));
     }
 
-    @Transactional
-    public AttenderAnswerDto.Result updateAttenderAnswer(Long id, AttenderAnswerDto.Update dto) {
-        AttenderAnswer attenderAnswer = attenderAnswerRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "AttenderAnswer id was not found"));
-
-        if (dto.getAnswer() != null) { attenderAnswer.setAnswer(new Answer(dto.getAnswer())); }
-        attenderAnswer = attenderAnswerRepository.save(attenderAnswer);
-        return dtoMapper.asResultDto(attenderAnswer);
-    }
-
-    @Transactional
-    public void deleteAttenderAnswer(Long id) {
-        int deleteResult = attenderAnswerRepository.removeById(id);
-        if (deleteResult == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "AttenderAnswer id was not found");
+    @Override
+    AttenderAnswer updateOnDB(AttenderAnswer entity, AttenderAnswerDto.Update dto) {
+        if (dto.getAnswer() != null) {
+            entity.setAnswer(new Answer(dto.getAnswer()));
         }
-    }
-
-    @Transactional
-    public AttenderAnswerDto.Result getAttenderAnswer(Long id) {
-        AttenderAnswer attenderAnswer = attenderAnswerRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "AttenderAnswer id was not found"));
-        return dtoMapper.asResultDto(attenderAnswer);
-    }
-
-    @Transactional
-    public List<AttenderAnswerDto.Result> getAttenderAnswers() {
-        List<AttenderAnswer> attenderAnswers = attenderAnswerRepository.findAll();
-        return attenderAnswers.stream()
-            .map(dtoMapper::asResultDto)
-            .collect(Collectors.toList());
+        return attenderAnswerRepository.save(entity);
     }
 }

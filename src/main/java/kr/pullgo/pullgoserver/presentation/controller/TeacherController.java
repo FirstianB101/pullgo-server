@@ -27,28 +27,28 @@ public class TeacherController {
     @PostMapping("/teachers")
     @ResponseStatus(HttpStatus.CREATED)
     public TeacherDto.Result post(@RequestBody TeacherDto.Create dto) {
-        return teacherService.createTeacher(dto);
+        return teacherService.create(dto);
     }
 
     @GetMapping("/teachers")
     public List<TeacherDto.Result> list() {
-        return teacherService.getTeachers();
+        return teacherService.search();
     }
 
     @GetMapping("teachers/{id}")
     public TeacherDto.Result get(@PathVariable Long id) {
-        return teacherService.getTeacher(id);
+        return teacherService.read(id);
     }
 
     @DeleteMapping("/teacher/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        teacherService.deleteTeacher(id);
+        teacherService.delete(id);
     }
 
     @PatchMapping("/teachers/{id}")
     public TeacherDto.Result patch(@PathVariable Long id, @RequestBody TeacherDto.Update dto) {
-        return teacherService.updateTeacher(id, dto);
+        return teacherService.update(id, dto);
     }
 
     @PostMapping("/teachers/{id}/apply-academy")

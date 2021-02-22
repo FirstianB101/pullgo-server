@@ -1,9 +1,6 @@
 package kr.pullgo.pullgoserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
-import kr.pullgo.pullgoserver.dto.AttenderStateDto.Result;
 import kr.pullgo.pullgoserver.dto.mapper.AttenderStateDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
@@ -18,9 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class AttenderStateService {
+public class AttenderStateService extends
+    BaseCrudService<AttenderState, Long, AttenderStateDto.Create,
+        AttenderStateDto.Update, AttenderStateDto.Result> {
 
-    private final AttenderStateDtoMapper dtoMapper;
     private final AttenderStateRepository attenderStateRepository;
     private final StudentRepository studentRepository;
     private final ExamRepository examRepository;
@@ -30,14 +28,14 @@ public class AttenderStateService {
         AttenderStateRepository attenderStateRepository,
         StudentRepository studentRepository,
         ExamRepository examRepository) {
-        this.dtoMapper = dtoMapper;
+        super(AttenderState.class, dtoMapper, attenderStateRepository);
         this.attenderStateRepository = attenderStateRepository;
         this.studentRepository = studentRepository;
         this.examRepository = examRepository;
     }
 
-    @Transactional
-    public AttenderStateDto.Result createAttenderState(AttenderStateDto.Create dto) {
+    @Override
+    AttenderState createOnDB(AttenderStateDto.Create dto) {
         AttenderState attenderState = new AttenderState();
         Student dtoAttender = studentRepository.findById(dto.getAttenderId())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -49,50 +47,22 @@ public class AttenderStateService {
         attenderState.setAttender(dtoAttender);
         attenderState.setExam(dtoExam);
 
-        attenderState = attenderStateRepository.save(attenderState);
-        return dtoMapper.asResultDto(attenderState);
+        return attenderStateRepository.save(attenderState);
     }
 
-    @Transactional
-    public AttenderStateDto.Result updateAttenderState(Long id, AttenderStateDto.Update dto) {
-        AttenderState attenderState = attenderStateRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "AttenderState id was not found"));
-
-        if (dto.getProgress() != null) { attenderState.setProgress(dto.getProgress()); }
-        if (dto.getScore() != null) { attenderState.setScore(dto.getScore()); }
-
-        attenderState = attenderStateRepository.save(attenderState);
-        return dtoMapper.asResultDto(attenderState);
-    }
-
-    @Transactional
-    public void deleteAttenderState(Long id) {
-        int deleteResult = attenderStateRepository.removeById(id);
-        if (deleteResult == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "AttenderState id was not found");
+    @Override
+    AttenderState updateOnDB(AttenderState entity, AttenderStateDto.Update dto) {
+        if (dto.getProgress() != null) {
+            entity.setProgress(dto.getProgress());
         }
+        if (dto.getScore() != null) {
+            entity.setScore(dto.getScore());
+        }
+        return attenderStateRepository.save(entity);
     }
 
     @Transactional
-    public AttenderStateDto.Result getAttenderState(Long id) {
-        AttenderState attenderState = attenderStateRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "AttenderState id was not found"));
-        return dtoMapper.asResultDto(attenderState);
-    }
-
-    @Transactional
-    public List<Result> getAttenderStates() {
-        List<AttenderState> attenderStates = attenderStateRepository.findAll();
-        return attenderStates.stream()
-            .map(dtoMapper::asResultDto)
-            .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public void submitAttenderState(Long id) {
+    public void submit(Long id) {
         AttenderState attenderState = attenderStateRepository.findById(id).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                 "AttenderState id was not found"));

@@ -1,7 +1,5 @@
 package kr.pullgo.pullgoserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.mapper.AcademyDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
@@ -19,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class AcademyService {
+public class AcademyService extends
+    BaseCrudService<Academy, Long, AcademyDto.Create, AcademyDto.Update, AcademyDto.Result> {
 
     private final AcademyDtoMapper dtoMapper;
     private final AcademyRepository academyRepository;
@@ -27,54 +26,34 @@ public class AcademyService {
     private final StudentRepository studentRepository;
 
     @Autowired
-    public AcademyService(AcademyDtoMapper academyDtoMapper,
+    public AcademyService(AcademyDtoMapper dtoMapper,
         AcademyRepository academyRepository,
         TeacherRepository teacherRepository,
         StudentRepository studentRepository) {
-        this.dtoMapper = academyDtoMapper;
+        super(Academy.class, dtoMapper, academyRepository);
+        this.dtoMapper = dtoMapper;
         this.academyRepository = academyRepository;
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
     }
 
-    @Transactional
-    public AcademyDto.Result createAcademy(AcademyDto.Create dto) {
-        Academy academy = academyRepository.save(dtoMapper.asEntity(dto));
-        return dtoMapper.asResultDto(academy);
+    @Override
+    Academy createOnDB(AcademyDto.Create dto) {
+        return academyRepository.save(dtoMapper.asEntity(dto));
     }
 
-    @Transactional
-    public AcademyDto.Result updateAcademy(Long id, AcademyDto.Update dto) {
-        Academy academy = academyRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
-        if (dto.getName() != null) { academy.setName(dto.getName()); }
-        if (dto.getPhone() != null) { academy.setPhone(dto.getPhone()); }
-        if (dto.getAddress() != null) { academy.setAddress(dto.getAddress()); }
-        academy = academyRepository.save(academy);
-        return dtoMapper.asResultDto(academy);
-    }
-
-    @Transactional
-    public void deleteAcademy(Long id) {
-        int deleteResult = academyRepository.removeById(id);
-        if (deleteResult == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found");
+    @Override
+    Academy updateOnDB(Academy entity, AcademyDto.Update dto) {
+        if (dto.getName() != null) {
+            entity.setName(dto.getName());
         }
-    }
-
-    @Transactional
-    public AcademyDto.Result getAcademy(Long id) {
-        Academy academy = academyRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
-        return dtoMapper.asResultDto(academy);
-    }
-
-    @Transactional
-    public List<AcademyDto.Result> getAcademies() {
-        List<Academy> academies = academyRepository.findAll();
-        return academies.stream()
-            .map(dtoMapper::asResultDto)
-            .collect(Collectors.toList());
+        if (dto.getPhone() != null) {
+            entity.setPhone(dto.getPhone());
+        }
+        if (dto.getAddress() != null) {
+            entity.setAddress(dto.getAddress());
+        }
+        return academyRepository.save(entity);
     }
 
     @Transactional

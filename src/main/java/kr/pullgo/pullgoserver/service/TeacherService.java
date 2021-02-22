@@ -1,7 +1,5 @@
 package kr.pullgo.pullgoserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
@@ -22,7 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class TeacherService {
+public class TeacherService extends
+    BaseCrudService<Teacher, Long, TeacherDto.Create, TeacherDto.Update, TeacherDto.Result> {
 
     private final TeacherDtoMapper dtoMapper;
     private final TeacherRepository teacherRepository;
@@ -34,25 +33,22 @@ public class TeacherService {
         TeacherRepository teacherRepository,
         AcademyRepository academyRepository,
         ClassroomRepository classroomRepository) {
+        super(Teacher.class, dtoMapper, teacherRepository);
         this.dtoMapper = dtoMapper;
         this.teacherRepository = teacherRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
     }
 
-    @Transactional
-    public TeacherDto.Result createTeacher(TeacherDto.Create dto) {
-        Teacher teacher = teacherRepository.save(dtoMapper.asEntity(dto));
-        return dtoMapper.asResultDto(teacher);
+    @Override
+    Teacher createOnDB(TeacherDto.Create dto) {
+        return teacherRepository.save(dtoMapper.asEntity(dto));
     }
 
-    @Transactional
-    public TeacherDto.Result updateTeacher(Long id, TeacherDto.Update dto) {
-        Teacher teacher = teacherRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found"));
-
+    @Override
+    Teacher updateOnDB(Teacher entity, TeacherDto.Update dto) {
         AccountDto.Update dtoAccount = dto.getAccount();
-        Account entityAccount = teacher.getAccount();
+        Account entityAccount = entity.getAccount();
         if (dtoAccount != null) {
             if (dtoAccount.getPassword() != null) {
                 entityAccount.setPassword(dtoAccount.getPassword());
@@ -60,33 +56,11 @@ public class TeacherService {
             if (dtoAccount.getFullName() != null) {
                 entityAccount.setFullName(dtoAccount.getFullName());
             }
-            if (dtoAccount.getPhone() != null) { entityAccount.setPhone(dtoAccount.getPhone()); }
+            if (dtoAccount.getPhone() != null) {
+                entityAccount.setPhone(dtoAccount.getPhone());
+            }
         }
-        teacher = teacherRepository.save(teacher);
-        return dtoMapper.asResultDto(teacher);
-    }
-
-    @Transactional
-    public void deleteTeacher(Long id) {
-        int deleteResult = teacherRepository.removeById(id);
-        if (deleteResult == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found");
-        }
-    }
-
-    @Transactional
-    public TeacherDto.Result getTeacher(Long id) {
-        Teacher teacher = teacherRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found"));
-        return dtoMapper.asResultDto(teacher);
-    }
-
-    @Transactional
-    public List<TeacherDto.Result> getTeachers() {
-        List<Teacher> teachers = teacherRepository.findAll();
-        return teachers.stream()
-            .map(dtoMapper::asResultDto)
-            .collect(Collectors.toList());
+        return teacherRepository.save(entity);
     }
 
     @Transactional

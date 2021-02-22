@@ -1,7 +1,5 @@
 package kr.pullgo.pullgoserver.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
@@ -13,7 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class ExamService {
+public class ExamService extends
+    BaseCrudService<Exam, Long, ExamDto.Create, ExamDto.Update, ExamDto.Result> {
 
     private final ExamDtoMapper dtoMapper;
     private final ExamRepository examRepository;
@@ -21,51 +20,34 @@ public class ExamService {
     @Autowired
     public ExamService(ExamDtoMapper dtoMapper,
         ExamRepository examRepository) {
+        super(Exam.class, dtoMapper, examRepository);
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
     }
 
-    @Transactional
-    public ExamDto.Result createExam(ExamDto.Create dto) {
-        Exam exam = examRepository.save(dtoMapper.asEntity(dto));
-        return dtoMapper.asResultDto(exam);
+    @Override
+    Exam createOnDB(ExamDto.Create dto) {
+        return examRepository.save(dtoMapper.asEntity(dto));
     }
 
-    @Transactional
-    public ExamDto.Result updateExam(Long id, ExamDto.Update dto) {
-        Exam exam = examRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam id was not found"));
-        if (dto.getName() != null) { exam.setName(dto.getName()); }
-        if (dto.getBeginDateTime() != null) { exam.setBeginDateTime(dto.getBeginDateTime()); }
-        if (dto.getEndDateTime() != null) { exam.setEndDateTime(dto.getEndDateTime()); }
-        if (dto.getTimeLimit() != null) { exam.setTimeLimit(dto.getTimeLimit()); }
-        if (dto.getPassScore() != null) { exam.setPassScore(dto.getPassScore()); }
-
-        exam = examRepository.save(exam);
-        return dtoMapper.asResultDto(exam);
-    }
-
-    @Transactional
-    public void deleteExam(Long id) {
-        int deleteResult = examRepository.removeById(id);
-        if (deleteResult == 0) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam id was not found");
+    @Override
+    Exam updateOnDB(Exam entity, ExamDto.Update dto) {
+        if (dto.getName() != null) {
+            entity.setName(dto.getName());
         }
-    }
-
-    @Transactional
-    public ExamDto.Result getExam(Long id) {
-        Exam exam = examRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam id was not found"));
-        return dtoMapper.asResultDto(exam);
-    }
-
-    @Transactional
-    public List<ExamDto.Result> getExams() {
-        List<Exam> exams = examRepository.findAll();
-        return exams.stream()
-            .map(dtoMapper::asResultDto)
-            .collect(Collectors.toList());
+        if (dto.getBeginDateTime() != null) {
+            entity.setBeginDateTime(dto.getBeginDateTime());
+        }
+        if (dto.getEndDateTime() != null) {
+            entity.setEndDateTime(dto.getEndDateTime());
+        }
+        if (dto.getTimeLimit() != null) {
+            entity.setTimeLimit(dto.getTimeLimit());
+        }
+        if (dto.getPassScore() != null) {
+            entity.setPassScore(dto.getPassScore());
+        }
+        return examRepository.save(entity);
     }
 
     @Transactional

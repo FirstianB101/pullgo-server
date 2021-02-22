@@ -28,34 +28,34 @@ public class AttenderStateController {
     @PostMapping("/exam/attender-state")
     @ResponseStatus(HttpStatus.CREATED)
     public AttenderStateDto.Result post(@RequestBody AttenderStateDto.Create dto) {
-        return attenderStateService.createAttenderState(dto);
+        return attenderStateService.create(dto);
     }
 
     @GetMapping("/exam/attender-state")
     public List<AttenderStateDto.Result> list() {
-        return attenderStateService.getAttenderStates();
+        return attenderStateService.search();
     }
 
     @GetMapping("/exam/attender-state/{id}")
     public AttenderStateDto.Result get(@PathVariable Long id) {
-        return attenderStateService.getAttenderState(id);
+        return attenderStateService.read(id);
     }
 
     @DeleteMapping("/exam/attender-state/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        attenderStateService.deleteAttenderState(id);
+        attenderStateService.delete(id);
     }
 
     @PatchMapping("/exam/attender-state/{id}")
     public AttenderStateDto.Result patch(@PathVariable Long id,
         @RequestBody AttenderStateDto.Update dto) {
-        return attenderStateService.updateAttenderState(id, dto);
+        return attenderStateService.update(id, dto);
     }
 
     @PostMapping("/exam/attender-state/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void submit(@PathVariable Long id) {
-        attenderStateService.submitAttenderState(id);
+        attenderStateService.submit(id);
     }
 }
