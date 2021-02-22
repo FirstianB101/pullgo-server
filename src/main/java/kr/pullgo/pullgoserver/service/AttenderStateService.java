@@ -8,11 +8,10 @@ import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
+import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AttenderStateService extends
@@ -38,11 +37,9 @@ public class AttenderStateService extends
     AttenderState createOnDB(AttenderStateDto.Create dto) {
         AttenderState attenderState = new AttenderState();
         Student dtoAttender = studentRepository.findById(dto.getAttenderId())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "Student id was not found"));
+            .orElseThrow(ResponseStatusExceptions::studentNotFound);
         Exam dtoExam = examRepository.findById(dto.getExamId())
-            .orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam id was not found"));
+            .orElseThrow(ResponseStatusExceptions::examNotFound);
 
         attenderState.setAttender(dtoAttender);
         attenderState.setExam(dtoExam);
@@ -63,9 +60,8 @@ public class AttenderStateService extends
 
     @Transactional
     public void submit(Long id) {
-        AttenderState attenderState = attenderStateRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                "AttenderState id was not found"));
+        AttenderState attenderState = attenderStateRepository.findById(id)
+            .orElseThrow(ResponseStatusExceptions::attenderStateNotFound);
         attenderState.setSubmitted(true);
     }
 }

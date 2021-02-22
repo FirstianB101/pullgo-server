@@ -10,6 +10,7 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -58,11 +59,11 @@ public class AcademyService extends
 
     @Transactional
     public void acceptTeacher(Long academyId, AcademyDto.AcceptTeacher dto) {
-        Academy academy = academyRepository.findById(academyId).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
+        Academy academy = academyRepository.findById(academyId)
+            .orElseThrow(ResponseStatusExceptions::academyNotFound);
 
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId()).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found"));
+        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
 
         try {
             academy.acceptTeacher(teacher);
@@ -73,11 +74,11 @@ public class AcademyService extends
 
     @Transactional
     public void kickTeacher(Long academyId, AcademyDto.KickTeacher dto) {
-        Academy academy = academyRepository.findById(academyId).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
+        Academy academy = academyRepository.findById(academyId)
+            .orElseThrow(ResponseStatusExceptions::academyNotFound);
 
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId()).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Teacher id was not found"));
+        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
 
         try {
             academy.removeTeacher(teacher);
@@ -88,11 +89,11 @@ public class AcademyService extends
 
     @Transactional
     public void acceptStudent(Long academyId, AcademyDto.AcceptStudent dto) {
-        Academy academy = academyRepository.findById(academyId).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
+        Academy academy = academyRepository.findById(academyId)
+            .orElseThrow(ResponseStatusExceptions::academyNotFound);
 
-        Student student = studentRepository.findById(dto.getStudentId()).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found"));
+        Student student = studentRepository.findById(dto.getStudentId())
+            .orElseThrow(ResponseStatusExceptions::studentNotFound);
 
         try {
             academy.acceptStudent(student);
@@ -103,11 +104,11 @@ public class AcademyService extends
 
     @Transactional
     public void kickStudent(Long academyId, AcademyDto.KickStudent dto) {
-        Academy academy = academyRepository.findById(academyId).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Academy id was not found"));
+        Academy academy = academyRepository.findById(academyId)
+            .orElseThrow(ResponseStatusExceptions::academyNotFound);
 
-        Student student = studentRepository.findById(dto.getStudentId()).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student id was not found"));
+        Student student = studentRepository.findById(dto.getStudentId())
+            .orElseThrow(ResponseStatusExceptions::studentNotFound);
 
         try {
             academy.removeStudent(student);

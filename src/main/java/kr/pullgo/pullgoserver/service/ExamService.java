@@ -4,11 +4,10 @@ import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
+import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ExamService extends
@@ -52,15 +51,15 @@ public class ExamService extends
 
     @Transactional
     public void cancelExam(Long id) {
-        Exam exam = examRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam id was not found"));
+        Exam exam = examRepository.findById(id)
+            .orElseThrow(ResponseStatusExceptions::examNotFound);
         exam.setCancelled(true);
     }
 
     @Transactional
     public void finishExam(Long id) {
-        Exam exam = examRepository.findById(id).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam id was not found"));
+        Exam exam = examRepository.findById(id)
+            .orElseThrow(ResponseStatusExceptions::examNotFound);
         exam.setFinished(true);
     }
 }
