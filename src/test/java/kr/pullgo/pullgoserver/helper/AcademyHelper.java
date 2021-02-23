@@ -51,9 +51,21 @@ public class AcademyHelper {
         return academy;
     }
 
+    public static AcceptTeacher acceptTeacherDto() {
+        return AcceptTeacher.builder()
+            .teacherId(0L)
+            .build();
+    }
+
     public static AcceptTeacher acceptTeacherDtoWithTeacherId(Long teacherId) {
         return AcceptTeacher.builder()
             .teacherId(teacherId)
+            .build();
+    }
+
+    public static KickTeacher kickTeacherDto() {
+        return KickTeacher.builder()
+            .teacherId(0L)
             .build();
     }
 
@@ -63,9 +75,21 @@ public class AcademyHelper {
             .build();
     }
 
+    public static AcceptStudent acceptStudentDto() {
+        return AcceptStudent.builder()
+            .studentId(0L)
+            .build();
+    }
+
     public static AcceptStudent acceptStudentDtoWithStudentId(Long studentId) {
         return AcceptStudent.builder()
             .studentId(studentId)
+            .build();
+    }
+
+    public static KickStudent kickStudentDto() {
+        return KickStudent.builder()
+            .studentId(0L)
             .build();
     }
 
