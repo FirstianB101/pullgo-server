@@ -2,8 +2,6 @@ package kr.pullgo.pullgoserver.dto.mapper;
 
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -12,7 +10,6 @@ import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
-import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,7 +30,7 @@ class ExamDtoMapperTest {
         // When
         ExamDto.Create dto = ExamDto.Create.builder()
             .classroomId(0L)
-            .creator(teacherCreateDto())
+            .creatorId(1L)
             .name("test name")
             .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
             .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
@@ -55,9 +52,6 @@ class ExamDtoMapperTest {
 
     @Test
     void asResultDto() {
-        // Given
-        given(teacherDtoMapper.asResultDto(any(Teacher.class)))
-            .willReturn(teacherResultDtoWithId(2L));
 
         // When
         Exam entity = Exam.builder()
@@ -78,7 +72,7 @@ class ExamDtoMapperTest {
         // Then
         assertThat(dto.getId()).isEqualTo(0L);
         assertThat(dto.getClassroomId()).isEqualTo(1L);
-        assertThat(dto.getCreator().getId()).isEqualTo(2L);
+        assertThat(dto.getCreatorId()).isEqualTo(2L);
         assertThat(dto.getName()).isEqualTo("test name");
         assertThat(dto.getBeginDateTime())
             .isEqualTo(LocalDateTime.of(2021, 1, 28, 0, 0));
