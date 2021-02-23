@@ -1,9 +1,9 @@
 package kr.pullgo.pullgoserver.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.sun.istack.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 public interface StudentDto {
@@ -60,12 +60,12 @@ public interface StudentDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     class ApplyAcademy {
 
         @NonNull
         private Long academyId;
 
-        @JsonCreator
         public ApplyAcademy(@NonNull Long academyId) {
             this.academyId = academyId;
         }
@@ -73,12 +73,12 @@ public interface StudentDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     class RemoveAppliedAcademy {
 
         @NonNull
         private Long academyId;
 
-        @JsonCreator
         public RemoveAppliedAcademy(@NonNull Long academyId) {
             this.academyId = academyId;
         }
@@ -86,12 +86,12 @@ public interface StudentDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     class ApplyClassroom {
 
         @NonNull
         private Long classroomId;
 
-        @JsonCreator
         public ApplyClassroom(@NonNull Long classroomId) {
             this.classroomId = classroomId;
         }
@@ -99,12 +99,12 @@ public interface StudentDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     class RemoveAppliedClassroom {
 
         @NonNull
         private Long classroomId;
 
-        @JsonCreator
         public RemoveAppliedClassroom(@NonNull Long classroomId) {
             this.classroomId = classroomId;
         }
