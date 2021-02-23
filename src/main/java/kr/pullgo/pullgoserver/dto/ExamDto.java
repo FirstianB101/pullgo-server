@@ -16,7 +16,7 @@ public interface ExamDto {
         private Long classroomId;
 
         @NonNull
-        private TeacherDto.Create creator;
+        private Long creatorId;
 
         @NonNull
         private String name;
@@ -59,7 +59,7 @@ public interface ExamDto {
         private Long classroomId;
 
         @NonNull
-        private TeacherDto.Result creator;
+        private Long creatorId;
 
         @NonNull
         private String name;
