@@ -40,7 +40,7 @@ public class TeacherController {
         return teacherService.read(id);
     }
 
-    @DeleteMapping("/teacher/{id}")
+    @DeleteMapping("/teachers/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         teacherService.delete(id);
