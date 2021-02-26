@@ -5,7 +5,7 @@ import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
-import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyEnrolledException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
@@ -75,8 +75,8 @@ public class TeacherService extends
 
         try {
             teacher.applyAcademy(academy);
-        } catch (TeacherNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enrolled teacher");
+        } catch (TeacherAlreadyEnrolledException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already enrolled teacher");
         }
     }
 
@@ -108,8 +108,8 @@ public class TeacherService extends
 
         try {
             teacher.applyClassroom(classroom);
-        } catch (TeacherNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enrolled teacher");
+        } catch (TeacherAlreadyEnrolledException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already enrolled teacher");
         }
     }
 
