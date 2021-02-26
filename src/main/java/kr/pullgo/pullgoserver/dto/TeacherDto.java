@@ -9,17 +9,27 @@ public interface TeacherDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     class Create {
 
         @NonNull
         private AccountDto.Create account;
+
+        public Create(@NonNull AccountDto.Create account) {
+            this.account = account;
+        }
     }
 
     @Data
     @Builder
+    @NoArgsConstructor
     class Update {
 
         private AccountDto.Update account;
+
+        public Update(AccountDto.Update account) {
+            this.account = account;
+        }
     }
 
     @Data
