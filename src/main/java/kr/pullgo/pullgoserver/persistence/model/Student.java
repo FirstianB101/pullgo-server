@@ -33,7 +33,7 @@ public class Student extends TimeEntity {
     private Long id;
 
     @NotNull
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @ToString.Exclude
     private Account account;
 
