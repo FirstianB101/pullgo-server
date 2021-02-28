@@ -20,9 +20,14 @@ public interface ClassroomDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     class Update {
 
         private String name;
+
+        public Update(String name) {
+            this.name = name;
+        }
     }
 
     @Data
