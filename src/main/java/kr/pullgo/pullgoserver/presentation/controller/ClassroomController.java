@@ -64,13 +64,13 @@ public class ClassroomController {
     }
 
 
-    @PostMapping("/classrooms/{id}/accept-student")
+    @PostMapping("/academy/classrooms/{id}/accept-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void acceptStudent(@PathVariable Long id, @RequestBody ClassroomDto.AcceptStudent dto) {
         classroomService.acceptStudent(id, dto);
     }
 
-    @PostMapping("/classrooms/{id}/kick-student")
+    @PostMapping("/academy/classrooms/{id}/kick-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void kickStudent(@PathVariable Long id, @RequestBody ClassroomDto.KickStudent dto) {
         classroomService.kickStudent(id, dto);
