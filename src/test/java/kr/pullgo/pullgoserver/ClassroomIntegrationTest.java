@@ -57,26 +57,42 @@ public class ClassroomIntegrationTest {
     @Autowired
     private StudentRepository studentRepository;
 
-    @Test
-    void getClassroom() throws Exception {
-        // Given
-        Classroom classroom = classroomRepository.save(Classroom.builder()
-            .name("test name")
-            .build());
+    @Nested
+    class GetClassroom {
 
-        Academy academy = createAndSaveAcademy();
-        classroom.setAcademy(academy);
-        classroomRepository.save(classroom);
+        @Test
+        void getClassroom() throws Exception {
+            // Given
+            Classroom classroom = classroomRepository.save(Classroom.builder()
+                .name("test name")
+                .build());
 
-        // When
-        ResultActions actions = mockMvc.perform(get("/academy/classrooms/{id}", classroom.getId()));
+            Academy academy = createAndSaveAcademy();
+            classroom.setAcademy(academy);
+            classroomRepository.save(classroom);
 
-        // Then
-        actions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(classroom.getId()))
-            .andExpect(jsonPath("$.name").value("test name"))
-            .andExpect(jsonPath("$.academyId").value(academy.getId()));
+            // When
+            ResultActions actions = mockMvc
+                .perform(get("/academy/classrooms/{id}", classroom.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(classroom.getId()))
+                .andExpect(jsonPath("$.name").value("test name"))
+                .andExpect(jsonPath("$.academyId").value(academy.getId()));
+        }
+
+        @Test
+        void getClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classrooms/{id}", 0L));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
     }
 
     @Test
