@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -68,8 +67,7 @@ public class TeacherIntegrationTest {
         teacherRepository.save(teacher);
 
         // When
-        ResultActions actions = mockMvc.perform(get("/teachers/{id}", teacher.getId()))
-            .andDo(print());
+        ResultActions actions = mockMvc.perform(get("/teachers/{id}", teacher.getId()));
 
         // Then
         actions
@@ -96,8 +94,7 @@ public class TeacherIntegrationTest {
 
         ResultActions actions = mockMvc.perform(post("/teachers")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(body))
-            .andDo(print());
+            .content(body));
 
         // Then
         actions
@@ -137,8 +134,7 @@ public class TeacherIntegrationTest {
 
             ResultActions actions = mockMvc.perform(patch("/teachers/{id}", teacher.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
-                .andDo(print());
+                .content(body));
 
             // Then
             actions
@@ -157,8 +153,7 @@ public class TeacherIntegrationTest {
 
             ResultActions actions = mockMvc.perform(patch("/teachers/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
-                .andDo(print());
+                .content(body));
 
             // Then
             actions
@@ -176,8 +171,7 @@ public class TeacherIntegrationTest {
             Teacher teacher = createAndSaveTeacher();
 
             // When
-            ResultActions actions = mockMvc.perform(delete("/teachers/{id}", teacher.getId()))
-                .andDo(print());
+            ResultActions actions = mockMvc.perform(delete("/teachers/{id}", teacher.getId()));
 
             // Then
             actions
@@ -190,8 +184,7 @@ public class TeacherIntegrationTest {
         @Test
         void deleteTeacher_TeacherNotFound_NotFound_Status() throws Exception {
             // When
-            ResultActions actions = mockMvc.perform(delete("/teachers/{id}", 0L))
-                .andDo(print());
+            ResultActions actions = mockMvc.perform(delete("/teachers/{id}", 0L));
 
             // Then
             actions
@@ -215,8 +208,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -232,8 +224,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -251,8 +242,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -275,8 +265,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -303,8 +292,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -320,8 +308,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -339,8 +326,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -359,8 +345,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -384,8 +369,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -401,8 +385,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -420,8 +403,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -444,8 +426,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -472,8 +453,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -489,8 +469,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -508,8 +487,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -528,8 +506,7 @@ public class TeacherIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", teacher.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
