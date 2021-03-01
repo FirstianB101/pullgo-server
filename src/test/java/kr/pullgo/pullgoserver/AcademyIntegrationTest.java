@@ -114,7 +114,7 @@ public class AcademyIntegrationTest {
         // Then
         actions
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").exists())
+            .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.name").value("Test academy"))
             .andExpect(jsonPath("$.phone").value("01012345678"))
             .andExpect(jsonPath("$.address").value("Seoul"));
