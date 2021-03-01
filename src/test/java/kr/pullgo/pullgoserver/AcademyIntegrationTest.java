@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,26 +61,40 @@ public class AcademyIntegrationTest {
     @Autowired
     private StudentRepository studentRepository;
 
-    @Test
-    void getAcademy() throws Exception {
-        // Given
-        Academy academy = academyRepository.save(Academy.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .build());
+    @Nested
+    class GetAcademy {
 
-        // When
-        ResultActions actions = mockMvc.perform(get("/academies/{id}", academy.getId()))
-            .andDo(print());
+        @Test
+        void getAcademy() throws Exception {
+            // Given
+            Academy academy = academyRepository.save(Academy.builder()
+                .name("Test academy")
+                .phone("01012345678")
+                .address("Seoul")
+                .build());
 
-        // Then
-        actions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(academy.getId()))
-            .andExpect(jsonPath("$.name").value("Test academy"))
-            .andExpect(jsonPath("$.phone").value("01012345678"))
-            .andExpect(jsonPath("$.address").value("Seoul"));
+            // When
+            ResultActions actions = mockMvc.perform(get("/academies/{id}", academy.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(academy.getId()))
+                .andExpect(jsonPath("$.name").value("Test academy"))
+                .andExpect(jsonPath("$.phone").value("01012345678"))
+                .andExpect(jsonPath("$.address").value("Seoul"));
+        }
+
+        @Test
+        void getAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
+            // When
+            ResultActions actions = mockMvc.perform(get("/academies/{id}", 0L));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
     }
 
     @Test
@@ -96,13 +109,12 @@ public class AcademyIntegrationTest {
 
         ResultActions actions = mockMvc.perform(post("/academies")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(body))
-            .andDo(print());
+            .content(body));
 
         // Then
         actions
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").exists())
+            .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.name").value("Test academy"))
             .andExpect(jsonPath("$.phone").value("01012345678"))
             .andExpect(jsonPath("$.address").value("Seoul"));
@@ -130,8 +142,7 @@ public class AcademyIntegrationTest {
 
             ResultActions actions = mockMvc.perform(patch("/academies/{id}", academy.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
-                .andDo(print());
+                .content(body));
 
             // Then
             actions
@@ -149,8 +160,7 @@ public class AcademyIntegrationTest {
 
             ResultActions actions = mockMvc.perform(patch("/academies/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
-                .andDo(print());
+                .content(body));
 
             // Then
             actions
@@ -168,12 +178,12 @@ public class AcademyIntegrationTest {
             Academy academy = createAndSaveAcademy();
 
             // When
-            ResultActions actions = mockMvc.perform(delete("/academies/{id}", academy.getId()))
-                .andDo(print());
+            ResultActions actions = mockMvc.perform(delete("/academies/{id}", academy.getId()));
 
             // Then
             actions
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(emptyString()));
 
             assertThat(academyRepository.findById(academy.getId())).isEmpty();
         }
@@ -181,8 +191,7 @@ public class AcademyIntegrationTest {
         @Test
         void deleteAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
             // When
-            ResultActions actions = mockMvc.perform(delete("/academies/{id}", 0))
-                .andDo(print());
+            ResultActions actions = mockMvc.perform(delete("/academies/{id}", 0));
 
             // Then
             actions
@@ -209,8 +218,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-teacher", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -226,8 +234,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-teacher", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -245,8 +252,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-teacher", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -265,8 +271,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-teacher", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -293,8 +298,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-teacher", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -310,8 +314,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-teacher", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -329,8 +332,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-teacher", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -349,8 +351,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-teacher", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -377,8 +378,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-student", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -394,8 +394,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-student", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -413,8 +412,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-student", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -433,8 +431,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/accept-student", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -462,8 +459,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-student", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -479,8 +475,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-student", 0L)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -498,8 +493,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-student", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
@@ -518,8 +512,7 @@ public class AcademyIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academies/{id}/kick-student", academy.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(body))
-                .andDo(print());
+                    .content(body));
 
             // Then
             actions
