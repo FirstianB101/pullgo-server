@@ -61,25 +61,40 @@ public class AcademyIntegrationTest {
     @Autowired
     private StudentRepository studentRepository;
 
-    @Test
-    void getAcademy() throws Exception {
-        // Given
-        Academy academy = academyRepository.save(Academy.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .build());
+    @Nested
+    class GetAcademy {
 
-        // When
-        ResultActions actions = mockMvc.perform(get("/academies/{id}", academy.getId()));
+        @Test
+        void getAcademy() throws Exception {
+            // Given
+            Academy academy = academyRepository.save(Academy.builder()
+                .name("Test academy")
+                .phone("01012345678")
+                .address("Seoul")
+                .build());
 
-        // Then
-        actions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(academy.getId()))
-            .andExpect(jsonPath("$.name").value("Test academy"))
-            .andExpect(jsonPath("$.phone").value("01012345678"))
-            .andExpect(jsonPath("$.address").value("Seoul"));
+            // When
+            ResultActions actions = mockMvc.perform(get("/academies/{id}", academy.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(academy.getId()))
+                .andExpect(jsonPath("$.name").value("Test academy"))
+                .andExpect(jsonPath("$.phone").value("01012345678"))
+                .andExpect(jsonPath("$.address").value("Seoul"));
+        }
+
+        @Test
+        void getAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
+            // When
+            ResultActions actions = mockMvc.perform(get("/academies/{id}", 0L));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
     }
 
     @Test
