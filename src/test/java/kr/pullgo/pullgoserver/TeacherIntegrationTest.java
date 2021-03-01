@@ -53,30 +53,45 @@ public class TeacherIntegrationTest {
     @Autowired
     private ClassroomRepository classroomRepository;
 
-    @Test
-    void getTeacher() throws Exception {
-        // Given
-        Teacher teacher = teacherRepository.save(new Teacher());
-        Account account = accountRepository.save(Account.builder()
-            .username("testusername")
-            .password("testpassword")
-            .fullName("Test FullName")
-            .phone("01012345678")
-            .build());
-        teacher.setAccount(account);
-        teacherRepository.save(teacher);
+    @Nested
+    class GetTeacher {
 
-        // When
-        ResultActions actions = mockMvc.perform(get("/teachers/{id}", teacher.getId()));
+        @Test
+        void getTeacher() throws Exception {
+            // Given
+            Teacher teacher = teacherRepository.save(new Teacher());
+            Account account = accountRepository.save(Account.builder()
+                .username("testusername")
+                .password("testpassword")
+                .fullName("Test FullName")
+                .phone("01012345678")
+                .build());
+            teacher.setAccount(account);
+            teacherRepository.save(teacher);
 
-        // Then
-        actions
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(teacher.getId()))
-            .andExpect(jsonPath("$.account.username").value("testusername"))
-            .andExpect(jsonPath("$.account.password").value("testpassword"))
-            .andExpect(jsonPath("$.account.fullName").value("Test FullName"))
-            .andExpect(jsonPath("$.account.phone").value("01012345678"));
+            // When
+            ResultActions actions = mockMvc.perform(get("/teachers/{id}", teacher.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(teacher.getId()))
+                .andExpect(jsonPath("$.account.username").value("testusername"))
+                .andExpect(jsonPath("$.account.password").value("testpassword"))
+                .andExpect(jsonPath("$.account.fullName").value("Test FullName"))
+                .andExpect(jsonPath("$.account.phone").value("01012345678"));
+        }
+
+        @Test
+        void getTeacher_TeacherNotFound_NotFoundStatus() throws Exception {
+            // When
+            ResultActions actions = mockMvc.perform(get("/teachers/{id}", 0L));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
     }
 
     @Test
