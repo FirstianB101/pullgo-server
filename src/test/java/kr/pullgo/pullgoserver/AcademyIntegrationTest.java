@@ -182,7 +182,8 @@ public class AcademyIntegrationTest {
 
             // Then
             actions
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(emptyString()));
 
             assertThat(academyRepository.findById(academy.getId())).isEmpty();
         }
