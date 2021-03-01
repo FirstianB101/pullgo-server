@@ -205,7 +205,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
-        void deleteStudent_StudentNotFound_NotFound_Status() throws Exception {
+        void deleteStudent_StudentNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/students/{id}", 0L));
 
