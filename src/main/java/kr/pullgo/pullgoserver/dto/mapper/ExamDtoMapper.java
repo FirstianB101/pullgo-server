@@ -14,6 +14,7 @@ public class ExamDtoMapper implements DtoMapper<Exam, ExamDto.Create, ExamDto.Re
             .beginDateTime(dto.getBeginDateTime())
             .endDateTime(dto.getEndDateTime())
             .timeLimit(dto.getTimeLimit())
+            .passScore(dto.getPassScore())
             .build();
     }
 
