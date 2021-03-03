@@ -2,8 +2,12 @@ package kr.pullgo.pullgoserver.service;
 
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
+import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
+import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
+import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,18 +19,31 @@ public class ExamService extends
 
     private final ExamDtoMapper dtoMapper;
     private final ExamRepository examRepository;
+    private final ClassroomRepository classroomRepository;
+    private final TeacherRepository teacherRepository;
 
     @Autowired
     public ExamService(ExamDtoMapper dtoMapper,
-        ExamRepository examRepository) {
+        ExamRepository examRepository,
+        ClassroomRepository classroomRepository,
+        TeacherRepository teacherRepository) {
         super(Exam.class, dtoMapper, examRepository);
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
+        this.classroomRepository = classroomRepository;
+        this.teacherRepository = teacherRepository;
     }
 
     @Override
     Exam createOnDB(ExamDto.Create dto) {
-        return examRepository.save(dtoMapper.asEntity(dto));
+        Exam exam = dtoMapper.asEntity(dto);
+        Teacher creator = teacherRepository.findById(dto.getCreatorId())
+            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+        Classroom classroom = classroomRepository.findById(dto.getClassroomId())
+            .orElseThrow(ResponseStatusExceptions::classroomNotFound);
+        classroom.addExam(exam);
+        exam.setCreator(creator);
+        return examRepository.save(exam);
     }
 
     @Override
