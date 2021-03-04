@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -87,6 +88,16 @@ class BaseCrudServiceTest {
 
         // Then
         verify(repository).findAll();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void searchBySpec() {
+        // When
+        service.search(Specification.where(null));
+
+        // Then
+        verify(repository).findAll(any(Specification.class));
     }
 
     @Test

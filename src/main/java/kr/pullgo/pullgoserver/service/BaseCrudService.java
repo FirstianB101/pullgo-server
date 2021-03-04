@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.mapper.DtoMapper;
 import kr.pullgo.pullgoserver.persistence.repository.BaseRepository;
 import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -82,8 +83,24 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
      */
     @Transactional
     public List<RESULT_DTO> search() {
-        List<E> academies = repository.findAll();
-        return academies.stream()
+        List<E> entities = repository.findAll();
+        return asResultDtoList(entities);
+    }
+
+    /**
+     * 리소스 목록을 읽어옵니다.
+     *
+     * @param spec 리소스를 읽어올 때 제한할 조건
+     * @return 읽어온 Entity를 매핑한 DTO 목록
+     */
+    @Transactional
+    public List<RESULT_DTO> search(Specification<E> spec) {
+        List<E> entities = repository.findAll(spec);
+        return asResultDtoList(entities);
+    }
+
+    private List<RESULT_DTO> asResultDtoList(List<E> entities) {
+        return entities.stream()
             .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());
     }
