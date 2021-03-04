@@ -63,13 +63,12 @@ public class LessonIntegrationTest {
                 .beginTime(stringToLocalTime("22:22:22"))
                 .endTime(stringToLocalTime("00:00:00"))
                 .build();
-            Classroom classroom = createAndSaveClassroom();
+            Classroom classroom = createClassroom();
 
             lesson.setSchedule(schedule);
             classroom.addLesson(lesson);
 
             classroomRepository.save(classroom);
-            lessonRepository.save(lesson);
 
             // When
             ResultActions actions = mockMvc
@@ -145,13 +144,12 @@ public class LessonIntegrationTest {
                 .beginTime(stringToLocalTime("22:22:22"))
                 .endTime(stringToLocalTime("00:00:00"))
                 .build();
-            Classroom classroom = createAndSaveClassroom();
+            Classroom classroom = createClassroom();
 
             lesson.setSchedule(schedule);
             classroom.addLesson(lesson);
 
             classroomRepository.save(classroom);
-            lessonRepository.save(lesson);
 
             // When
             LessonDto.Update dto = Update.builder()
@@ -241,11 +239,16 @@ public class LessonIntegrationTest {
         return LocalTime.parse(date);
     }
 
+    private Classroom createClassroom() {
+        return Classroom.builder()
+            .name("test classroom")
+            .build();
+    }
+
     private Classroom createAndSaveClassroom() {
-        return classroomRepository.save(
-            Classroom.builder()
-                .name("test classroom")
-                .build());
+        return classroomRepository.save(Classroom.builder()
+            .name("test classroom")
+            .build());
     }
 
     private Schedule createSchedule() {
@@ -262,11 +265,12 @@ public class LessonIntegrationTest {
             .build();
 
         Schedule schedule = createSchedule();
-        Classroom classroom = createAndSaveClassroom();
+        Classroom classroom = createClassroom();
         lesson.setSchedule(schedule);
         classroom.addLesson(lesson);
 
-        return lessonRepository.save(lesson);
+        classroomRepository.save(classroom);
+        return lesson;
     }
 
     private LessonDto.Update lessonUpdateDto() {
