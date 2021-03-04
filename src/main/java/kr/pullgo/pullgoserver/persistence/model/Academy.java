@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
@@ -39,6 +40,11 @@ public class Academy extends TimeEntity {
 
     @NotNull
     private String address;
+
+    @ToString.Exclude
+    @NotNull
+    @ManyToOne
+    private Teacher owner;
 
     @ToString.Exclude
     @NotNull

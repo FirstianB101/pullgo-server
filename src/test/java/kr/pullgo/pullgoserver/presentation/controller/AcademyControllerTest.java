@@ -53,6 +53,7 @@ class AcademyControllerTest {
             .name("Test academy")
             .phone("01012345678")
             .address("Seoul")
+            .ownerId(1L)
             .build();
 
         given(academyService.read(eq(0L)))
@@ -68,7 +69,8 @@ class AcademyControllerTest {
             .andExpect(jsonPath("$.id").value(0L))
             .andExpect(jsonPath("$.name").value("Test academy"))
             .andExpect(jsonPath("$.phone").value("01012345678"))
-            .andExpect(jsonPath("$.address").value("Seoul"));
+            .andExpect(jsonPath("$.address").value("Seoul"))
+            .andExpect(jsonPath("$.ownerId").value(1L));
     }
 
     @Test

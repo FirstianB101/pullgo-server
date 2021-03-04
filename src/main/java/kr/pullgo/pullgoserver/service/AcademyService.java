@@ -40,7 +40,13 @@ public class AcademyService extends
 
     @Override
     Academy createOnDB(AcademyDto.Create dto) {
-        return academyRepository.save(dtoMapper.asEntity(dto));
+        Academy academy = dtoMapper.asEntity(dto);
+
+        Teacher teacher = teacherRepository.findById(dto.getOwnerId())
+            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+        academy.setOwner(teacher);
+
+        return academyRepository.save(academy);
     }
 
     @Override
@@ -53,6 +59,11 @@ public class AcademyService extends
         }
         if (dto.getAddress() != null) {
             entity.setAddress(dto.getAddress());
+        }
+        if (dto.getOwnerId() != null) {
+            Teacher teacher = teacherRepository.findById(dto.getOwnerId())
+                .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+            entity.setOwner(teacher);
         }
         return academyRepository.save(entity);
     }

@@ -23,6 +23,7 @@ public class AcademyDtoMapper implements DtoMapper<Academy, AcademyDto.Create, A
             .name(academy.getName())
             .phone(academy.getPhone())
             .address(academy.getAddress())
+            .ownerId(academy.getOwner().getId())
             .build();
     }
 
