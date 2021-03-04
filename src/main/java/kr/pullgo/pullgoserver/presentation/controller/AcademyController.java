@@ -3,8 +3,11 @@ package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
+import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.service.AcademyService;
+import kr.pullgo.pullgoserver.service.spec.AcademySpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,8 +30,31 @@ public class AcademyController {
     }
 
     @GetMapping("/academies")
-    public List<AcademyDto.Result> list() {
-        return academyService.search();
+    public List<AcademyDto.Result> search(
+        @RequestParam(required = false) Long ownerId,
+        @RequestParam(required = false) Long studentId,
+        @RequestParam(required = false) Long applyingStudentId,
+        @RequestParam(required = false) Long teacherId,
+        @RequestParam(required = false) Long applyingTeacherId
+    ) {
+        Specification<Academy> spec = null;
+        if (ownerId != null) {
+            spec = AcademySpecs.ownerId(ownerId).and(spec);
+        }
+        if (studentId != null) {
+            spec = AcademySpecs.hasStudent(studentId).and(spec);
+        }
+        if (applyingStudentId != null) {
+            spec = AcademySpecs.hasApplyingStudent(applyingStudentId).and(spec);
+        }
+        if (teacherId != null) {
+            spec = AcademySpecs.hasTeacher(teacherId).and(spec);
+        }
+        if (applyingTeacherId != null) {
+            spec = AcademySpecs.hasApplyingTeacher(applyingTeacherId).and(spec);
+        }
+
+        return academyService.search(spec);
     }
 
     @GetMapping("/academies/{id}")
