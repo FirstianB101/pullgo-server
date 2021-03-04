@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import kr.pullgo.pullgoserver.dto.AcademyDto;
@@ -17,6 +18,7 @@ class AcademyDtoMapperTest {
             .name("test name")
             .phone("01012345678")
             .address("test address")
+            .ownerId(0L)
             .build();
 
         Academy entity = dtoMapper.asEntity(dto);
@@ -36,6 +38,7 @@ class AcademyDtoMapperTest {
             .address("test address")
             .build();
         entity.setId(0L);
+        entity.setOwner(teacherWithId(1L));
 
         AcademyDto.Result dto = dtoMapper.asResultDto(entity);
 
@@ -44,6 +47,7 @@ class AcademyDtoMapperTest {
         assertThat(dto.getName()).isEqualTo("test name");
         assertThat(dto.getPhone()).isEqualTo("01012345678");
         assertThat(dto.getAddress()).isEqualTo("test address");
+        assertThat(dto.getOwnerId()).isEqualTo(1L);
     }
 
 }

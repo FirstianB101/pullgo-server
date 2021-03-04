@@ -19,6 +19,9 @@ public interface AcademyDto {
 
         @NonNull
         private String address;
+
+        @NonNull
+        private Long ownerId;
     }
 
     @Data
@@ -30,6 +33,8 @@ public interface AcademyDto {
         private String phone;
 
         private String address;
+
+        private Long ownerId;
     }
 
     @Data
@@ -47,6 +52,9 @@ public interface AcademyDto {
 
         @NonNull
         private String address;
+
+        @NonNull
+        private Long ownerId;
     }
 
     @Data

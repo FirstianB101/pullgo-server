@@ -1,6 +1,8 @@
 package kr.pullgo.pullgoserver.service;
 
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyCreateDtoWithOwnerId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDtoWithOwnerId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyWithId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDtoWithStudentId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDtoWithTeacherId;
@@ -22,6 +24,7 @@ import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
+import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +47,9 @@ class AcademyServiceTest {
     @Mock
     private StudentRepository studentRepository;
 
+    @Mock
+    private AccountRepository accountRepository;
+
     private AcademyService academyService;
 
     @BeforeEach
@@ -62,10 +68,14 @@ class AcademyServiceTest {
                 .name("Test academy")
                 .phone("01012345678")
                 .address("Seoul")
+                .ownerId(0L)
                 .build();
 
             given(academyRepository.save(any()))
                 .will(i -> withId(i.getArgument(0), 0L));
+
+            given(teacherRepository.findById(0L))
+                .willReturn(Optional.of(teacherWithId(0L)));
 
             // When
             AcademyDto.Result result = academyService.create(dto);
@@ -75,6 +85,20 @@ class AcademyServiceTest {
             assertThat(result.getPhone()).isEqualTo("01012345678");
             assertThat(result.getAddress()).isEqualTo("Seoul");
         }
+
+        @Test
+        void createAcademy_InvalidOwnerId_ExceptionThrown() {
+            // Given
+            given(teacherRepository.findById(0L))
+                .willReturn(Optional.empty());
+
+            // When
+            AcademyDto.Create dto = academyCreateDtoWithOwnerId(0L);
+            Throwable thrown = catchThrowable(() -> academyService.create(dto));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+        }
     }
 
     @Nested
@@ -83,12 +107,15 @@ class AcademyServiceTest {
         @Test
         void updateAcademy() {
             // Given
+            Teacher owner = teacherWithId(1L);
+
             Academy entity = Academy.builder()
                 .name("Before")
                 .phone("01000000000")
                 .address("Zottopia")
                 .build();
             entity.setId(0L);
+            entity.setOwner(owner);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(entity));
@@ -96,11 +123,15 @@ class AcademyServiceTest {
             given(academyRepository.save(any()))
                 .will(i -> i.getArgument(0));
 
+            given(teacherRepository.findById(2L))
+                .willReturn(Optional.of(teacherWithId(2L)));
+
             // When
             AcademyDto.Update dto = AcademyDto.Update.builder()
                 .name("Test academy")
                 .phone("01012345678")
                 .address("Seoul")
+                .ownerId(2L)
                 .build();
 
             AcademyDto.Result result = academyService.update(0L, dto);
@@ -109,6 +140,7 @@ class AcademyServiceTest {
             assertThat(result.getName()).isEqualTo("Test academy");
             assertThat(result.getPhone()).isEqualTo("01012345678");
             assertThat(result.getAddress()).isEqualTo("Seoul");
+            assertThat(result.getOwnerId()).isEqualTo(2);
         }
 
         @Test
@@ -121,6 +153,31 @@ class AcademyServiceTest {
 
             // When
             Throwable thrown = catchThrowable(() -> academyService.update(1L, dto));
+
+            // Then
+            assertThat(thrown).isInstanceOf(ResponseStatusException.class);
+        }
+
+        @Test
+        void updateAcademy_InvalidOwnerId_ExceptionThrown() {
+            // Given
+            Academy entity = Academy.builder()
+                .name("Before")
+                .phone("01000000000")
+                .address("Zottopia")
+                .build();
+            entity.setId(0L);
+            entity.setOwner(teacherWithId(1L));
+
+            given(academyRepository.findById(0L))
+                .willReturn(Optional.of(entity));
+
+            given(teacherRepository.findById(2L))
+                .willReturn(Optional.empty());
+
+            // When
+            AcademyDto.Update dto = academyUpdateDtoWithOwnerId(2L);
+            Throwable thrown = catchThrowable(() -> academyService.update(0L, dto));
 
             // Then
             assertThat(thrown).isInstanceOf(ResponseStatusException.class);
@@ -169,6 +226,7 @@ class AcademyServiceTest {
                 .address("Seoul")
                 .build();
             entity.setId(0L);
+            entity.setOwner(teacherWithId(1L));
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(entity));
@@ -180,6 +238,7 @@ class AcademyServiceTest {
             assertThat(result.getName()).isEqualTo("Test academy");
             assertThat(result.getPhone()).isEqualTo("01012345678");
             assertThat(result.getAddress()).isEqualTo("Seoul");
+            assertThat(result.getOwnerId()).isEqualTo(1L);
         }
 
         @Test

@@ -1,6 +1,8 @@
 package kr.pullgo.pullgoserver;
 
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyCreateDtoWithOwnerId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDtoWithOwnerId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDto;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDtoWithStudentId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDto;
@@ -67,11 +69,15 @@ public class AcademyIntegrationTest {
         @Test
         void getAcademy() throws Exception {
             // Given
-            Academy academy = academyRepository.save(Academy.builder()
+            Teacher owner = createAndSaveTeacher();
+
+            Academy academy = Academy.builder()
                 .name("Test academy")
                 .phone("01012345678")
                 .address("Seoul")
-                .build());
+                .build();
+            academy.setOwner(owner);
+            academy = academyRepository.save(academy);
 
             // When
             ResultActions actions = mockMvc.perform(get("/academies/{id}", academy.getId()));
@@ -82,7 +88,8 @@ public class AcademyIntegrationTest {
                 .andExpect(jsonPath("$.id").value(academy.getId()))
                 .andExpect(jsonPath("$.name").value("Test academy"))
                 .andExpect(jsonPath("$.phone").value("01012345678"))
-                .andExpect(jsonPath("$.address").value("Seoul"));
+                .andExpect(jsonPath("$.address").value("Seoul"))
+                .andExpect(jsonPath("$.ownerId").value(owner.getId()));
         }
 
         @Test
@@ -97,27 +104,52 @@ public class AcademyIntegrationTest {
 
     }
 
-    @Test
-    void postAcademy() throws Exception {
-        // When
-        AcademyDto.Create dto = AcademyDto.Create.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .build();
-        String body = toJson(dto);
+    @Nested
+    class PostAcademy {
 
-        ResultActions actions = mockMvc.perform(post("/academies")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body));
+        @Test
+        void postAcademy() throws Exception {
+            // Given
+            Teacher creator = createAndSaveTeacher();
 
-        // Then
-        actions
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.name").value("Test academy"))
-            .andExpect(jsonPath("$.phone").value("01012345678"))
-            .andExpect(jsonPath("$.address").value("Seoul"));
+            // When
+            AcademyDto.Create dto = AcademyDto.Create.builder()
+                .name("Test academy")
+                .phone("01012345678")
+                .address("Seoul")
+                .ownerId(creator.getId())
+                .build();
+            String body = toJson(dto);
+
+            ResultActions actions = mockMvc.perform(post("/academies")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.name").value("Test academy"))
+                .andExpect(jsonPath("$.phone").value("01012345678"))
+                .andExpect(jsonPath("$.address").value("Seoul"))
+                .andExpect(jsonPath("$.ownerId").value(creator.getId()));
+        }
+
+        @Test
+        void postAcademy_InvalidOwner_NotFoundStatus() throws Exception {
+            // When
+            AcademyDto.Create dto = academyCreateDtoWithOwnerId(0L);
+            String body = toJson(dto);
+
+            ResultActions actions = mockMvc.perform(post("/academies")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
     }
 
     @Nested
@@ -126,17 +158,23 @@ public class AcademyIntegrationTest {
         @Test
         void patchAcademy() throws Exception {
             // Given
-            Academy academy = academyRepository.save(Academy.builder()
+            Teacher teacherA = createAndSaveTeacher();
+            Teacher teacherB = createAndSaveTeacher();
+
+            Academy academy = Academy.builder()
                 .name("Before academy")
                 .phone("01011112222")
                 .address("Busan")
-                .build());
+                .build();
+            academy.setOwner(teacherA);
+            academy = academyRepository.save(academy);
 
             // When
             AcademyDto.Update dto = AcademyDto.Update.builder()
                 .name("Test academy")
                 .phone("01012345678")
                 .address("Seoul")
+                .ownerId(teacherB.getId())
                 .build();
             String body = toJson(dto);
 
@@ -150,13 +188,28 @@ public class AcademyIntegrationTest {
                 .andExpect(jsonPath("$.id").value(academy.getId()))
                 .andExpect(jsonPath("$.name").value("Test academy"))
                 .andExpect(jsonPath("$.phone").value("01012345678"))
-                .andExpect(jsonPath("$.address").value("Seoul"));
+                .andExpect(jsonPath("$.address").value("Seoul"))
+                .andExpect(jsonPath("$.ownerId").value(teacherB.getId()));
         }
 
         @Test
         void patchAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(academyUpdateDto());
+
+            ResultActions actions = mockMvc.perform(patch("/academies/{id}", 0)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void patchAcademy_InvalidOwner_NotFoundStatus() throws Exception {
+            // When
+            String body = toJson(academyUpdateDtoWithOwnerId(0L));
 
             ResultActions actions = mockMvc.perform(patch("/academies/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -526,12 +579,14 @@ public class AcademyIntegrationTest {
     }
 
     private Academy createAndSaveAcademy() {
-        return academyRepository.save(
-            Academy.builder()
-                .name("Test academy")
-                .phone("01012345678")
-                .address("Seoul")
-                .build());
+        Teacher owner = createAndSaveTeacher();
+        Academy academy = Academy.builder()
+            .name("Test academy")
+            .phone("01012345678")
+            .address("Seoul")
+            .build();
+        academy.setOwner(owner);
+        return academyRepository.save(academy);
     }
 
     private Student createAndSaveStudent() {

@@ -1,5 +1,8 @@
 package kr.pullgo.pullgoserver.helper;
 
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
+
+import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.AcademyDto.AcceptStudent;
 import kr.pullgo.pullgoserver.dto.AcademyDto.AcceptTeacher;
 import kr.pullgo.pullgoserver.dto.AcademyDto.Create;
@@ -22,6 +25,7 @@ public class AcademyHelper {
             .name("Test academy")
             .phone("01012345678")
             .address("Seoul")
+            .ownerId(0L)
             .build();
     }
 
@@ -30,6 +34,25 @@ public class AcademyHelper {
             .name("Test academy")
             .phone("01012345678")
             .address("Seoul")
+            .ownerId(0L)
+            .build();
+    }
+
+    public static Create academyCreateDtoWithOwnerId(long ownerId) {
+        return AcademyDto.Create.builder()
+            .name("Test academy")
+            .phone("01012345678")
+            .address("Seoul")
+            .ownerId(ownerId)
+            .build();
+    }
+
+    public static Update academyUpdateDtoWithOwnerId(long ownerId) {
+        return AcademyDto.Update.builder()
+            .name("Test academy")
+            .phone("01012345678")
+            .address("Seoul")
+            .ownerId(ownerId)
             .build();
     }
 
@@ -38,6 +61,7 @@ public class AcademyHelper {
             .name("Test academy")
             .phone("01012345678")
             .address("Seoul")
+            .ownerId(0L)
             .build();
     }
 
@@ -48,6 +72,7 @@ public class AcademyHelper {
             .address("Seoul")
             .build();
         academy.setId(id);
+        academy.setOwner(teacherWithId(0L));
         return academy;
     }
 
