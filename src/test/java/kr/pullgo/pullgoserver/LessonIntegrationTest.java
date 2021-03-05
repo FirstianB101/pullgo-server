@@ -12,9 +12,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.LessonDto;
 import kr.pullgo.pullgoserver.dto.LessonDto.Update;
 import kr.pullgo.pullgoserver.dto.ScheduleDto;
@@ -23,6 +25,8 @@ import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
+import kr.pullgo.pullgoserver.util.H2DbCleaner;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +52,14 @@ public class LessonIntegrationTest {
 
     @Autowired
     private ClassroomRepository classroomRepository;
+
+    @Autowired
+    private DataSource dataSource;
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        H2DbCleaner.clean(dataSource);
+    }
 
     @Nested
     class GetLesson {
