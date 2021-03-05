@@ -12,9 +12,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.ExamDto.Update;
 import kr.pullgo.pullgoserver.persistence.model.Account;
@@ -32,6 +34,8 @@ import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.util.H2DbCleaner;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +73,14 @@ public class ExamIntegrationTest {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private DataSource dataSource;
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        H2DbCleaner.clean(dataSource);
+    }
 
     @Nested
     class GetExam {
