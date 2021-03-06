@@ -1,7 +1,9 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -132,6 +134,105 @@ public class ExamIntegrationTest {
             actions
                 .andExpect(status().isNotFound());
         }
+    }
+
+    @Nested
+    class SearchExams {
+
+        @Test
+        void listExams() throws Exception {
+            // Given
+            Exam examA = createAndSaveExam();
+            Exam examB = createAndSaveExam();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exams"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    examA.getId().intValue(),
+                    examB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchExamsByClassroomId() throws Exception {
+            // Given
+            Classroom classroom = createAndSaveClassroom();
+
+            Exam examA = createAndSaveExamWithClassroom(classroom);
+            Exam examB = createAndSaveExamWithClassroom(classroom);
+            createAndSaveExam();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exams")
+                .param("classroomId", classroom.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    examA.getId().intValue(),
+                    examB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchExamsByCreatorId() throws Exception {
+            // Given
+            Classroom classroom = createAndSaveClassroom();
+            Teacher creator = createAndSaveTeacher();
+
+            Exam examA = createAndSaveExamWithClassroomAndCreator(classroom, creator);
+            Exam examB = createAndSaveExamWithClassroomAndCreator(classroom, creator);
+            createAndSaveExam();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exams")
+                .param("creatorId", classroom.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    examA.getId().intValue(),
+                    examB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchExamsByStudentId() throws Exception {
+            // Given
+            Classroom classroom = createAndSaveClassroom();
+            Student student = createAndSaveStudent();
+
+            student.applyClassroom(classroom);
+            classroom.acceptStudent(student);
+            classroomRepository.save(classroom);
+
+            Exam examA = createAndSaveExamWithClassroom(classroom);
+            Exam examB = createAndSaveExamWithClassroom(classroom);
+            createAndSaveExam();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exams")
+                .param("studentId", student.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    examA.getId().intValue(),
+                    examB.getId().intValue()
+                )));
+        }
+
     }
 
     @Test
@@ -484,6 +585,45 @@ public class ExamIntegrationTest {
         classroom.addExam(exam);
 
         classroomRepository.save(classroom);
+        return examRepository.save(exam);
+    }
+
+    private Exam createAndSaveExamWithClassroom(Classroom classroom) {
+        Exam exam = Exam.builder()
+            .name("test name")
+            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
+            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
+            .timeLimit(stringToDuration("PT1H"))
+            .passScore(70)
+            .build();
+        Teacher creator = createAndSaveTeacher();
+        AttenderState attenderState = createAndSaveAttenderState();
+        Question question = createQuestion();
+
+        exam.setCreator(creator);
+        attenderState.setExam(exam);
+        exam.addQuestion(question);
+        classroom.addExam(exam);
+
+        return examRepository.save(exam);
+    }
+
+    private Exam createAndSaveExamWithClassroomAndCreator(Classroom classroom, Teacher creator) {
+        Exam exam = Exam.builder()
+            .name("test name")
+            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
+            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
+            .timeLimit(stringToDuration("PT1H"))
+            .passScore(70)
+            .build();
+        AttenderState attenderState = createAndSaveAttenderState();
+        Question question = createQuestion();
+
+        exam.setCreator(creator);
+        attenderState.setExam(exam);
+        exam.addQuestion(question);
+        classroom.addExam(exam);
+
         return examRepository.save(exam);
     }
 
