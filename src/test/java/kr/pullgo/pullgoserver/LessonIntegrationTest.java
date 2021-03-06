@@ -1,7 +1,9 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -20,11 +22,17 @@ import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.LessonDto;
 import kr.pullgo.pullgoserver.dto.LessonDto.Update;
 import kr.pullgo.pullgoserver.dto.ScheduleDto;
+import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
+import kr.pullgo.pullgoserver.persistence.model.Student;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
+import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
+import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
+import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -52,6 +60,15 @@ public class LessonIntegrationTest {
 
     @Autowired
     private ClassroomRepository classroomRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private TeacherRepository teacherRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
 
     @Autowired
     private DataSource dataSource;
@@ -105,6 +122,111 @@ public class LessonIntegrationTest {
             // Then
             actions
                 .andExpect(status().isNotFound());
+        }
+
+    }
+
+    @Nested
+    class SearchLessons {
+
+        @Test
+        void listLessons() throws Exception {
+            // Given
+            Lesson lessonA = createAndSaveLesson();
+            Lesson lessonB = createAndSaveLesson();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    lessonA.getId().intValue(),
+                    lessonB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchLessonsByClassroomId() throws Exception {
+            // Given
+            Classroom classroom = createAndSaveClassroom();
+
+            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
+            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
+            createAndSaveLesson();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
+                .param("classroomId", classroom.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    lessonA.getId().intValue(),
+                    lessonB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchLessonsByStudentId() throws Exception {
+            // Given
+            Classroom classroom = createAndSaveClassroom();
+
+            Student student = createAndSaveStudent();
+            student.applyClassroom(classroom);
+            classroom.acceptStudent(student);
+
+            classroomRepository.save(classroom);
+
+            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
+            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
+            createAndSaveLesson();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
+                .param("studentId", student.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    lessonA.getId().intValue(),
+                    lessonB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchLessonsByTeacherId() throws Exception {
+            // Given
+            Classroom classroom = createAndSaveClassroom();
+
+            Teacher teacher = createAndSaveTeacher();
+            teacher.applyClassroom(classroom);
+            classroom.acceptTeacher(teacher);
+
+            classroomRepository.save(classroom);
+
+            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
+            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
+            createAndSaveLesson();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
+                .param("teacherId", teacher.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    lessonA.getId().intValue(),
+                    lessonB.getId().intValue()
+                )));
         }
 
     }
@@ -283,6 +405,52 @@ public class LessonIntegrationTest {
 
         classroomRepository.save(classroom);
         return lesson;
+    }
+
+    private Lesson createAndSaveLessonWithClassroom(Classroom classroom) {
+        Lesson lesson = Lesson.builder()
+            .name("test lesson")
+            .build();
+
+        Schedule schedule = createSchedule();
+        lesson.setSchedule(schedule);
+        classroom.addLesson(lesson);
+
+        return lessonRepository.save(lesson);
+    }
+
+    private Student createAndSaveStudent() {
+        Account account = accountRepository.save(
+            Account.builder()
+                .username("JottsungE")
+                .fullName("Kim eun seong")
+                .password("mincho")
+                .build()
+        );
+        Student student = studentRepository.save(
+            Student.builder()
+                .parentPhone("01000000000")
+                .schoolName("asdf")
+                .schoolYear(1)
+                .build()
+        );
+        student.setAccount(account);
+        return student;
+    }
+
+    private Teacher createAndSaveTeacher() {
+        Account account = accountRepository.save(
+            Account.builder()
+                .username("JottsungE")
+                .fullName("Kim eun seong")
+                .password("mincho")
+                .build()
+        );
+        Teacher teacher = teacherRepository.save(
+            new Teacher()
+        );
+        teacher.setAccount(account);
+        return teacher;
     }
 
     private LessonDto.Update lessonUpdateDto() {
