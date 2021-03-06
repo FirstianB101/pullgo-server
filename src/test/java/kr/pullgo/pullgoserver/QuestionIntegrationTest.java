@@ -1,7 +1,9 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -104,6 +106,53 @@ public class QuestionIntegrationTest {
             // Then
             actions
                 .andExpect(status().isNotFound());
+        }
+
+    }
+
+    @Nested
+    class SearchQuestions {
+
+        @Test
+        void listQuestions() throws Exception {
+            // Given
+            Question questionA = createAndSaveQuestion();
+            Question questionB = createAndSaveQuestion();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/questions"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    questionA.getId().intValue(),
+                    questionB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchQuestionsByExamId() throws Exception {
+            // Given
+            Exam exam = createAndSaveExam();
+
+            Question questionA = createAndSaveQuestionWithExam(exam);
+            Question questionB = createAndSaveQuestionWithExam(exam);
+            createAndSaveQuestion();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/questions")
+                .param("examId", exam.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    questionA.getId().intValue(),
+                    questionB.getId().intValue()
+                )));
         }
 
     }
@@ -271,6 +320,17 @@ public class QuestionIntegrationTest {
         examRepository.save(exam);
 
         return question;
+    }
+
+    private Question createAndSaveQuestionWithExam(Exam exam) {
+        Question question = Question.builder()
+            .answer(new Answer(4, 5, 6))
+            .pictureUrl("Before url")
+            .content("Before contents")
+            .build();
+        exam.addQuestion(question);
+
+        return questionRepository.save(question);
     }
 
     private Update questionUpdateDto() {
