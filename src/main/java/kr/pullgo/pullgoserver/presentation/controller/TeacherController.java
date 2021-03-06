@@ -2,8 +2,11 @@ package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.service.TeacherService;
+import kr.pullgo.pullgoserver.service.spec.TeacherSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,8 +35,27 @@ public class TeacherController {
     }
 
     @GetMapping("/teachers")
-    public List<TeacherDto.Result> list() {
-        return teacherService.search();
+    public List<TeacherDto.Result> search(
+        @RequestParam(required = false) Long academyId,
+        @RequestParam(required = false) Long appliedAcademyId,
+        @RequestParam(required = false) Long classroomId,
+        @RequestParam(required = false) Long appliedClassroomId
+    ) {
+        Specification<Teacher> spec = null;
+        if (academyId != null) {
+            spec = TeacherSpecs.isEnrolledInAcademy(academyId).and(spec);
+        }
+        if (appliedAcademyId != null) {
+            spec = TeacherSpecs.hasAppliedToAcademy(appliedAcademyId).and(spec);
+        }
+        if (classroomId != null) {
+            spec = TeacherSpecs.isEnrolledInClassroom(classroomId).and(spec);
+        }
+        if (appliedClassroomId != null) {
+            spec = TeacherSpecs.hasAppliedToClassroom(appliedClassroomId).and(spec);
+        }
+
+        return teacherService.search(spec);
     }
 
     @GetMapping("teachers/{id}")
