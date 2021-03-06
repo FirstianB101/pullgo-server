@@ -1,7 +1,9 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -109,6 +111,144 @@ public class StudentIntegrationTest {
             // Then
             actions
                 .andExpect(status().isNotFound());
+        }
+
+    }
+
+    @Nested
+    class SearchStudents {
+
+        @Test
+        void listStudents() throws Exception {
+            // Given
+            Student studentA = createAndSaveStudent();
+            Student studentB = createAndSaveStudent();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/students"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    studentA.getId().intValue(),
+                    studentB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchStudentsByAcademyId() throws Exception {
+            // Given
+            Student studentA = createAndSaveStudent();
+            Student studentB = createAndSaveStudent();
+            createAndSaveStudent();
+
+            Academy academy = createAndSaveAcademy();
+            studentA.applyAcademy(academy);
+            studentB.applyAcademy(academy);
+            academy.acceptStudent(studentA);
+            academy.acceptStudent(studentB);
+
+            academyRepository.save(academy);
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/students")
+                .param("academyId", academy.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    studentA.getId().intValue(),
+                    studentB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchStudentsByAppliedAcademyId() throws Exception {
+            // Given
+            Student studentA = createAndSaveStudent();
+            Student studentB = createAndSaveStudent();
+            createAndSaveStudent();
+
+            Academy academy = createAndSaveAcademy();
+            studentA.applyAcademy(academy);
+            studentB.applyAcademy(academy);
+
+            studentRepository.save(studentA);
+            studentRepository.save(studentB);
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/students")
+                .param("appliedAcademyId", academy.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    studentA.getId().intValue(),
+                    studentB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchStudentsByClassroomId() throws Exception {
+            // Given
+            Student studentA = createAndSaveStudent();
+            Student studentB = createAndSaveStudent();
+            createAndSaveStudent();
+
+            Classroom classroom = createAndSaveClassroom();
+            studentA.applyClassroom(classroom);
+            studentB.applyClassroom(classroom);
+            classroom.acceptStudent(studentA);
+            classroom.acceptStudent(studentB);
+
+            classroomRepository.save(classroom);
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/students")
+                .param("classroomId", classroom.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    studentA.getId().intValue(),
+                    studentB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchStudentsByAppliedClassroomId() throws Exception {
+            // Given
+            Student studentA = createAndSaveStudent();
+            Student studentB = createAndSaveStudent();
+            createAndSaveStudent();
+
+            Classroom classroom = createAndSaveClassroom();
+            studentA.applyClassroom(classroom);
+            studentB.applyClassroom(classroom);
+
+            studentRepository.save(studentA);
+            studentRepository.save(studentB);
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/students")
+                .param("appliedClassroomId", classroom.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    studentA.getId().intValue(),
+                    studentB.getId().intValue()
+                )));
         }
 
     }
