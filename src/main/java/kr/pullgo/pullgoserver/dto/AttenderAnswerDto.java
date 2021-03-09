@@ -4,6 +4,7 @@ import java.util.Set;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 public interface AttenderAnswerDto {
@@ -24,9 +25,14 @@ public interface AttenderAnswerDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     class Update {
 
         private Set<Integer> answer;
+
+        public Update(Set<Integer> answer) {
+            this.answer = answer;
+        }
     }
 
     @Data
