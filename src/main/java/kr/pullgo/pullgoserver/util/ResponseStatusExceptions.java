@@ -4,6 +4,7 @@ import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
+import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,10 @@ public class ResponseStatusExceptions {
 
     public static ResponseStatusException examNotFound() {
         return notFound(Exam.class);
+    }
+
+    public static ResponseStatusException questionNotFound() {
+        return notFound(Question.class);
     }
 
     public static ResponseStatusException attenderStateNotFound() {
