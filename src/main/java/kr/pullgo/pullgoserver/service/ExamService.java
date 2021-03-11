@@ -68,15 +68,23 @@ public class ExamService extends
 
     @Transactional
     public void cancelExam(Long id) {
-        Exam exam = examRepository.findById(id)
-            .orElseThrow(ResponseStatusExceptions::examNotFound);
+        Exam exam = getOnGoingExam(id);
+
         exam.setCancelled(true);
     }
 
     @Transactional
     public void finishExam(Long id) {
+        Exam exam = getOnGoingExam(id);
+
+        exam.setFinished(true);
+    }
+
+    private Exam getOnGoingExam(Long id) {
         Exam exam = examRepository.findById(id)
             .orElseThrow(ResponseStatusExceptions::examNotFound);
-        exam.setFinished(true);
+        if (exam.isFinished()) { throw ResponseStatusExceptions.examAlreadyFinished(); }
+        if (exam.isCancelled()) { throw ResponseStatusExceptions.examAlreadyCanceled(); }
+        return exam;
     }
 }

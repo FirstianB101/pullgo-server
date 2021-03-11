@@ -298,6 +298,35 @@ public class ExamIntegrationTest {
                 .andExpect(status().isNotFound());
         }
 
+        @Test
+        void cancelExam_ExamAlreadyFinished_BadRequestStatus() throws Exception {
+            // Given
+            Exam exam = createAndSaveExam();
+            exam.setFinished(true);
+            examRepository.save(exam);
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/cancel", exam.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void cancelExam_ExamAlreadyCancelled_BadRequestStatus() throws Exception {
+            // Given
+            Exam exam = createAndSaveExam();
+            exam.setCancelled(true);
+            examRepository.save(exam);
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/cancel", exam.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
     }
 
     @Nested
@@ -332,6 +361,35 @@ public class ExamIntegrationTest {
                 .andExpect(status().isNotFound());
         }
 
+        @Test
+        void finishExam_ExamAlreadyCancelled_BadRequestStatus() throws Exception {
+            // Given
+            Exam exam = createAndSaveExam();
+            exam.setCancelled(true);
+            examRepository.save(exam);
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/finish", exam.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void finishExam_ExamAlreadyFinished_BadRequestStatus() throws Exception {
+            // Given
+            Exam exam = createAndSaveExam();
+            exam.setFinished(true);
+            examRepository.save(exam);
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/finish", exam.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
     }
 
     private Exam findExamById(Long id) {

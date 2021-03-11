@@ -32,12 +32,29 @@ public class ResponseStatusExceptions {
         return notFound(Exam.class);
     }
 
+    public static ResponseStatusException examAlreadyFinished() {
+        return badRequest(Exam.class, "exam already finished");
+    }
+
+    public static ResponseStatusException examAlreadyCanceled() {
+        return badRequest(Exam.class, "exam already canceled");
+    }
+
     public static ResponseStatusException questionNotFound() {
         return notFound(Question.class);
     }
 
     public static ResponseStatusException attenderStateNotFound() {
         return notFound(AttenderState.class);
+    }
+
+    public static ResponseStatusException badRequest(Class<?> resourceClass, String reason) {
+        return badRequest(reason + " at " + resourceClass.getName());
+    }
+
+    public static ResponseStatusException badRequest(String reasonWithResourceName) {
+        String reason = String.format("bad request by %s", reasonWithResourceName);
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, reason);
     }
 
     public static ResponseStatusException notFound(Class<?> resourceClass) {
@@ -48,4 +65,5 @@ public class ResponseStatusExceptions {
         String reason = String.format("%s id was not found", resourceName);
         return new ResponseStatusException(HttpStatus.NOT_FOUND, reason);
     }
+
 }
