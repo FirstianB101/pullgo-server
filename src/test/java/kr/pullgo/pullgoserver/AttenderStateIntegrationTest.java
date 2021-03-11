@@ -1,7 +1,9 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -107,6 +109,76 @@ public class AttenderStateIntegrationTest {
             // Then
             actions
                 .andExpect(status().isNotFound());
+        }
+
+    }
+
+    @Nested
+    class SearchAttenderStates {
+
+        @Test
+        void listAttenderStates() throws Exception {
+            // Given
+            AttenderState attenderStateA = createAndSaveAttenderState();
+            AttenderState attenderStateB = createAndSaveAttenderState();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/attender-states"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    attenderStateA.getId().intValue(),
+                    attenderStateB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchAttenderStatesByStudentId() throws Exception {
+            // Given
+            Student student = createAndSaveStudent();
+
+            AttenderState attenderStateA = createAndSaveAttenderStateWithAttender(student);
+            AttenderState attenderStateB = createAndSaveAttenderStateWithAttender(student);
+            createAndSaveAttenderState();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/attender-states")
+                .param("studentId", student.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    attenderStateA.getId().intValue(),
+                    attenderStateB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchAttenderStatesByExamId() throws Exception {
+            // Given
+            Exam exam = createAndSaveExam();
+
+            AttenderState attenderStateA = createAndSaveAttenderStateWithExam(exam);
+            AttenderState attenderStateB = createAndSaveAttenderStateWithExam(exam);
+            createAndSaveAttenderState();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/attender-states")
+                .param("examId", exam.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    attenderStateA.getId().intValue(),
+                    attenderStateB.getId().intValue()
+                )));
         }
 
     }
@@ -319,6 +391,28 @@ public class AttenderStateIntegrationTest {
         attenderState.setAttender(attender);
 
         examRepository.save(exam);
+        studentRepository.save(attender);
+        attenderStateRepository.save(attenderState);
+        return attenderState;
+    }
+
+    private AttenderState createAndSaveAttenderStateWithAttender(Student attender) {
+        Exam exam = createAndSaveExam();
+        AttenderState attenderState = new AttenderState();
+        attenderState.setExam(exam);
+        attenderState.setAttender(attender);
+
+        examRepository.save(exam);
+        attenderStateRepository.save(attenderState);
+        return attenderState;
+    }
+
+    private AttenderState createAndSaveAttenderStateWithExam(Exam exam) {
+        Student attender = createAndSaveStudent();
+        AttenderState attenderState = new AttenderState();
+        attenderState.setExam(exam);
+        attenderState.setAttender(attender);
+
         studentRepository.save(attender);
         attenderStateRepository.save(attenderState);
         return attenderState;
