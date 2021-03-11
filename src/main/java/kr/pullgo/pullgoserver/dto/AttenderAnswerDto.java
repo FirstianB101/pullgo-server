@@ -1,7 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
 import java.util.Set;
-import kr.pullgo.pullgoserver.persistence.model.Answer;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -49,6 +48,6 @@ public interface AttenderAnswerDto {
         private Long questionId;
 
         @NonNull
-        private Answer answer;
+        private Set<Integer> answer;
     }
 }

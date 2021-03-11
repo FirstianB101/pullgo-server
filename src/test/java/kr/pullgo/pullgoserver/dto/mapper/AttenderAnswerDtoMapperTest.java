@@ -45,7 +45,7 @@ public class AttenderAnswerDtoMapperTest {
         assertThat(dto.getId()).isEqualTo(0L);
         assertThat(dto.getAttenderStateId()).isEqualTo(1L);
         assertThat(dto.getQuestionId()).isEqualTo(2L);
-        assertThat(dto.getAnswer().getObjectiveNumbers()).containsOnly(1, 3);
+        assertThat(dto.getAnswer()).containsOnly(1, 3);
     }
 
     private AttenderState attenderStateWithId(Long id) {

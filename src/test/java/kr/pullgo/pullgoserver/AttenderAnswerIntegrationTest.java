@@ -76,9 +76,9 @@ public class AttenderAnswerIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(attenderAnswer.getId()))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[0]").value(1))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[1]").value(2))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[2]").value(3))
+                .andExpect(jsonPath("$.answer.[0]").value(1))
+                .andExpect(jsonPath("$.answer.[1]").value(2))
+                .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.questionId").value(question.getId()))
                 .andExpect(jsonPath("$.attenderStateId").value(attenderState.getId()));
         }
@@ -117,9 +117,9 @@ public class AttenderAnswerIntegrationTest {
         actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.answer.objectiveNumbers.[0]").value(1))
-            .andExpect(jsonPath("$.answer.objectiveNumbers.[1]").value(2))
-            .andExpect(jsonPath("$.answer.objectiveNumbers.[2]").value(3))
+            .andExpect(jsonPath("$.answer.[0]").value(1))
+            .andExpect(jsonPath("$.answer.[1]").value(2))
+            .andExpect(jsonPath("$.answer.[2]").value(3))
             .andExpect(jsonPath("$.attenderStateId").value(attenderState.getId()))
             .andExpect(jsonPath("$.questionId").value(question.getId()));
     }
@@ -156,9 +156,9 @@ public class AttenderAnswerIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[0]").value(1))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[1]").value(2))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[2]").value(3))
+                .andExpect(jsonPath("$.answer.[0]").value(1))
+                .andExpect(jsonPath("$.answer.[1]").value(2))
+                .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.attenderStateId").value(attenderState.getId()))
                 .andExpect(jsonPath("$.questionId").value(question.getId()));
 
