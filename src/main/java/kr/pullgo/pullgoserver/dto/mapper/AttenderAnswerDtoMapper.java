@@ -22,7 +22,7 @@ public class AttenderAnswerDtoMapper implements
             .id(attenderAnswer.getId())
             .attenderStateId(attenderAnswer.getAttenderState().getId())
             .questionId(attenderAnswer.getQuestion().getId())
-            .answer(attenderAnswer.getAnswer())
+            .answer(attenderAnswer.getAnswer().getObjectiveNumbers())
             .build();
     }
 
