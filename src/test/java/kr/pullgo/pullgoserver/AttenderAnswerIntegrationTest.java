@@ -1,7 +1,9 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -103,6 +105,54 @@ public class AttenderAnswerIntegrationTest {
             // Then
             actions
                 .andExpect(status().isNotFound());
+        }
+
+    }
+
+    @Nested
+    class SearchAttenderAnswers {
+
+        @Test
+        void listAttenderAnswers() throws Exception {
+            // Given
+            AttenderAnswer attenderAnswerA = createAndSaveAttenderAnswer();
+            AttenderAnswer attenderAnswerB = createAndSaveAttenderAnswer();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/attender-state/answers"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    attenderAnswerA.getId().intValue(),
+                    attenderAnswerB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchAttenderAnswersByAttenderStatesId() throws Exception {
+            // Given
+            AttenderState attenderState = createAndSaveAttenderState();
+
+            AttenderAnswer attenderAnswerA = createAndSaveAttenderAnswerWithAttenderState(
+                attenderState);
+            AttenderAnswer attenderAnswerB = createAndSaveAttenderAnswerWithAttenderState(
+                attenderState);
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/attender-state/answers")
+                .param("attenderStateId", attenderState.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    attenderAnswerA.getId().intValue(),
+                    attenderAnswerB.getId().intValue()
+                )));
         }
 
     }
@@ -240,11 +290,27 @@ public class AttenderAnswerIntegrationTest {
         AttenderAnswer attenderAnswer = AttenderAnswer.builder()
             .answer(new Answer(4, 5, 6))
             .build();
+
         AttenderState attenderState = createAttenderState();
         attenderState.addAnswer(attenderAnswer);
-        attenderStateRepository.save(attenderState);
 
-        return attenderAnswer;
+        Question question = createAndSaveQuestion();
+        attenderAnswer.setQuestion(question);
+
+        return attenderAnswerRepository.save(attenderAnswer);
+    }
+
+    private AttenderAnswer createAndSaveAttenderAnswerWithAttenderState(
+        AttenderState attenderState) {
+        AttenderAnswer attenderAnswer = AttenderAnswer.builder()
+            .answer(new Answer(4, 5, 6))
+            .build();
+        attenderState.addAnswer(attenderAnswer);
+
+        Question question = createAndSaveQuestion();
+        attenderAnswer.setQuestion(question);
+
+        return attenderAnswerRepository.save(attenderAnswer);
     }
 
     private Question createAndSaveQuestion() {
