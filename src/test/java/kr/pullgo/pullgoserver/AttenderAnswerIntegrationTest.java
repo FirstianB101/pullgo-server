@@ -291,7 +291,7 @@ public class AttenderAnswerIntegrationTest {
             .answer(new Answer(4, 5, 6))
             .build();
 
-        AttenderState attenderState = createAttenderState();
+        AttenderState attenderState = createAndSaveAttenderState();
         attenderState.addAnswer(attenderAnswer);
 
         Question question = createAndSaveQuestion();
