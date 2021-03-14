@@ -95,7 +95,6 @@ class StudentDtoMapperTest {
         return AccountDto.Result.builder()
             .id(0L)
             .username("testusername")
-            .password("testpassword")
             .fullName("Test FullName")
             .phone("01012345678")
             .build();

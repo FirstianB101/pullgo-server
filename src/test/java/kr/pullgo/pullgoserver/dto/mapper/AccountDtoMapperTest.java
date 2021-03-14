@@ -45,7 +45,6 @@ public class AccountDtoMapperTest {
         // Then
         assertThat(dto.getId()).isEqualTo(0L);
         assertThat(dto.getUsername()).isEqualTo("testusername");
-        assertThat(dto.getPassword()).isEqualTo("testpassword");
         assertThat(dto.getFullName()).isEqualTo("Test FullName");
         assertThat(dto.getPhone()).isEqualTo("01012345678");
     }
