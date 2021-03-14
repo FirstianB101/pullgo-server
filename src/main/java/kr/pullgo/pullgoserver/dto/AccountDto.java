@@ -45,9 +45,6 @@ public interface AccountDto {
         private String username;
 
         @NonNull
-        private String password;
-
-        @NonNull
         private String fullName;
 
         @NonNull

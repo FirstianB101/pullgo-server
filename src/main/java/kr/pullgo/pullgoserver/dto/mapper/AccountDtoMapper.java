@@ -22,7 +22,6 @@ public class AccountDtoMapper implements DtoMapper<Account, AccountDto.Create, A
         return AccountDto.Result.builder()
             .id(account.getId())
             .username(account.getUsername())
-            .password(account.getPassword())
             .fullName(account.getFullName())
             .phone(account.getPhone())
             .build();
