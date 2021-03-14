@@ -20,7 +20,6 @@ public class ScheduleDtoMapper implements
     @Override
     public ScheduleDto.Result asResultDto(Schedule schedule) {
         return ScheduleDto.Result.builder()
-            .id(schedule.getId())
             .date(schedule.getDate())
             .beginTime(schedule.getBeginTime())
             .endTime(schedule.getEndTime())

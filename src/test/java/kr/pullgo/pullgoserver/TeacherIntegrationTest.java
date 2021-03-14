@@ -90,6 +90,7 @@ public class TeacherIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(teacher.getId()))
+                .andExpect(jsonPath("$.account.id").doesNotExist())
                 .andExpect(jsonPath("$.account.username").value("testusername"))
                 .andExpect(jsonPath("$.account.password").doesNotExist())
                 .andExpect(jsonPath("$.account.fullName").value("Test FullName"))
@@ -267,6 +268,7 @@ public class TeacherIntegrationTest {
         actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
+            .andExpect(jsonPath("$.account.id").doesNotExist())
             .andExpect(jsonPath("$.account.username").value("testusername"))
             .andExpect(jsonPath("$.account.password").doesNotExist())
             .andExpect(jsonPath("$.account.fullName").value("Test FullName"))
@@ -307,6 +309,7 @@ public class TeacherIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(teacher.getId()))
+                .andExpect(jsonPath("$.account.id").doesNotExist())
                 .andExpect(jsonPath("$.account.username").value("testusername"))
                 .andExpect(jsonPath("$.account.password").doesNotExist())
                 .andExpect(jsonPath("$.account.fullName").value("Test FullName"))

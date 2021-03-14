@@ -64,7 +64,6 @@ class LessonDtoMapperTest {
 
         // Then
         assertThat(dto.getId()).isEqualTo(0L);
-        assertThat(dto.getSchedule().getId()).isEqualTo(1L);
         assertThat(dto.getName()).isEqualTo("test name");
         assertThat(dto.getClassroomId()).isEqualTo(2L);
     }
@@ -89,7 +88,6 @@ class LessonDtoMapperTest {
 
     private ScheduleDto.Result scheduleResultDtoWithId(Long id) {
         return ScheduleDto.Result.builder()
-            .id(id)
             .date(LocalDate.of(2021, 2, 22))
             .beginTime(LocalTime.of(12, 0))
             .endTime(LocalTime.of(13, 0))

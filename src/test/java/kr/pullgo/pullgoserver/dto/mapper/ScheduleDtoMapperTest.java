@@ -45,7 +45,6 @@ class ScheduleDtoMapperTest {
         ScheduleDto.Result dto = dtoMapper.asResultDto(entity);
 
         // Then
-        assertThat(dto.getId()).isEqualTo(0L);
         assertThat(dto.getDate())
             .isEqualTo(LocalDate.of(2021, 2, 22));
         assertThat(dto.getBeginTime())
