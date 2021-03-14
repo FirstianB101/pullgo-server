@@ -109,6 +109,7 @@ public class LessonIntegrationTest {
                 .andExpect(jsonPath("$.id").value(lesson.getId()))
                 .andExpect(jsonPath("$.name").value("test name"))
                 .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
+                .andExpect(jsonPath("$.schedule.id").doesNotExist())
                 .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
                 .andExpect(jsonPath("$.schedule.beginTime").value("22:22:22"))
                 .andExpect(jsonPath("$.schedule.endTime").value("00:00:00"));
@@ -258,6 +259,7 @@ public class LessonIntegrationTest {
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
             .andExpect(jsonPath("$.name").value("test name"))
+            .andExpect(jsonPath("$.schedule.id").doesNotExist())
             .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
             .andExpect(jsonPath("$.schedule.beginTime").value("22:22:22"))
             .andExpect(jsonPath("$.schedule.endTime").value("00:00:00"));
@@ -307,6 +309,7 @@ public class LessonIntegrationTest {
                 .andExpect(jsonPath("$.id").value(lesson.getId()))
                 .andExpect(jsonPath("$.name").value("test name"))
                 .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
+                .andExpect(jsonPath("$.schedule.id").doesNotExist())
                 .andExpect(jsonPath("$.schedule.date").value("2021-03-02"))
                 .andExpect(jsonPath("$.schedule.beginTime").value("08:00:00"))
                 .andExpect(jsonPath("$.schedule.endTime").value("21:59:59"));

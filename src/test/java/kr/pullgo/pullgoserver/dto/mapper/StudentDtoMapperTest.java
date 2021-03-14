@@ -93,7 +93,6 @@ class StudentDtoMapperTest {
 
     private AccountDto.Result accountResultDto() {
         return AccountDto.Result.builder()
-            .id(0L)
             .username("testusername")
             .fullName("Test FullName")
             .phone("01012345678")

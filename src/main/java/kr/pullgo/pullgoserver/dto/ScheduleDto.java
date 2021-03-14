@@ -38,9 +38,6 @@ public interface ScheduleDto {
     class Result {
 
         @NonNull
-        private Long id;
-
-        @NonNull
         private LocalDate date;
 
         @NonNull

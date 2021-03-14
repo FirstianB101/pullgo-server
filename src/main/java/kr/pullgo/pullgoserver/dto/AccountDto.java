@@ -39,9 +39,6 @@ public interface AccountDto {
     class Result {
 
         @NonNull
-        private Long id;
-
-        @NonNull
         private String username;
 
         @NonNull

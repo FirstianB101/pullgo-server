@@ -20,7 +20,6 @@ public class AccountDtoMapper implements DtoMapper<Account, AccountDto.Create, A
     @Override
     public AccountDto.Result asResultDto(Account account) {
         return AccountDto.Result.builder()
-            .id(account.getId())
             .username(account.getUsername())
             .fullName(account.getFullName())
             .phone(account.getPhone())
