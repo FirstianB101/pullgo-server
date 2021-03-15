@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -44,7 +45,7 @@ public class AttenderState extends TimeEntity {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    private AttendingProgress progress = AttendingProgress.BEFORE_EXAM;
+    private AttendingProgress progress;
 
     @ToString.Exclude
     @NotNull
@@ -53,7 +54,18 @@ public class AttenderState extends TimeEntity {
 
     private Integer score = null;
 
-    private boolean submitted = false;
+    private LocalDateTime examStartTime = null;
+
+
+    public boolean isOutOfTimeRange(LocalDateTime now) {
+        return now.isBefore(exam.getBeginDateTime())
+            || now.isAfter(exam.getEndDateTime());
+    }
+
+    public boolean isAfterTimeLimit(LocalDateTime now) {
+        LocalDateTime deadLine = examStartTime.plus(exam.getTimeLimit());
+        return now.isAfter(deadLine);
+    }
 
     public void setAttender(Student attender) {
         this.attender = attender;

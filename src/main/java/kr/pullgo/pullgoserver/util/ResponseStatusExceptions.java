@@ -40,6 +40,22 @@ public class ResponseStatusExceptions {
         return badRequest(Exam.class, "exam already canceled");
     }
 
+    public static ResponseStatusException attenderStateSubmittedAlreadyFinishedExam() {
+        return badRequest(Exam.class, "attender state already finished exam");
+    }
+
+    public static ResponseStatusException attenderStateSubmittedAlreadyCancelledExam() {
+        return badRequest(Exam.class, "attender state already canceled exam");
+    }
+
+    public static ResponseStatusException attenderStateSubmittedAfterTimeLimit() {
+        return badRequest(AttenderState.class, "attender state submitted after timeout");
+    }
+
+    public static ResponseStatusException attenderStateSubmittedAfterTimeRange() {
+        return badRequest(AttenderState.class, "attender state submitted after time range");
+    }
+
     public static ResponseStatusException questionNotFound() {
         return notFound(Question.class);
     }

@@ -16,6 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto.Update;
@@ -79,6 +82,7 @@ public class AttenderStateIntegrationTest {
             Exam exam = createAndSaveExam();
             Student attender = createAndSaveStudent();
             AttenderState attenderState = new AttenderState();
+            attenderState.setProgress(AttendingProgress.ONGOING);
             attenderState.setExam(exam);
             attenderState.setAttender(attender);
 
@@ -96,9 +100,8 @@ public class AttenderStateIntegrationTest {
                 .andExpect(jsonPath("$.id").value(attenderState.getId()))
                 .andExpect(jsonPath("$.attenderId").value(attender.getId()))
                 .andExpect(jsonPath("$.examId").value(exam.getId()))
-                .andExpect(jsonPath("$.progress").value(AttendingProgress.BEFORE_EXAM.toString()))
-                .andExpect(jsonPath("$.score").value(nullValue()))
-                .andExpect(jsonPath("$.submitted").value(false));
+                .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
+                .andExpect(jsonPath("$.score").value(nullValue()));
         }
 
         @Test
@@ -206,9 +209,8 @@ public class AttenderStateIntegrationTest {
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.attenderId").value(attender.getId()))
             .andExpect(jsonPath("$.examId").value(exam.getId()))
-            .andExpect(jsonPath("$.progress").value(AttendingProgress.BEFORE_EXAM.toString()))
-            .andExpect(jsonPath("$.score").value(nullValue()))
-            .andExpect(jsonPath("$.submitted").value(false));
+            .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
+            .andExpect(jsonPath("$.score").value(nullValue()));
     }
 
     @Nested
@@ -220,6 +222,7 @@ public class AttenderStateIntegrationTest {
             Exam exam = createAndSaveExam();
             Student attender = createAndSaveStudent();
             AttenderState attenderState = new AttenderState();
+            attenderState.setProgress(AttendingProgress.ONGOING);
             attenderState.setExam(exam);
             attenderState.setAttender(attender);
 
@@ -246,8 +249,7 @@ public class AttenderStateIntegrationTest {
                 .andExpect(jsonPath("$.attenderId").value(attender.getId()))
                 .andExpect(jsonPath("$.examId").value(exam.getId()))
                 .andExpect(jsonPath("$.progress").value(AttendingProgress.COMPLETE.toString()))
-                .andExpect(jsonPath("$.score").value(85))
-                .andExpect(jsonPath("$.submitted").value(false));
+                .andExpect(jsonPath("$.score").value(85));
         }
 
         @Test
@@ -277,48 +279,135 @@ public class AttenderStateIntegrationTest {
             AttenderState attenderState = new AttenderState();
             attenderState.setExam(exam);
             attenderState.setAttender(attender);
+            attenderState.setProgress(AttendingProgress.ONGOING);
+            attenderState.setExamStartTime(stringToLocalDateTime("2021-01-12T00:00:00"));
+            exam.setTimeLimit(stringToDuration("PT1H"));
+            exam.setBeginDateTime(stringToLocalDateTime("2021-01-11T00:00:00"));
+            exam.setEndDateTime(stringToLocalDateTime("2021-01-13T00:00:00"));
 
             examRepository.save(exam);
             studentRepository.save(attender);
             attenderStateRepository.save(attenderState);
 
             // When
-            AttenderStateDto.Create dto = AttenderStateDto.Create.builder()
-                .attenderId(attender.getId())
-                .examId(exam.getId())
-                .build();
-            String body = toJson(dto);
-
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderState.getId())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(body));
+                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            AttenderState resultAttenderState = attenderStateRepository
-                .findById(attenderState.getId())
-                .orElseThrow();
-            assertThat(resultAttenderState.isSubmitted()).isTrue();
+            AttenderState resultAttenderState = findAttenderStateById(attenderState);
+
+            assertThat(resultAttenderState.getProgress()).isEqualTo(AttendingProgress.COMPLETE);
         }
 
         @Test
         void submitAttenderState_AttenderStateNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(attenderStateUpdateDto());
-
-            ResultActions actions = mockMvc.perform(post("/exam/attender-states/{id}", 0)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
+            ResultActions actions = mockMvc.perform(post("/exam/attender-states/{id}", 0));
 
             // Then
             actions
                 .andExpect(status().isNotFound());
         }
 
+        @Test
+        void submitAttenderState_BadAttendingProgress_BadRequestStatus() throws Exception {
+            // Given
+            AttenderState attenderState = createAndSaveAttenderState();
+            attenderState.setProgress(AttendingProgress.COMPLETE);
+            attenderStateRepository.save(attenderState);
+
+            // When
+            ResultActions actions = mockMvc
+                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void submitAttenderState_AfterTimeLimit_BadRequestStatus() throws Exception {
+            // Given
+            AttenderState attenderState = createAndSaveAttenderState();
+            Exam exam = attenderState.getExam();
+            exam.setTimeLimit(stringToDuration("PT1H"));
+            exam.setBeginDateTime(stringToLocalDateTime("2021-01-09T00:00:00"));
+            exam.setEndDateTime(stringToLocalDateTime("2021-01-10T00:00:00"));
+            attenderState.setExamStartTime(stringToLocalDateTime("2021-01-12T00:00:00"));
+
+            examRepository.save(exam);
+            attenderStateRepository.save(attenderState);
+
+            // When
+            ResultActions actions = mockMvc
+                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void submitAttenderState_AlreadyFinishedExam_BadRequestStatus() throws Exception {
+            // Given
+            AttenderState attenderState = createAndSaveAttenderState();
+            Exam exam = attenderState.getExam();
+            exam.setFinished(true);
+
+            examRepository.save(exam);
+            attenderStateRepository.save(attenderState);
+
+            // When
+            ResultActions actions = mockMvc
+                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void submitAttenderState_AlreadyCancelled_BadRequestStatus() throws Exception {
+            // Given
+            AttenderState attenderState = createAndSaveAttenderState();
+            Exam exam = attenderState.getExam();
+            exam.setCancelled(true);
+
+            examRepository.save(exam);
+            attenderStateRepository.save(attenderState);
+
+            // When
+            ResultActions actions = mockMvc
+                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void submitAttenderState_AfterTimeRange_BadRequestStatus() throws Exception {
+            // Given
+            AttenderState attenderState = createAndSaveAttenderState();
+            Exam exam = attenderState.getExam();
+            exam.setBeginDateTime(stringToLocalDateTime("2021-01-09T00:00:00"));
+            exam.setEndDateTime(stringToLocalDateTime("2021-01-10T00:00:00"));
+
+            examRepository.save(exam);
+            attenderStateRepository.save(attenderState);
+
+            // When
+            ResultActions actions = mockMvc
+                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
     }
 
     @Nested
@@ -350,16 +439,31 @@ public class AttenderStateIntegrationTest {
             actions
                 .andExpect(status().isNotFound());
         }
-
     }
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
     }
 
+    private AttenderState findAttenderStateById(AttenderState attenderState) {
+        return attenderStateRepository
+            .findById(attenderState.getId()).orElseThrow();
+    }
+
+    private Duration stringToDuration(String duration) {
+        return Duration.parse(duration);
+    }
+
+    private LocalDateTime stringToLocalDateTime(String date) {
+        return LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
+    }
+
     private Exam createAndSaveExam() {
         return examRepository.save(Exam.builder()
             .name("test exam")
+            .timeLimit(stringToDuration("PT1H"))
+            .beginDateTime(stringToLocalDateTime("2021-01-11T00:00:00"))
+            .endDateTime(stringToLocalDateTime("2021-01-13T00:00:00"))
             .build());
     }
 
@@ -386,9 +490,7 @@ public class AttenderStateIntegrationTest {
     private AttenderState createAndSaveAttenderState() {
         Exam exam = createAndSaveExam();
         Student attender = createAndSaveStudent();
-        AttenderState attenderState = new AttenderState();
-        attenderState.setExam(exam);
-        attenderState.setAttender(attender);
+        AttenderState attenderState = createAttenderState(exam, attender);
 
         examRepository.save(exam);
         studentRepository.save(attender);
@@ -396,11 +498,18 @@ public class AttenderStateIntegrationTest {
         return attenderState;
     }
 
-    private AttenderState createAndSaveAttenderStateWithAttender(Student attender) {
-        Exam exam = createAndSaveExam();
+    private AttenderState createAttenderState(Exam exam, Student attender) {
         AttenderState attenderState = new AttenderState();
+        attenderState.setExamStartTime(stringToLocalDateTime("2021-01-12T00:00:00"));
+        attenderState.setProgress(AttendingProgress.ONGOING);
         attenderState.setExam(exam);
         attenderState.setAttender(attender);
+        return attenderState;
+    }
+
+    private AttenderState createAndSaveAttenderStateWithAttender(Student attender) {
+        Exam exam = createAndSaveExam();
+        AttenderState attenderState = createAttenderState(exam, attender);
 
         examRepository.save(exam);
         attenderStateRepository.save(attenderState);
@@ -409,9 +518,7 @@ public class AttenderStateIntegrationTest {
 
     private AttenderState createAndSaveAttenderStateWithExam(Exam exam) {
         Student attender = createAndSaveStudent();
-        AttenderState attenderState = new AttenderState();
-        attenderState.setExam(exam);
-        attenderState.setAttender(attender);
+        AttenderState attenderState = createAttenderState(exam, attender);
 
         studentRepository.save(attender);
         attenderStateRepository.save(attenderState);
