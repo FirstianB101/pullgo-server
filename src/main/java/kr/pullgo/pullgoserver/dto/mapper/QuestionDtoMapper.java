@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
 import kr.pullgo.pullgoserver.dto.QuestionDto;
+import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,7 @@ public class QuestionDtoMapper implements
         return Question.builder()
             .content(dto.getContent())
             .pictureUrl(dto.getPictureUrl())
-            .answer(dto.getAnswer())
+            .answer(new Answer(dto.getAnswer()))
             .build();
     }
 
@@ -24,7 +25,7 @@ public class QuestionDtoMapper implements
             .examId(question.getExam().getId())
             .content(question.getContent())
             .pictureUrl(question.getPictureUrl())
-            .answer(question.getAnswer())
+            .answer(question.getAnswer().getObjectiveNumbers())
             .build();
     }
 
