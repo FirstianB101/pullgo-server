@@ -39,7 +39,6 @@ class AttenderStateDtoMapperTest {
         entity.setExam(examWithId(2L));
         entity.setProgress(AttendingProgress.COMPLETE);
         entity.setScore(100);
-        entity.setSubmitted(true);
 
         AttenderStateDto.Result dto = dtoMapper.asResultDto(entity);
 
@@ -49,7 +48,6 @@ class AttenderStateDtoMapperTest {
         assertThat(dto.getExamId()).isEqualTo(2L);
         assertThat(dto.getProgress()).isEqualTo(AttendingProgress.COMPLETE);
         assertThat(dto.getScore()).isEqualTo(100);
-        assertThat(dto.getSubmitted()).isEqualTo(true);
     }
 
     private Student studentWithId(Long id) {
