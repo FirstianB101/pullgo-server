@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Set;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
@@ -21,7 +22,7 @@ class QuestionDtoMapperTest {
             .examId(0L)
             .content("test content")
             .pictureUrl(null)
-            .answer(new Answer(1, 3))
+            .answer(Set.of(1, 3))
             .build();
 
         Question entity = dtoMapper.asEntity(dto);
@@ -50,7 +51,7 @@ class QuestionDtoMapperTest {
         assertThat(dto.getExamId()).isEqualTo(1L);
         assertThat(dto.getContent()).isEqualTo("test content");
         assertThat(dto.getPictureUrl()).isNull();
-        assertThat(dto.getAnswer().getObjectiveNumbers()).containsOnly(1, 3);
+        assertThat(dto.getAnswer()).containsOnly(1, 3);
     }
 
     private Exam examWithId(Long id) {

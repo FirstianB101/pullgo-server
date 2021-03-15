@@ -1,6 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
-import kr.pullgo.pullgoserver.persistence.model.Answer;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -20,7 +20,7 @@ public interface QuestionDto {
         private String pictureUrl;
 
         @NonNull
-        private Answer answer;
+        private Set<Integer> answer;
     }
 
     @Data
@@ -31,7 +31,7 @@ public interface QuestionDto {
 
         private String pictureUrl;
 
-        private Answer answer;
+        private Set<Integer> answer;
     }
 
     @Data
@@ -50,6 +50,6 @@ public interface QuestionDto {
         private String pictureUrl;
 
         @NonNull
-        private Answer answer;
+        private Set<Integer> answer;
     }
 }

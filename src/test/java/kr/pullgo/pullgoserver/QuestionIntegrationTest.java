@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.dto.QuestionDto.Update;
@@ -90,9 +91,9 @@ public class QuestionIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(question.getId()))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[0]").value(1))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[1]").value(2))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[2]").value(3))
+                .andExpect(jsonPath("$.answer.[0]").value(1))
+                .andExpect(jsonPath("$.answer.[1]").value(2))
+                .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.pictureUrl").value("Url"))
                 .andExpect(jsonPath("$.content").value("Contents"))
                 .andExpect(jsonPath("$.examId").value(exam.getId()));
@@ -164,7 +165,7 @@ public class QuestionIntegrationTest {
 
         // When
         QuestionDto.Create dto = QuestionDto.Create.builder()
-            .answer(new Answer(1, 2, 3))
+            .answer(Set.of(1, 2, 3))
             .pictureUrl("Url")
             .content("Contents")
             .examId(exam.getId())
@@ -179,9 +180,9 @@ public class QuestionIntegrationTest {
         actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.answer.objectiveNumbers.[0]").value(1))
-            .andExpect(jsonPath("$.answer.objectiveNumbers.[1]").value(2))
-            .andExpect(jsonPath("$.answer.objectiveNumbers.[2]").value(3))
+            .andExpect(jsonPath("$.answer.[0]").value(1))
+            .andExpect(jsonPath("$.answer.[1]").value(2))
+            .andExpect(jsonPath("$.answer.[2]").value(3))
             .andExpect(jsonPath("$.pictureUrl").value("Url"))
             .andExpect(jsonPath("$.content").value("Contents"))
             .andExpect(jsonPath("$.examId").value(exam.getId()));
@@ -205,7 +206,7 @@ public class QuestionIntegrationTest {
 
             // When
             Update dto = Update.builder()
-                .answer(new Answer(1, 2, 3))
+                .answer(Set.of(1, 2, 3))
                 .pictureUrl("Url")
                 .content("Contents")
                 .build();
@@ -220,9 +221,9 @@ public class QuestionIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[0]").value(1))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[1]").value(2))
-                .andExpect(jsonPath("$.answer.objectiveNumbers.[2]").value(3))
+                .andExpect(jsonPath("$.answer.[0]").value(1))
+                .andExpect(jsonPath("$.answer.[1]").value(2))
+                .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.pictureUrl").value("Url"))
                 .andExpect(jsonPath("$.content").value("Contents"))
                 .andExpect(jsonPath("$.examId").value(exam.getId()));
@@ -335,7 +336,7 @@ public class QuestionIntegrationTest {
 
     private Update questionUpdateDto() {
         return Update.builder()
-            .answer(new Answer(1, 2, 3))
+            .answer(Set.of(1, 2, 3))
             .pictureUrl("Url")
             .content("Contents")
             .build();
