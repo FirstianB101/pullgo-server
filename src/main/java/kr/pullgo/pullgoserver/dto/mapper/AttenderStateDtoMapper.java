@@ -21,7 +21,6 @@ public class AttenderStateDtoMapper implements
             .examId(attenderState.getExam().getId())
             .progress(attenderState.getProgress())
             .score(attenderState.getScore())
-            .submitted(attenderState.isSubmitted())
             .build();
     }
 

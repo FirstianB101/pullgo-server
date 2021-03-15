@@ -44,8 +44,5 @@ public interface AttenderStateDto {
         private AttendingProgress progress;
 
         private Integer score;
-
-        @NonNull
-        private Boolean submitted;
     }
 }
