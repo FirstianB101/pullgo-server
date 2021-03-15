@@ -4,6 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -40,19 +47,43 @@ import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-
+@ExtendWith(RestDocumentationExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
 public class ExamIntegrationTest {
 
-    @Autowired
+    private static final FieldDescriptor DOC_FIELD_ID =
+        fieldWithPath("id").description("시험 ID");
+    private static final FieldDescriptor DOC_FIELD_CLASSROOM_ID =
+        fieldWithPath("classroomId").description("소속된 반 ID");
+    private static final FieldDescriptor DOC_FIELD_CREATOR_ID =
+        fieldWithPath("creatorId").description("생성한 선생님 ID");
+    private static final FieldDescriptor DOC_FIELD_NAME =
+        fieldWithPath("name").description("시험 이름");
+    private static final FieldDescriptor DOC_FIELD_BEGIN_DATE_TIME =
+        fieldWithPath("beginDateTime").description("시험 시작 일시");
+    private static final FieldDescriptor DOC_FIELD_END_DATE_TIME =
+        fieldWithPath("endDateTime").description("시험 종료 일시");
+    private static final FieldDescriptor DOC_FIELD_TIME_LIMIT =
+        fieldWithPath("timeLimit").description("응시 시간");
+    private static final FieldDescriptor DOC_FIELD_PASS_SCORE =
+        fieldWithPath("passScore").description("기준 점수");
+    private static final FieldDescriptor DOC_FIELD_CANCELLED =
+        fieldWithPath("cancelled").description("시험 취소 여부");
+    private static final FieldDescriptor DOC_FIELD_FINISHED =
+        fieldWithPath("finished").description("시험 종료 여부");
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -80,8 +111,13 @@ public class ExamIntegrationTest {
     private DataSource dataSource;
 
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext,
+        RestDocumentationContextProvider restDocumentation) throws SQLException {
         H2DbCleaner.clean(dataSource);
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(documentationConfiguration(restDocumentation))
+            .build();
     }
 
     @Nested
@@ -123,6 +159,21 @@ public class ExamIntegrationTest {
                 .andExpect(jsonPath("$.passScore").value(70))
                 .andExpect(jsonPath("$.cancelled").value(false))
                 .andExpect(jsonPath("$.finished").value(false));
+
+            // Document
+            actions.andDo(document("exam-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_CLASSROOM_ID,
+                    DOC_FIELD_CREATOR_ID,
+                    DOC_FIELD_NAME,
+                    DOC_FIELD_BEGIN_DATE_TIME,
+                    DOC_FIELD_END_DATE_TIME,
+                    DOC_FIELD_TIME_LIMIT,
+                    DOC_FIELD_PASS_SCORE,
+                    DOC_FIELD_CANCELLED,
+                    DOC_FIELD_FINISHED
+                )));
         }
 
         @Test
@@ -156,6 +207,9 @@ public class ExamIntegrationTest {
                     examA.getId().intValue(),
                     examB.getId().intValue()
                 )));
+
+            // Document
+            actions.andDo(document("exam-list-example"));
         }
 
         @Test
@@ -178,6 +232,17 @@ public class ExamIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     examA.getId().intValue(),
                     examB.getId().intValue()
+                )));
+
+            // Document
+            actions.andDo(document("exam-search-example",
+                requestParameters(
+                    parameterWithName("classroomId")
+                        .description("소속된 반 ID").optional(),
+                    parameterWithName("creatorId")
+                        .description("생성한 선생님 ID").optional(),
+                    parameterWithName("studentId")
+                        .description("시험 응시생(소속된 반의 수강생) ID").optional()
                 )));
         }
 
@@ -270,6 +335,18 @@ public class ExamIntegrationTest {
             .andExpect(jsonPath("$.passScore").value(70))
             .andExpect(jsonPath("$.cancelled").value(false))
             .andExpect(jsonPath("$.finished").value(false));
+
+        // Document
+        actions.andDo(document("exam-create-example",
+            requestFields(
+                DOC_FIELD_CLASSROOM_ID,
+                DOC_FIELD_CREATOR_ID,
+                DOC_FIELD_NAME,
+                DOC_FIELD_BEGIN_DATE_TIME,
+                DOC_FIELD_END_DATE_TIME,
+                DOC_FIELD_TIME_LIMIT,
+                DOC_FIELD_PASS_SCORE.optional()
+            )));
     }
 
     @Nested
@@ -317,6 +394,16 @@ public class ExamIntegrationTest {
                 .andExpect(jsonPath("$.endDateTime").value("2021-05-17T12:30:00"))
                 .andExpect(jsonPath("$.timeLimit").value("PT3H"))
                 .andExpect(jsonPath("$.passScore").value(80));
+
+            // Document
+            actions.andDo(document("exam-update-example",
+                requestFields(
+                    DOC_FIELD_NAME.optional(),
+                    DOC_FIELD_BEGIN_DATE_TIME.optional(),
+                    DOC_FIELD_END_DATE_TIME.optional(),
+                    DOC_FIELD_TIME_LIMIT.optional(),
+                    DOC_FIELD_PASS_SCORE.optional()
+                )));
         }
 
         @Test
@@ -353,6 +440,9 @@ public class ExamIntegrationTest {
                 .andExpect(content().string(emptyString()));
 
             assertThat(examRepository.findById(exam.getId())).isEmpty();
+
+            // Document
+            actions.andDo(document("exam-delete-example"));
         }
 
         @Test
@@ -387,6 +477,9 @@ public class ExamIntegrationTest {
             Exam result = findExamById(exam.getId());
 
             assertThat(result.isCancelled()).isTrue();
+
+            // Document
+            actions.andDo(document("exam-cancel-example"));
         }
 
         @Test
@@ -450,6 +543,9 @@ public class ExamIntegrationTest {
             Exam result = findExamById(exam.getId());
 
             assertThat(result.isFinished()).isTrue();
+
+            // Document
+            actions.andDo(document("exam-finish-example"));
         }
 
         @Test

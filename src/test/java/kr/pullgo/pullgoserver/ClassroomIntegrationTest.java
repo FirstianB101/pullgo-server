@@ -4,6 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -31,18 +38,29 @@ import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
+@ExtendWith(RestDocumentationExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
 public class ClassroomIntegrationTest {
 
-    @Autowired
+    private static final FieldDescriptor DOC_FIELD_ID =
+        fieldWithPath("id").description("반 ID");
+    private static final FieldDescriptor DOC_FIELD_NAME =
+        fieldWithPath("name").description("반 이름");
+    private static final FieldDescriptor DOC_FIELD_ACADEMY_ID =
+        fieldWithPath("academyId").description("소속된 학원 ID");
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -67,8 +85,13 @@ public class ClassroomIntegrationTest {
     private DataSource dataSource;
 
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext,
+        RestDocumentationContextProvider restDocumentation) throws SQLException {
         H2DbCleaner.clean(dataSource);
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(documentationConfiguration(restDocumentation))
+            .build();
     }
 
     @Nested
@@ -95,6 +118,14 @@ public class ClassroomIntegrationTest {
                 .andExpect(jsonPath("$.id").value(classroom.getId()))
                 .andExpect(jsonPath("$.name").value("test name"))
                 .andExpect(jsonPath("$.academyId").value(academy.getId()));
+
+            // Document
+            actions.andDo(document("classroom-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_NAME,
+                    DOC_FIELD_ACADEMY_ID
+                )));
         }
 
         @Test
@@ -129,6 +160,9 @@ public class ClassroomIntegrationTest {
                     classroomA.getId().intValue(),
                     classroomB.getId().intValue()
                 )));
+
+            // Document
+            actions.andDo(document("classroom-list-example"));
         }
 
         @Test
@@ -151,6 +185,21 @@ public class ClassroomIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     classroomA.getId().intValue(),
                     classroomB.getId().intValue()
+                )));
+
+            // Document
+            actions.andDo(document("classroom-search-example",
+                requestParameters(
+                    parameterWithName("academyId")
+                        .description("소속된 학원 ID").optional(),
+                    parameterWithName("studentId")
+                        .description("반 수강생 ID").optional(),
+                    parameterWithName("applyingStudentId")
+                        .description("반에 가입 요청한 학생 ID").optional(),
+                    parameterWithName("teacherId")
+                        .description("반 선생님 ID").optional(),
+                    parameterWithName("applyingTeacherId")
+                        .description("반에 가입 요청한 선생님 ID").optional()
                 )));
         }
 
@@ -292,6 +341,13 @@ public class ClassroomIntegrationTest {
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.name").value("test name"))
             .andExpect(jsonPath("$.academyId").value(academy.getId()));
+
+        // Document
+        actions.andDo(document("classroom-create-example",
+            requestFields(
+                DOC_FIELD_NAME,
+                DOC_FIELD_ACADEMY_ID
+            )));
     }
 
     @Nested
@@ -325,6 +381,12 @@ public class ClassroomIntegrationTest {
                 .andExpect(jsonPath("$.id").value(classroom.getId()))
                 .andExpect(jsonPath("$.name").value("test name"))
                 .andExpect(jsonPath("$.academyId").value(academy.getId()));
+
+            // Document
+            actions.andDo(document("classroom-update-example",
+                requestFields(
+                    DOC_FIELD_NAME.optional()
+                )));
         }
 
         @Test
@@ -360,6 +422,9 @@ public class ClassroomIntegrationTest {
                 .andExpect(status().isNoContent());
 
             assertThat(classroomRepository.findById(classroom.getId())).isEmpty();
+
+            // Document
+            actions.andDo(document("classroom-delete-example"));
         }
 
         @Test
@@ -398,6 +463,12 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("classroom-accept-teacher-example",
+                requestFields(
+                    fieldWithPath("teacherId").description("승인할 선생님 ID")
+                )));
         }
 
         @Test
@@ -478,6 +549,12 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("classroom-kick-teacher-example",
+                requestFields(
+                    fieldWithPath("teacherId").description("추방할 선생님 ID")
+                )));
         }
 
         @Test
@@ -558,6 +635,12 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("classroom-accept-student-example",
+                requestFields(
+                    fieldWithPath("studentId").description("승인할 학생 ID")
+                )));
         }
 
         @Test
@@ -639,6 +722,12 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("classroom-kick-student-example",
+                requestFields(
+                    fieldWithPath("studentId").description("추방할 학생 ID")
+                )));
         }
 
         @Test
