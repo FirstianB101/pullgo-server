@@ -15,6 +15,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -40,18 +47,33 @@ import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
+@ExtendWith(RestDocumentationExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
 public class AcademyIntegrationTest {
 
-    @Autowired
+    private static final FieldDescriptor DOC_FIELD_ID =
+        fieldWithPath("id").description("학원 ID");
+    private static final FieldDescriptor DOC_FIELD_NAME =
+        fieldWithPath("name").description("학원 이름");
+    private static final FieldDescriptor DOC_FIELD_PHONE =
+        fieldWithPath("phone").description("학원 전화번호");
+    private static final FieldDescriptor DOC_FIELD_ADDRESS =
+        fieldWithPath("address").description("학원 주소");
+    private static final FieldDescriptor DOC_FIELD_OWNER_ID =
+        fieldWithPath("ownerId").description("학원을 소유한 선생님 ID");
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -73,8 +95,13 @@ public class AcademyIntegrationTest {
     private DataSource dataSource;
 
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext,
+        RestDocumentationContextProvider restDocumentation) throws SQLException {
         H2DbCleaner.clean(dataSource);
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(documentationConfiguration(restDocumentation))
+            .build();
     }
 
     @Nested
@@ -104,6 +131,16 @@ public class AcademyIntegrationTest {
                 .andExpect(jsonPath("$.phone").value("01012345678"))
                 .andExpect(jsonPath("$.address").value("Seoul"))
                 .andExpect(jsonPath("$.ownerId").value(owner.getId()));
+
+            // Document
+            actions.andDo(document("academy-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_NAME,
+                    DOC_FIELD_PHONE,
+                    DOC_FIELD_ADDRESS,
+                    DOC_FIELD_OWNER_ID
+                )));
         }
 
         @Test
@@ -138,6 +175,9 @@ public class AcademyIntegrationTest {
                     academyA.getId().intValue(),
                     academyB.getId().intValue()
                 )));
+
+            // Document
+            actions.andDo(document("academy-list-example"));
         }
 
         @Test
@@ -160,6 +200,21 @@ public class AcademyIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     academyA.getId().intValue(),
                     academyB.getId().intValue()
+                )));
+
+            // Document
+            actions.andDo(document("academy-search-example",
+                requestParameters(
+                    parameterWithName("ownerId")
+                        .description("학원 소유자 ID").optional(),
+                    parameterWithName("studentId")
+                        .description("학원에 등록된 학생 ID").optional(),
+                    parameterWithName("applyingStudentId")
+                        .description("학원에 가입 요청한 학생 ID").optional(),
+                    parameterWithName("teacherId")
+                        .description("학원에 등록된 선생님 ID").optional(),
+                    parameterWithName("applyingTeacherId")
+                        .description("학원에 가입 요청한 선생님 ID").optional()
                 )));
         }
 
@@ -314,6 +369,15 @@ public class AcademyIntegrationTest {
                 .andExpect(jsonPath("$.phone").value("01012345678"))
                 .andExpect(jsonPath("$.address").value("Seoul"))
                 .andExpect(jsonPath("$.ownerId").value(creator.getId()));
+
+            // Document
+            actions.andDo(document("academy-create-example",
+                requestFields(
+                    DOC_FIELD_NAME,
+                    DOC_FIELD_PHONE,
+                    DOC_FIELD_ADDRESS,
+                    DOC_FIELD_OWNER_ID
+                )));
         }
 
         @Test
@@ -371,6 +435,15 @@ public class AcademyIntegrationTest {
                 .andExpect(jsonPath("$.phone").value("01012345678"))
                 .andExpect(jsonPath("$.address").value("Seoul"))
                 .andExpect(jsonPath("$.ownerId").value(teacherB.getId()));
+
+            // Document
+            actions.andDo(document("academy-update-example",
+                requestFields(
+                    DOC_FIELD_NAME.optional(),
+                    DOC_FIELD_PHONE.optional(),
+                    DOC_FIELD_ADDRESS.optional(),
+                    DOC_FIELD_OWNER_ID.optional()
+                )));
         }
 
         @Test
@@ -420,6 +493,9 @@ public class AcademyIntegrationTest {
                 .andExpect(content().string(emptyString()));
 
             assertThat(academyRepository.findById(academy.getId())).isEmpty();
+
+            // Document
+            actions.andDo(document("academy-delete-example"));
         }
 
         @Test
@@ -458,6 +534,12 @@ public class AcademyIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("academy-accept-teacher-example",
+                requestFields(
+                    fieldWithPath("teacherId").description("승인할 선생님 ID")
+                )));
         }
 
         @Test
@@ -538,6 +620,12 @@ public class AcademyIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("academy-kick-teacher-example",
+                requestFields(
+                    fieldWithPath("teacherId").description("추방할 선생님 ID")
+                )));
         }
 
         @Test
@@ -618,6 +706,12 @@ public class AcademyIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("academy-accept-student-example",
+                requestFields(
+                    fieldWithPath("studentId").description("승인할 학생 ID")
+                )));
         }
 
         @Test
@@ -699,6 +793,12 @@ public class AcademyIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("academy-kick-student-example",
+                requestFields(
+                    fieldWithPath("studentId").description("추방할 학생 ID")
+                )));
         }
 
         @Test

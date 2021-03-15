@@ -1,0 +1,648 @@
+= pullgo-server REST API Guide
+woodyn1002;
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+:operation-curl-request-title: Example request
+:operation-http-response-title: Example response
+
+WARNING: 이 API는 아직 구현 중에 있으며 추후에 변경될 수 있습니다.
+
+****
+다음 기능은 아직 미구현 상태입니다:
+
+* 회원가입과 로그인 API
+* 시험 결과를 응시자 부모의 전화번호로 전송하는 API
+* 사진과 함께 시험 문제를 생성하는 API
+* 목록 조회 API에서의 페이징과 정렬 기능
+* API 호출 시 사용자 신분과 권한 확인 (지금은 모두 관리자 권한을 가짐)
+* 요청으로 전달한 인자 값 유효성 검증
+****
+
+[[overview]]
+= Overview
+
+[[overview_http_verbs]]
+== HTTP 요청 메소드
+
+API 호출에 사용되는 HTTP 요청 메소드는 일반적인 REST Convention을 최대한 지켜 사용하고 있습니다.
+그러나 프로젝트의 특수성을 이유로 불가피하게 RESTful하지 못 한 부분이 일부 있을 수 있음을 염려 부탁드립니다.
+
+가령, 저희 API는 REST 구조의 기본 메소드 중 하나인 `PUT` 을 일반적인 경우 제공하지 않습니다.
+RESTful API에서의 `PUT` 은 요청에 리소스 id 값을 입력해서, 해당하는 리소스의 정보를 새로 덮어 씌우거나, 해당 id를 기반으로 새로운 리소스를 생성하는 작업을 수행합니다.
+
+이때, 클라이언트가 원하는 id로 리소스를 생성하는 것은 의도치 않은 상황을 야기할 수 있고, 리소스 정보를 덮어씌우는 작업은 `PATCH` 를 통해서도 충분히 가능하다고 생각하여, 꼭 필요하지 않다면 해당 메소드를 제공하지 않고 있습니다.
+
+|===
+| Method | Usage
+
+| `GET`
+| 리소스를 조회할 때 사용됩니다.
+
+| `POST`
+| 새로운 리소스를 생성할 때 혹은 리소스 컨트롤러를 작동시킬 때 사용됩니다.
+
+| `PATCH`
+| 존재하는 리소스의 정보를 수정할 때 사용됩니다.
+정보의 일부만 수정할 수도 있습니다.
+
+| `DELETE`
+| 존재하는 리소스를 삭제할 때 사용됩니다.
+|===
+
+[[overview_http_status_codes]]
+== HTTP 상태 코드
+
+API 호출에 사용되는 HTTP 상태 코드는 일반적인 REST Convention을 최대한 지켜 사용하고 있습니다.
+그러나 프로젝트의 특수성을 이유로 불가피하게 RESTful하지 못 한 부분이 일부 있을 수 있음을 염려 부탁드립니다.
+
+|===
+| Status code | Usage
+
+| `200 OK`
+| 요청이 성공적으로 수행되었을 때 사용됩니다.
+
+| `201 Created`
+| 새로운 리소스가 성공적으로 생성되었을 때 사용됩니다.
+
+| `204 No Content`
+| 요청이 성공적으로 수행되었고, 응답 Body가 비어있을 때 사용됩니다.
+
+| `400 Bad Request`
+| 요청이 잘못되었을 때 사용됩니다.
+응답 Body에 에러 메시지가 포함됩니다.
+
+| `401 Unauthorized`
+| 보호된 리소스에 접근할 때, 신원 확인에 실패한 경우 사용됩니다.
+
+| `403 Forbidden`
+| 보호된 리소스에 접근할 때, 권한이 없어 요청이 거절된 경우 사용됩니다.
+
+| `404 Not Found`
+| 요청한 리소스가 존재하지 않을 때 사용됩니다.
+
+| `409 Conflict`
+| 요청이 서버 상태와 충돌했을 때 사용됩니다. (e.g. 이미 존재하는 사용자 이름으로 회원가입을 시도한 경우)
+|===
+
+[[overview_errors]]
+== 에러 응답
+
+에러 응답(400 이상의 상태 코드)이 반환될 때, 문제를 설명하는 JSON 객체가 응답 Body에 담겨집니다.
+
+에러 객체는 다음 구조를 가집니다:
+
+include::{snippets}/error-example/response-fields.adoc[]
+
+예시로 존재하지 않는 Student를 조회하면, 다음과 같이 `404 Not Found` 에러 응답이 반환됩니다:
+
+include::{snippets}/error-example/http-response.adoc[]
+
+[[overview_api_usage]]
+== API 사용법
+
+REST API는 웹 브라우저의 ajax 기반 라이브러리 혹은 여러 HTTP 클라이언트 라이브러리를 통해 요청을 보내 사용할 수 있습니다.
+클라이언트에서 어떤 방식으로 API 호출하든 서버는 영향받지 않습니다.
+
+다만 클라이언트 개발자는 테스트나 디버깅을 목적으로 코드 실행 없이 직접 REST API에 요청을 보낼 필요가 있을 수 있습니다.
+이때 터미널의 경우 curl을, 그 외에는 Postman이나 Insomnia와 같은 REST Client 프로그램을 사용할 수 있습니다.
+
+이 문서는 그 중 터미널 환경에서 가장 일반적으로 사용하는 커맨드라인 툴인 curl을 기준으로 API 사용 예시를 제공합니다.
+그러나 클라이언트 개발자가 curl이 아닌 다른 도구를 사용할 수도 있으므로, API 사용 예시에 활용하는 curl 명령어를 간략하게 소개하고자 합니다.
+
+다음은 새로운 Academy를 생성하는 요청 예시입니다:
+
+include::{snippets}/academy-create-example/curl-request.adoc[]
+
+`curl` 명령어를 통해 특정 URL에 HTTP 요청을 전송합니다.
+사용되는 인자는 다음과 같습니다:
+
+|===
+| Flag | Description
+
+| -i
+| 커맨드 결과에 응답에 대한 자세한 정보(상태 코드, 헤더 등)를 담도록 합니다.
+
+| -X
+| HTTP 요청의 메소드를 명시합니다. `POST` 는 일반적으로 리소스 생성에 사용되는 메소드입니다.
+
+| -H
+| HTTP 요청에 적용할 헤더를 명시합니다. `Content-Type` 은 요청에 담을 데이터의 형식을 명시하는 헤더입니다.
+
+| -d
+| HTTP 요청에 담을 데이터를 명시합니다.
+요청 Body를 말합니다.
+
+|===
+
+다음은 위 요청의 응답 예시입니다:
+
+include::{snippets}/academy-create-example/http-response.adoc[]
+
+* `HTTP/1.1 201 Created`: HTTP 통신에 사용된 프로토콜 버전과 응답의 상태 코드입니다.
+* `Content-Type` : 서버에서 제공한 데이터의 형식을 명시한 헤더입니다.
+* `Content-Length` : 데이터의 길이를 명시한 헤더입니다.
+
+curl에 관한 보다 자세한 내용은 link:https://curl.se/docs/manpage.html[curl manpage]를 참고해주세요.
+
+[[value_format]]
+== 값 형식
+
+요청과 응답에서의 인자 혹은 필드에 사용되는 값들은 다음과 같이 정해진 형식을 갖습니다:
+
+|===
+| Value | Format
+
+| ID
+| 0~2^63^-1 범위의 수 (64bit 정수, Long)
+
+| 날짜와 시간, 기간
+| link:https://ko.wikipedia.org/wiki/ISO_8601[ISO 8601 형식]의 문자열
+
+| 전화번호
+| '-'를 생략한 숫자 조합의 문자열
+
+| 응시 진행도
+| BEFORE_EXAM: 응시 전, ONGOING: 응시 중, COMPLETE: 응시 완료, ABSENCE: 미응시
+
+|===
+
+[[resources]]
+= Resources
+
+[[resources_academy]]
+== Academy 리소스
+
+[[resources_academy_retrieve]]
+=== Academy 조회
+
+`GET /academies/{id}` 요청으로 하나의 Academy를 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::academy-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_academy_list]]
+=== Academy 목록 조회
+
+`GET /academies` 요청으로 다수의 Academy들을 조회합니다.
+
+operation::academy-list-example[snippets='curl-request,http-response']
+
+[[resources_academy_search]]
+=== Academy 목록 검색
+
+<<resources_academy_list, Academy 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 Academy를 검색할 수 있습니다.
+
+operation::academy-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_academy_create]]
+=== Academy 생성
+
+`POST /academies` 요청으로 Academy를 생성합니다.
+성공 시 생성한 Academy를 응답 Body로 전달합니다.
+
+operation::academy-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_academy_upate]]
+=== Academy 수정
+
+`PATCH /academies/{id}` 요청으로 Academy를 수정합니다.
+성공 시 갱신된 Academy를 응답 Body로 전달합니다.
+
+operation::academy-update-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_academy_delete]]
+=== Academy 삭제
+
+`DELETE /academies/{id}` 요청으로 Academy를 삭제합니다.
+
+operation::academy-delete-example[snippets='curl-request,http-response']
+
+[[resources_academy_accept-teacher]]
+=== 학원에 가입 요청한 선생님 승인
+
+`POST /academies/{academyId}/accept-teacher` 요청으로 Academy에 가입 요청한 선생님을 승인합니다.
+
+operation::academy-accept-teacher-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_academy_accept-student]]
+=== 학원에 가입 요청한 학생 승인
+
+`POST /academies/{academyId}/accept-student` 요청으로 Academy에 가입 요청한 학생을 승인합니다.
+
+operation::academy-accept-student-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_academy_kick-teacher]]
+=== 학원에 등록된 선생님 추방
+
+`POST /academies/{academyId}/kick-teacher` 요청으로 Academy에 등록된 선생님을 추방합니다.
+
+operation::academy-kick-teacher-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_academy_kick-student]]
+=== 학원에 등록된 학생 추방
+
+`POST /academies/{academyId}/kick-student` 요청으로 Academy에 등록된 학생을 추방합니다.
+
+operation::academy-kick-student-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_teacher]]
+== Teacher 리소스
+
+[[resources_teacher_retrieve]]
+=== Teacher 조회
+
+`GET /teachers/{id}` 요청으로 하나의 Teacher를 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::teacher-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_teacher_list]]
+=== Teacher 목록 조회
+
+`GET /teachers` 요청으로 다수의 Teacher들을 조회합니다.
+
+operation::teacher-list-example[snippets='curl-request,http-response']
+
+[[resources_teacher_search]]
+=== Teacher 목록 검색
+
+<<resources_teacher_list, Teacher 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 Teacher를 검색할 수 있습니다.
+
+operation::teacher-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_teacher_create]]
+=== Teacher 생성
+
+`POST /teachers` 요청으로 Teacher를 생성합니다.
+성공 시 생성한 Teacher를 응답 Body로 전달합니다.
+
+operation::teacher-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_teacher_upate]]
+=== Teacher 수정
+
+`PATCH /teachers/{id}` 요청으로 Teacher를 수정합니다.
+성공 시 갱신된 Teacher를 응답 Body로 전달합니다.
+
+operation::teacher-update-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_teacher_delete]]
+=== Teacher 삭제
+
+`DELETE /teachers/{id}` 요청으로 Teacher를 삭제합니다.
+
+operation::teacher-delete-example[snippets='curl-request,http-response']
+
+[[resources_teacher_apply-academy]]
+=== 학원에 가입 요청
+
+`POST /teachers/{teacherId}/apply-academy` 요청으로 학원에 가입을 요청합니다.
+
+operation::teacher-apply-academy-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_teacher_remove-applied-academy]]
+=== 학원에 보낸 가입 요청 철회
+
+`POST /teachers/{teacherId}/remove-applied-academy` 요청으로 학원에 보낸 가입 요청을 철회합니다.
+
+operation::teacher-remove-applied-academy-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_teacher_apply-classroom]]
+=== 반에 가입 요청
+
+`POST /teachers/{teacherId}/apply-classroom` 요청으로 반에 가입을 요청합니다.
+
+operation::teacher-apply-classroom-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_teacher_remove-applied-classroom]]
+=== 반에 보낸 가입 요청 철회
+
+`POST /teachers/{teacherId}/remove-applied-classroom` 요청으로 반에 보낸 가입 요청을 철회합니다.
+
+operation::teacher-remove-applied-classroom-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_student]]
+== Student 리소스
+
+[[resources_student_retrieve]]
+=== Student 조회
+
+`GET /students/{id}` 요청으로 하나의 Student를 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::student-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_student_list]]
+=== Student 목록 조회
+
+`GET /students` 요청으로 다수의 Student들을 조회합니다.
+
+operation::student-list-example[snippets='curl-request,http-response']
+
+[[resources_student_search]]
+=== Student 목록 검색
+
+<<resources_student_list, Student 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 Student를 검색할 수 있습니다.
+
+operation::student-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_student_create]]
+=== Student 생성
+
+`POST /students` 요청으로 Student를 생성합니다.
+성공 시 생성한 Student를 응답 Body로 전달합니다.
+
+operation::student-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_student_upate]]
+=== Student 수정
+
+`PATCH /students/{id}` 요청으로 Student를 수정합니다.
+성공 시 갱신된 Student를 응답 Body로 전달합니다.
+
+operation::student-update-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_student_delete]]
+=== Student 삭제
+
+`DELETE /students/{id}` 요청으로 Student를 삭제합니다.
+
+operation::student-delete-example[snippets='curl-request,http-response']
+
+[[resources_student_apply-academy]]
+=== 학원에 가입 요청
+
+`POST /students/{studentId}/apply-academy` 요청으로 학원에 가입을 요청합니다.
+
+operation::student-apply-academy-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_student_remove-applied-academy]]
+=== 학원에 보낸 가입 요청 철회
+
+`POST /students/{studentId}/remove-applied-academy` 요청으로 학원에 보낸 가입 요청을 철회합니다.
+
+operation::student-remove-applied-academy-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_student_apply-classroom]]
+=== 반에 가입 요청
+
+`POST /students/{studentId}/apply-classroom` 요청으로 반에 가입을 요청합니다.
+
+operation::student-apply-classroom-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_student_remove-applied-classroom]]
+=== 반에 보낸 가입 요청 철회
+
+`POST /students/{studentId}/remove-applied-classroom` 요청으로 반에 보낸 가입 요청을 철회합니다.
+
+operation::student-remove-applied-classroom-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_classroom]]
+== Classroom 리소스
+
+[[resources_classroom_retrieve]]
+=== Classroom 조회
+
+`GET /academy/classrooms/{id}` 요청으로 하나의 Classroom를 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::classroom-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_classroom_list]]
+=== Classroom 목록 조회
+
+`GET /academy/classrooms` 요청으로 다수의 Classroom들을 조회합니다.
+
+operation::classroom-list-example[snippets='curl-request,http-response']
+
+[[resources_classroom_search]]
+=== Classroom 목록 검색
+
+<<resources_classroom_list, Classroom 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 Classroom를 검색할 수 있습니다.
+
+operation::classroom-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_classroom_create]]
+=== Classroom 생성
+
+`POST /academy/classrooms` 요청으로 Classroom를 생성합니다.
+성공 시 생성한 Classroom를 응답 Body로 전달합니다.
+
+operation::classroom-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_classroom_upate]]
+=== Classroom 수정
+
+`PATCH /academy/classrooms/{id}` 요청으로 Classroom를 수정합니다.
+성공 시 갱신된 Classroom를 응답 Body로 전달합니다.
+
+operation::classroom-update-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_classroom_delete]]
+=== Classroom 삭제
+
+`DELETE /academy/classrooms/{id}` 요청으로 Classroom를 삭제합니다.
+
+operation::classroom-delete-example[snippets='curl-request,http-response']
+
+[[resources_classroom_accept-teacher]]
+=== 반에 가입 요청한 선생님 승인
+
+`POST /academy/classrooms/{classroomId}/accept-teacher` 요청으로 Classroom에 가입 요청한 선생님을 승인합니다.
+
+operation::classroom-accept-teacher-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_classroom_accept-student]]
+=== 반에 가입 요청한 학생 승인
+
+`POST /academy/classrooms/{classroomId}/accept-student` 요청으로 Classroom에 가입 요청한 학생을 승인합니다.
+
+operation::classroom-accept-student-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_classroom_kick-teacher]]
+=== 반에 등록된 선생님 추방
+
+`POST /academy/classrooms/{classroomId}/kick-teacher` 요청으로 Classroom에 등록된 선생님을 추방합니다.
+
+operation::classroom-kick-teacher-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_classroom_kick-student]]
+=== 반에 등록된 학생 추방
+
+`POST /academy/classrooms/{classroomId}/kick-student` 요청으로 Classroom에 등록된 학생을 추방합니다.
+
+operation::classroom-kick-student-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_lesson]]
+== Lesson 리소스
+
+[[resources_lesson_retrieve]]
+=== Lesson 조회
+
+`GET /academy/classroom/lessons/{id}` 요청으로 하나의 Lesson을 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::lesson-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_lesson_list]]
+=== Lesson 목록 조회
+
+`GET /academy/classroom/lessons` 요청으로 다수의 Lesson들을 조회합니다.
+
+operation::lesson-list-example[snippets='curl-request,http-response']
+
+[[resources_lesson_search]]
+=== Lesson 목록 검색
+
+<<resources_lesson_list, Lesson 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 Lesson을 검색할 수 있습니다.
+
+operation::lesson-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_lesson_create]]
+=== Lesson 생성
+
+`POST /academy/classroom/lessons` 요청으로 Lesson을 생성합니다.
+성공 시 생성한 Lesson을 응답 Body로 전달합니다.
+
+operation::lesson-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_lesson_upate]]
+=== Lesson 수정
+
+`PATCH /academy/classroom/lessons/{id}` 요청으로 Lesson을 수정합니다.
+성공 시 갱신된 Lesson을 응답 Body로 전달합니다.
+
+operation::lesson-update-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_lesson_delete]]
+=== Lesson 삭제
+
+`DELETE /academy/classroom/lessons/{id}` 요청으로 Lesson을 삭제합니다.
+
+operation::lesson-delete-example[snippets='curl-request,http-response']
+
+[[resources_exam]]
+== Exam 리소스
+
+[[resources_exam_retrieve]]
+=== Exam 조회
+
+`GET /exams/{id}` 요청으로 하나의 Exam을 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::exam-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_exam_list]]
+=== Exam 목록 조회
+
+`GET /exams` 요청으로 다수의 Exam들을 조회합니다.
+
+operation::exam-list-example[snippets='curl-request,http-response']
+
+[[resources_exam_search]]
+=== Exam 목록 검색
+
+<<resources_exam_list, Exam 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 Exam을 검색할 수 있습니다.
+
+operation::exam-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_exam_create]]
+=== Exam 생성
+
+`POST /exams` 요청으로 Exam을 생성합니다.
+성공 시 생성한 Exam을 응답 Body로 전달합니다.
+
+operation::exam-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_exam_upate]]
+=== Exam 수정
+
+`PATCH /exams/{id}` 요청으로 Exam을 수정합니다.
+성공 시 갱신된 Exam을 응답 Body로 전달합니다.
+
+operation::exam-update-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_exam_delete]]
+=== Exam 삭제
+
+`DELETE /exams/{id}` 요청으로 Exam을 삭제합니다.
+
+operation::exam-delete-example[snippets='curl-request,http-response']
+
+[[resources_exam_cancel]]
+=== 시험 취소
+
+`POST /exams/{id}/cancel` 요청으로 시험을 취소합니다.
+시험이 이미 취소되었거나 종료되었으면 `400 Bad Request` 에러를 반환합니다.
+
+operation::exam-cancel-example[snippets='curl-request,http-response']
+
+[[resources_exam_finish]]
+=== 시험 종료
+
+`POST /exams/{id}/finish` 요청으로 시험을 종료합니다.
+시험이 이미 취소되었거나 종료되었으면 `400 Bad Request` 에러를 반환합니다.
+
+operation::exam-finish-example[snippets='curl-request,http-response']
+
+[[resources_question]]
+== Question 리소스
+
+[[resources_question_retrieve]]
+=== Question 조회
+
+`GET /exam/questions/{id}` 요청으로 하나의 Question을 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::question-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_question_list]]
+=== Question 목록 조회
+
+`GET /exam/questions` 요청으로 다수의 Question들을 조회합니다.
+
+operation::question-list-example[snippets='curl-request,http-response']
+
+[[resources_question_search]]
+=== Question 목록 검색
+
+<<resources_question_list, Question 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 Question을 검색할 수 있습니다.
+
+operation::question-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_question_create]]
+=== Question 생성
+
+`POST /exam/questions` 요청으로 Question을 생성합니다.
+성공 시 생성한 Question을 응답 Body로 전달합니다.
+
+operation::question-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_question_upate]]
+=== Question 수정
+
+`PATCH /exam/questions/{id}` 요청으로 Question을 수정합니다.
+성공 시 갱신된 Question을 응답 Body로 전달합니다.
+
+operation::question-update-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_question_delete]]
+=== Question 삭제
+
+`DELETE /exam/questions/{id}` 요청으로 Question을 삭제합니다.
+
+operation::question-delete-example[snippets='curl-request,http-response']
+
+[[resources_attender-state]]
+== [WIP] AttenderState 리소스
+
+아직 완성되지 않은 API입니다.
+
+[[resources_attender-answer]]
+== [WIP] AttenderAnswer 리소스
+
+아직 완성되지 않은 API입니다.

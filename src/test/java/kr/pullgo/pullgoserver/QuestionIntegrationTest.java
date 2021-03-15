@@ -4,6 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -32,19 +39,33 @@ import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-
+@ExtendWith(RestDocumentationExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
 public class QuestionIntegrationTest {
 
-    @Autowired
+    private static final FieldDescriptor DOC_FIELD_ID =
+        fieldWithPath("id").description("문제 ID");
+    private static final FieldDescriptor DOC_FIELD_ANSWER =
+        fieldWithPath("answer").description("정답 (객관식, 1~5 범위의 정수 배열)");
+    private static final FieldDescriptor DOC_FIELD_PICTURE_URL =
+        fieldWithPath("pictureUrl").description("첨부된 사진의 URL");
+    private static final FieldDescriptor DOC_FIELD_CONTENT =
+        fieldWithPath("content").description("문제 내용");
+    private static final FieldDescriptor DOC_FIELD_EXAM_ID =
+        fieldWithPath("examId").description("소속된 시험 ID");
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -63,8 +84,13 @@ public class QuestionIntegrationTest {
     private DataSource dataSource;
 
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext,
+        RestDocumentationContextProvider restDocumentation) throws SQLException {
         H2DbCleaner.clean(dataSource);
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(documentationConfiguration(restDocumentation))
+            .build();
     }
 
     @Nested
@@ -97,6 +123,16 @@ public class QuestionIntegrationTest {
                 .andExpect(jsonPath("$.pictureUrl").value("Url"))
                 .andExpect(jsonPath("$.content").value("Contents"))
                 .andExpect(jsonPath("$.examId").value(exam.getId()));
+
+            // Document
+            actions.andDo(document("question-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_ANSWER,
+                    DOC_FIELD_PICTURE_URL,
+                    DOC_FIELD_CONTENT,
+                    DOC_FIELD_EXAM_ID
+                )));
         }
 
         @Test
@@ -131,6 +167,9 @@ public class QuestionIntegrationTest {
                     questionA.getId().intValue(),
                     questionB.getId().intValue()
                 )));
+
+            // Document
+            actions.andDo(document("question-list-example"));
         }
 
         @Test
@@ -153,6 +192,12 @@ public class QuestionIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     questionA.getId().intValue(),
                     questionB.getId().intValue()
+                )));
+
+            // Document
+            actions.andDo(document("question-search-example",
+                requestParameters(
+                    parameterWithName("examId").description("소속된 시험 ID").optional()
                 )));
         }
 
@@ -186,6 +231,15 @@ public class QuestionIntegrationTest {
             .andExpect(jsonPath("$.pictureUrl").value("Url"))
             .andExpect(jsonPath("$.content").value("Contents"))
             .andExpect(jsonPath("$.examId").value(exam.getId()));
+
+        // Document
+        actions.andDo(document("question-create-example",
+            requestFields(
+                DOC_FIELD_ANSWER,
+                DOC_FIELD_PICTURE_URL.optional(),
+                DOC_FIELD_CONTENT,
+                DOC_FIELD_EXAM_ID
+            )));
     }
 
     @Nested
@@ -228,6 +282,13 @@ public class QuestionIntegrationTest {
                 .andExpect(jsonPath("$.content").value("Contents"))
                 .andExpect(jsonPath("$.examId").value(exam.getId()));
 
+            // Document
+            actions.andDo(document("question-update-example",
+                requestFields(
+                    DOC_FIELD_ANSWER.optional(),
+                    DOC_FIELD_PICTURE_URL.optional(),
+                    DOC_FIELD_CONTENT.optional()
+                )));
         }
 
         @Test
@@ -264,6 +325,9 @@ public class QuestionIntegrationTest {
                 .andExpect(content().string(emptyString()));
 
             assertThat(questionRepository.findById(question.getId())).isEmpty();
+
+            // Document
+            actions.andDo(document("question-delete-example"));
         }
 
         @Test

@@ -4,6 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -37,19 +44,35 @@ import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-
+@ExtendWith(RestDocumentationExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
 public class LessonIntegrationTest {
 
-    @Autowired
+    private static final FieldDescriptor DOC_FIELD_ID =
+        fieldWithPath("id").description("수업 ID");
+    private static final FieldDescriptor DOC_FIELD_NAME =
+        fieldWithPath("name").description("수업 이름");
+    private static final FieldDescriptor DOC_FIELD_CLASSROOM_ID =
+        fieldWithPath("classroomId").description("소속된 반 ID");
+    private static final FieldDescriptor DOC_FIELD_SCHEDULE_DATE =
+        fieldWithPath("schedule.date").description("수업 날짜");
+    private static final FieldDescriptor DOC_FIELD_SCHEDULE_BEGIN_TIME =
+        fieldWithPath("schedule.beginTime").description("수업 시작 시간");
+    private static final FieldDescriptor DOC_FIELD_SCHEDULE_END_TIME =
+        fieldWithPath("schedule.endTime").description("수업 종료 시간");
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -74,8 +97,13 @@ public class LessonIntegrationTest {
     private DataSource dataSource;
 
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext,
+        RestDocumentationContextProvider restDocumentation) throws SQLException {
         H2DbCleaner.clean(dataSource);
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(documentationConfiguration(restDocumentation))
+            .build();
     }
 
     @Nested
@@ -113,6 +141,17 @@ public class LessonIntegrationTest {
                 .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
                 .andExpect(jsonPath("$.schedule.beginTime").value("22:22:22"))
                 .andExpect(jsonPath("$.schedule.endTime").value("00:00:00"));
+
+            // Document
+            actions.andDo(document("lesson-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_NAME,
+                    DOC_FIELD_CLASSROOM_ID,
+                    DOC_FIELD_SCHEDULE_DATE,
+                    DOC_FIELD_SCHEDULE_BEGIN_TIME,
+                    DOC_FIELD_SCHEDULE_END_TIME
+                )));
         }
 
         @Test
@@ -147,6 +186,9 @@ public class LessonIntegrationTest {
                     lessonA.getId().intValue(),
                     lessonB.getId().intValue()
                 )));
+
+            // Document
+            actions.andDo(document("lesson-list-example"));
         }
 
         @Test
@@ -169,6 +211,17 @@ public class LessonIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     lessonA.getId().intValue(),
                     lessonB.getId().intValue()
+                )));
+
+            // Document
+            actions.andDo(document("lesson-search-example",
+                requestParameters(
+                    parameterWithName("classroomId")
+                        .description("소속된 반 ID").optional(),
+                    parameterWithName("studentId")
+                        .description("수업이 배정된 학생(소속된 반의 수강생) ID").optional(),
+                    parameterWithName("teacherId")
+                        .description("수업이 배정된 선생님(소속된 반의 선생님) ID").optional()
                 )));
         }
 
@@ -263,6 +316,16 @@ public class LessonIntegrationTest {
             .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
             .andExpect(jsonPath("$.schedule.beginTime").value("22:22:22"))
             .andExpect(jsonPath("$.schedule.endTime").value("00:00:00"));
+
+        // Document
+        actions.andDo(document("lesson-create-example",
+            requestFields(
+                DOC_FIELD_NAME,
+                DOC_FIELD_CLASSROOM_ID,
+                DOC_FIELD_SCHEDULE_DATE,
+                DOC_FIELD_SCHEDULE_BEGIN_TIME,
+                DOC_FIELD_SCHEDULE_END_TIME
+            )));
     }
 
     @Nested
@@ -314,6 +377,14 @@ public class LessonIntegrationTest {
                 .andExpect(jsonPath("$.schedule.beginTime").value("08:00:00"))
                 .andExpect(jsonPath("$.schedule.endTime").value("21:59:59"));
 
+            // Document
+            actions.andDo(document("lesson-update-example",
+                requestFields(
+                    DOC_FIELD_NAME,
+                    DOC_FIELD_SCHEDULE_DATE,
+                    DOC_FIELD_SCHEDULE_BEGIN_TIME,
+                    DOC_FIELD_SCHEDULE_END_TIME
+                )));
         }
 
         @Test
@@ -350,6 +421,9 @@ public class LessonIntegrationTest {
                 .andExpect(content().string(emptyString()));
 
             assertThat(lessonRepository.findById(lesson.getId())).isEmpty();
+
+            // Document
+            actions.andDo(document("lesson-delete-example"));
         }
 
         @Test
