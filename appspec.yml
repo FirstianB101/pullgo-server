@@ -1,0 +1,19 @@
+# Reference: https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure.html
+
+# The version of AppSec file (Do not change this value)
+version: 0.0
+
+# The operating system value of the instance
+os: linux
+
+# Install the application codes to the home directory
+files:
+  - source: /
+    destination: /home/ec2-user/deployment
+    overwrite: yes
+
+# After installing the codes, execute the deploying script
+hooks:
+  AfterInstall:
+    - location: after-install.sh
+      timeout: 60
