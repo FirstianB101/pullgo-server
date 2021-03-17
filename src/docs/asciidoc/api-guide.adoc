@@ -17,7 +17,6 @@ WARNING: 이 API는 아직 구현 중에 있으며 추후에 변경될 수 있�
 * 회원가입과 로그인 API
 * 시험 결과를 응시자 부모의 전화번호로 전송하는 API
 * 사진과 함께 시험 문제를 생성하는 API
-* 목록 조회 API에서의 페이징과 정렬 기능
 * API 호출 시 사용자 신분과 권한 확인 (지금은 모두 관리자 권한을 가짐)
 * 요청으로 전달한 인자 값 유효성 검증
 ****
@@ -170,6 +169,51 @@ curl에 관한 보다 자세한 내용은 link:https://curl.se/docs/manpage.html
 
 |===
 
+[[overview_paging_and_sorting]]
+== Paging과 Sorting
+
+리소스 목록 조회 API를 사용할 때 Paging과 Sorting 기능을 사용할 수 있습니다.
+
+[[overview_paging_and_sorting_paging]]
+=== Paging (페이징)
+
+Paging은 방대한 양의 리소스를 조회할 때 한 번에 불러올 리소스 수를 제한하는 기능이며, API URL에 요청 패러미터를 명시함으로써 사용할 수 있습니다.
+요청 패러미터를 직접 명시하지 않으면 데이터베이스 부하를 막기 위해서 기본 값이 적용됩니다.
+
+.Paging 기능에 사용되는 요청 패러미터
+* page: 페이지 인덱스 (0부터 시작, 기본값 0)
+* size: 페이지 단위 (한 페이지에 보여줄 리소스 수, 기본값 20, 최대값 2000)
+
+[[overview_paging_and_sorting_sorting]]
+=== Sorting (정렬)
+
+Sorting은 리소스 목록을 조회할 때 리소스의 프로퍼티를 기준으로 순서를 설정하는 기능이며, API URL에 요청 패러미터를 명시함으로써 사용할 수 있습니다.
+
+.Sorting 기능에 사용되는 요청 패러미터
+* sort: 정렬 기준 (`property,{ASC|DESC}` 형식)
+
+정렬 기준이 여러 개 필요할 때에는 여러 개의 요청 패러미터를 명시할 수 있습니다.
+이때에는 먼저 명시된 패러미터가 더 높은 우선순위를 갖습니다.
+
+[[overview_paging_and_sorting_example]]
+=== 사용 예시
+
+* `GET /{리소스 URL}?sort=name`: 이름을 기준으로 오름차순 정렬하여 조회합니다.
+* `GET /{리소스 URL}?sort=id,desc`: id를 기준으로 내림차순 정렬하여 조회합니다.
+* `GET /{리소스 URL}?size=10&page=0`: 첫 열 개의 리소스들을 조회합니다.
+* `GET /{리소스 URL}?size=10&page=1`: 다음 열 개의 리소스들을 조회합니다.
+* `GET /{리소스 URL}?size=2&page=0&sort=id,desc`: id 기준으로 내림차순 정렬한 뒤, 가장 먼저 오는 리소스 두 개만을 조회합니다.
+
+다음은 Academy 리소스 목록 조회 API에 Paging과 Sorting 기능을 적용한 요청 예시입니다:
+
+include::{snippets}/academy-list-with-paging-example/curl-request.adoc[]
+
+참고: `%2C` 는 `,` 의 ASCII 표현입니다.
+
+다음은 요청의 응답 예시입니다:
+
+include::{snippets}/academy-list-with-paging-example/response-body.adoc[]
+
 [[resources]]
 = Resources
 
@@ -188,8 +232,9 @@ operation::academy-retrieve-example[snippets='response-fields,curl-request,http-
 === Academy 목록 조회
 
 `GET /academies` 요청으로 다수의 Academy들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
 
-operation::academy-list-example[snippets='curl-request,http-response']
+operation::academy-list-example[snippets='request-parameters,curl-request,http-response']
 
 [[resources_academy_search]]
 === Academy 목록 검색
@@ -264,8 +309,9 @@ operation::teacher-retrieve-example[snippets='response-fields,curl-request,http-
 === Teacher 목록 조회
 
 `GET /teachers` 요청으로 다수의 Teacher들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
 
-operation::teacher-list-example[snippets='curl-request,http-response']
+operation::teacher-list-example[snippets='request-parameters,curl-request,http-response']
 
 [[resources_teacher_search]]
 === Teacher 목록 검색
@@ -340,8 +386,9 @@ operation::student-retrieve-example[snippets='response-fields,curl-request,http-
 === Student 목록 조회
 
 `GET /students` 요청으로 다수의 Student들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
 
-operation::student-list-example[snippets='curl-request,http-response']
+operation::student-list-example[snippets='request-parameters,curl-request,http-response']
 
 [[resources_student_search]]
 === Student 목록 검색
@@ -416,8 +463,9 @@ operation::classroom-retrieve-example[snippets='response-fields,curl-request,htt
 === Classroom 목록 조회
 
 `GET /academy/classrooms` 요청으로 다수의 Classroom들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
 
-operation::classroom-list-example[snippets='curl-request,http-response']
+operation::classroom-list-example[snippets='request-parameters,curl-request,http-response']
 
 [[resources_classroom_search]]
 === Classroom 목록 검색
@@ -492,8 +540,9 @@ operation::lesson-retrieve-example[snippets='response-fields,curl-request,http-r
 === Lesson 목록 조회
 
 `GET /academy/classroom/lessons` 요청으로 다수의 Lesson들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
 
-operation::lesson-list-example[snippets='curl-request,http-response']
+operation::lesson-list-example[snippets='request-parameters,curl-request,http-response']
 
 [[resources_lesson_search]]
 === Lesson 목록 검색
@@ -540,8 +589,9 @@ operation::exam-retrieve-example[snippets='response-fields,curl-request,http-res
 === Exam 목록 조회
 
 `GET /exams` 요청으로 다수의 Exam들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
 
-operation::exam-list-example[snippets='curl-request,http-response']
+operation::exam-list-example[snippets='request-parameters,curl-request,http-response']
 
 [[resources_exam_search]]
 === Exam 목록 검색
@@ -604,8 +654,9 @@ operation::question-retrieve-example[snippets='response-fields,curl-request,http
 === Question 목록 조회
 
 `GET /exam/questions` 요청으로 다수의 Question들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
 
-operation::question-list-example[snippets='curl-request,http-response']
+operation::question-list-example[snippets='request-parameters,curl-request,http-response']
 
 [[resources_question_search]]
 === Question 목록 검색
