@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
+import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.LessonDto;
 import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.service.LessonService;
@@ -30,7 +31,7 @@ public class LessonController {
 
     @PostMapping("/academy/classroom/lessons")
     @ResponseStatus(HttpStatus.CREATED)
-    public LessonDto.Result post(@RequestBody LessonDto.Create dto) {
+    public LessonDto.Result post(@Valid @RequestBody LessonDto.Create dto) {
         return lessonService.create(dto);
     }
 
@@ -66,7 +67,7 @@ public class LessonController {
     }
 
     @PatchMapping("/academy/classroom/lessons/{id}")
-    public LessonDto.Result patch(@PathVariable Long id, @RequestBody LessonDto.Update dto) {
+    public LessonDto.Result patch(@PathVariable Long id, @Valid @RequestBody LessonDto.Update dto) {
         return lessonService.update(id, dto);
     }
 

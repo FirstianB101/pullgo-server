@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
+import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto.Result;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
@@ -31,7 +32,7 @@ public class AttenderAnswerController {
 
     @PostMapping("/exam/attender-state/answers")
     @ResponseStatus(HttpStatus.CREATED)
-    public AttenderAnswerDto.Result post(@RequestBody AttenderAnswerDto.Create dto) {
+    public AttenderAnswerDto.Result post(@Valid @RequestBody AttenderAnswerDto.Create dto) {
         return attenderAnswerService.create(dto);
     }
 
@@ -60,7 +61,7 @@ public class AttenderAnswerController {
 
     @PatchMapping("/exam/attender-state/answers/{id}")
     public AttenderAnswerDto.Result patch(@PathVariable Long id,
-        @RequestBody AttenderAnswerDto.Update dto) {
+        @Valid @RequestBody AttenderAnswerDto.Update dto) {
         return attenderAnswerService.update(id, dto);
     }
 

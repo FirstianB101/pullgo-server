@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
+import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.service.ExamService;
@@ -30,7 +31,7 @@ public class ExamController {
 
     @PostMapping("/exams")
     @ResponseStatus(HttpStatus.CREATED)
-    public ExamDto.Result post(@RequestBody ExamDto.Create dto) {
+    public ExamDto.Result post(@Valid @RequestBody ExamDto.Create dto) {
         return examService.create(dto);
     }
 
@@ -66,7 +67,7 @@ public class ExamController {
     }
 
     @PatchMapping("/exams/{id}")
-    public ExamDto.Result patch(@PathVariable Long id, @RequestBody ExamDto.Update dto) {
+    public ExamDto.Result patch(@PathVariable Long id, @Valid @RequestBody ExamDto.Update dto) {
         return examService.update(id, dto);
     }
 

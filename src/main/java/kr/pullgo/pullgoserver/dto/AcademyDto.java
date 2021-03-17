@@ -1,9 +1,9 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 public interface AcademyDto {
 
@@ -11,16 +11,16 @@ public interface AcademyDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private String name;
 
-        @NonNull
+        @NotNull
         private String phone;
 
-        @NonNull
+        @NotNull
         private String address;
 
-        @NonNull
+        @NotNull
         private Long ownerId;
     }
 
@@ -41,19 +41,19 @@ public interface AcademyDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private String name;
 
-        @NonNull
+        @NotNull
         private String phone;
 
-        @NonNull
+        @NotNull
         private String address;
 
-        @NonNull
+        @NotNull
         private Long ownerId;
     }
 
@@ -62,10 +62,10 @@ public interface AcademyDto {
     @NoArgsConstructor
     class AcceptTeacher {
 
-        @NonNull
+        @NotNull
         private Long teacherId;
 
-        public AcceptTeacher(@NonNull Long teacherId) {
+        public AcceptTeacher(@NotNull Long teacherId) {
             this.teacherId = teacherId;
         }
     }
@@ -75,11 +75,11 @@ public interface AcademyDto {
     @NoArgsConstructor
     class KickTeacher {
 
-        @NonNull
+        @NotNull
         private Long teacherId;
 
 
-        public KickTeacher(@NonNull Long teacherId) {
+        public KickTeacher(@NotNull Long teacherId) {
             this.teacherId = teacherId;
         }
     }
@@ -89,10 +89,10 @@ public interface AcademyDto {
     @NoArgsConstructor
     class AcceptStudent {
 
-        @NonNull
+        @NotNull
         private Long studentId;
 
-        public AcceptStudent(@NonNull Long studentId) {
+        public AcceptStudent(@NotNull Long studentId) {
             this.studentId = studentId;
         }
     }
@@ -102,7 +102,7 @@ public interface AcademyDto {
     @NoArgsConstructor
     class KickStudent {
 
-        @NonNull
+        @NotNull
         private Long studentId;
 
         public KickStudent(Long studentId) {

@@ -1,8 +1,8 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 
 public interface AccountDto {
 
@@ -10,16 +10,16 @@ public interface AccountDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private String username;
 
-        @NonNull
+        @NotNull
         private String password;
 
-        @NonNull
+        @NotNull
         private String fullName;
 
-        @NonNull
+        @NotNull
         private String phone;
     }
 
@@ -38,13 +38,13 @@ public interface AccountDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private String username;
 
-        @NonNull
+        @NotNull
         private String fullName;
 
-        @NonNull
+        @NotNull
         private String phone;
     }
 }

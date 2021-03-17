@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
+import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.service.ClassroomService;
@@ -63,12 +64,13 @@ public class ClassroomController {
 
     @PostMapping("/academy/classrooms")
     @ResponseStatus(HttpStatus.CREATED)
-    public ClassroomDto.Result post(@RequestBody ClassroomDto.Create dto) {
+    public ClassroomDto.Result post(@Valid @RequestBody ClassroomDto.Create dto) {
         return classroomService.create(dto);
     }
 
     @PatchMapping("/academy/classrooms/{id}")
-    public ClassroomDto.Result patch(@PathVariable Long id, @RequestBody ClassroomDto.Update dto) {
+    public ClassroomDto.Result patch(@PathVariable Long id,
+        @Valid @RequestBody ClassroomDto.Update dto) {
         return classroomService.update(id, dto);
     }
 
@@ -80,26 +82,30 @@ public class ClassroomController {
 
     @PostMapping("/academy/classrooms/{id}/accept-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void acceptTeacher(@PathVariable Long id, @RequestBody ClassroomDto.AcceptTeacher dto) {
+    public void acceptTeacher(@PathVariable Long id,
+        @Valid @RequestBody ClassroomDto.AcceptTeacher dto) {
         classroomService.acceptTeacher(id, dto);
     }
 
     @PostMapping("/academy/classrooms/{id}/kick-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void kickTeacher(@PathVariable Long id, @RequestBody ClassroomDto.KickTeacher dto) {
+    public void kickTeacher(@PathVariable Long id,
+        @Valid @RequestBody ClassroomDto.KickTeacher dto) {
         classroomService.kickTeacher(id, dto);
     }
 
 
     @PostMapping("/academy/classrooms/{id}/accept-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void acceptStudent(@PathVariable Long id, @RequestBody ClassroomDto.AcceptStudent dto) {
+    public void acceptStudent(@PathVariable Long id,
+        @Valid @RequestBody ClassroomDto.AcceptStudent dto) {
         classroomService.acceptStudent(id, dto);
     }
 
     @PostMapping("/academy/classrooms/{id}/kick-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void kickStudent(@PathVariable Long id, @RequestBody ClassroomDto.KickStudent dto) {
+    public void kickStudent(@PathVariable Long id,
+        @Valid @RequestBody ClassroomDto.KickStudent dto) {
         classroomService.kickStudent(id, dto);
     }
 }
