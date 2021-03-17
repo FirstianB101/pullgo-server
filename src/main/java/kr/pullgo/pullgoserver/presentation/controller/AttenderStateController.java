@@ -7,6 +7,7 @@ import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.service.AttenderStateService;
 import kr.pullgo.pullgoserver.service.spec.AttenderStateSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +40,8 @@ public class AttenderStateController {
     @GetMapping("/exam/attender-states")
     public List<AttenderStateDto.Result> search(
         @RequestParam(required = false) Long studentId,
-        @RequestParam(required = false) Long examId
+        @RequestParam(required = false) Long examId,
+        Pageable pageable
     ) {
         Specification<AttenderState> spec = null;
         if (studentId != null) {
@@ -49,7 +51,7 @@ public class AttenderStateController {
             spec = AttenderStateSpecs.belongsToExam(examId).and(spec);
         }
 
-        return attenderStateService.search(spec);
+        return attenderStateService.search(spec, pageable);
     }
 
     @GetMapping("/exam/attender-states/{id}")

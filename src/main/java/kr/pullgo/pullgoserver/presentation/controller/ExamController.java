@@ -7,6 +7,7 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.service.ExamService;
 import kr.pullgo.pullgoserver.service.spec.ExamSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +40,8 @@ public class ExamController {
     public List<ExamDto.Result> search(
         @RequestParam(required = false) Long classroomId,
         @RequestParam(required = false) Long creatorId,
-        @RequestParam(required = false) Long studentId
+        @RequestParam(required = false) Long studentId,
+        Pageable pageable
     ) {
         Specification<Exam> spec = null;
         if (classroomId != null) {
@@ -52,7 +54,7 @@ public class ExamController {
             spec = ExamSpecs.isAssignedTo(studentId).and(spec);
         }
 
-        return examService.search(spec);
+        return examService.search(spec, pageable);
     }
 
     @GetMapping("/exams/{id}")

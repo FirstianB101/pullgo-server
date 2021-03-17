@@ -5,7 +5,10 @@ import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.mapper.DtoMapper;
 import kr.pullgo.pullgoserver.persistence.repository.BaseRepository;
 import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Streamable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -82,8 +85,8 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
      * @return 읽어온 Entity를 매핑한 DTO 목록
      */
     @Transactional
-    public List<RESULT_DTO> search() {
-        List<E> entities = repository.findAll();
+    public List<RESULT_DTO> search(Pageable pageable) {
+        Page<E> entities = repository.findAll(pageable);
         return asResultDtoList(entities);
     }
 
@@ -94,12 +97,12 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
      * @return 읽어온 Entity를 매핑한 DTO 목록
      */
     @Transactional
-    public List<RESULT_DTO> search(Specification<E> spec) {
-        List<E> entities = repository.findAll(spec);
+    public List<RESULT_DTO> search(Specification<E> spec, Pageable pageable) {
+        Page<E> entities = repository.findAll(spec, pageable);
         return asResultDtoList(entities);
     }
 
-    private List<RESULT_DTO> asResultDtoList(List<E> entities) {
+    private List<RESULT_DTO> asResultDtoList(Streamable<E> entities) {
         return entities.stream()
             .map(dtoMapper::asResultDto)
             .collect(Collectors.toList());

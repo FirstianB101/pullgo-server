@@ -7,6 +7,7 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.service.TeacherService;
 import kr.pullgo.pullgoserver.service.spec.TeacherSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,7 +41,8 @@ public class TeacherController {
         @RequestParam(required = false) Long academyId,
         @RequestParam(required = false) Long appliedAcademyId,
         @RequestParam(required = false) Long classroomId,
-        @RequestParam(required = false) Long appliedClassroomId
+        @RequestParam(required = false) Long appliedClassroomId,
+        Pageable pageable
     ) {
         Specification<Teacher> spec = null;
         if (academyId != null) {
@@ -56,7 +58,7 @@ public class TeacherController {
             spec = TeacherSpecs.hasAppliedToClassroom(appliedClassroomId).and(spec);
         }
 
-        return teacherService.search(spec);
+        return teacherService.search(spec, pageable);
     }
 
     @GetMapping("teachers/{id}")

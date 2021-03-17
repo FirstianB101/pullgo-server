@@ -7,6 +7,7 @@ import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.service.LessonService;
 import kr.pullgo.pullgoserver.service.spec.LessonSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +40,8 @@ public class LessonController {
     public List<LessonDto.Result> search(
         @RequestParam(required = false) Long classroomId,
         @RequestParam(required = false) Long studentId,
-        @RequestParam(required = false) Long teacherId
+        @RequestParam(required = false) Long teacherId,
+        Pageable pageable
     ) {
         Specification<Lesson> spec = null;
         if (classroomId != null) {
@@ -52,7 +54,7 @@ public class LessonController {
             spec = LessonSpecs.isAssignedToTeacher(teacherId).and(spec);
         }
 
-        return lessonService.search(spec);
+        return lessonService.search(spec, pageable);
     }
 
     @GetMapping("/academy/classroom/lessons/{id}")
