@@ -1,9 +1,9 @@
 package kr.pullgo.pullgoserver.dto;
 
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 
 public interface QuestionDto {
 
@@ -11,15 +11,15 @@ public interface QuestionDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private Long examId;
 
-        @NonNull
+        @NotNull
         private String content;
 
         private String pictureUrl;
 
-        @NonNull
+        @NotNull
         private Set<Integer> answer;
     }
 
@@ -38,18 +38,18 @@ public interface QuestionDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private Long examId;
 
-        @NonNull
+        @NotNull
         private String content;
 
         private String pictureUrl;
 
-        @NonNull
+        @NotNull
         private Set<Integer> answer;
     }
 }

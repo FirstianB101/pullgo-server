@@ -1,10 +1,10 @@
 package kr.pullgo.pullgoserver.dto;
 
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 public interface AttenderAnswerDto {
 
@@ -12,13 +12,13 @@ public interface AttenderAnswerDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private Long attenderStateId;
 
-        @NonNull
+        @NotNull
         private Long questionId;
 
-        @NonNull
+        @NotNull
         private Set<Integer> answer;
     }
 
@@ -38,16 +38,16 @@ public interface AttenderAnswerDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private Long attenderStateId;
 
-        @NonNull
+        @NotNull
         private Long questionId;
 
-        @NonNull
+        @NotNull
         private Set<Integer> answer;
     }
 }

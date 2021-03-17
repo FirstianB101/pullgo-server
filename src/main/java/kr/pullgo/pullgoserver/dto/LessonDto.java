@@ -1,9 +1,8 @@
 package kr.pullgo.pullgoserver.dto;
 
-import com.sun.istack.NotNull;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 
 public interface LessonDto {
 
@@ -11,10 +10,10 @@ public interface LessonDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private Long classroomId;
 
-        @NonNull
+        @NotNull
         private String name;
 
         @NotNull
@@ -34,13 +33,13 @@ public interface LessonDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private Long classroomId;
 
-        @NonNull
+        @NotNull
         private String name;
 
         @NotNull

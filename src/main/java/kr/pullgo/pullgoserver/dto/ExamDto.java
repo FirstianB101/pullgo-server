@@ -2,9 +2,9 @@ package kr.pullgo.pullgoserver.dto;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 
 public interface ExamDto {
 
@@ -12,22 +12,22 @@ public interface ExamDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private Long classroomId;
 
-        @NonNull
+        @NotNull
         private Long creatorId;
 
-        @NonNull
+        @NotNull
         private String name;
 
-        @NonNull
+        @NotNull
         private LocalDateTime beginDateTime;
 
-        @NonNull
+        @NotNull
         private LocalDateTime endDateTime;
 
-        @NonNull
+        @NotNull
         private Duration timeLimit;
 
         private Integer passScore;
@@ -52,33 +52,33 @@ public interface ExamDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private Long classroomId;
 
-        @NonNull
+        @NotNull
         private Long creatorId;
 
-        @NonNull
+        @NotNull
         private String name;
 
-        @NonNull
+        @NotNull
         private LocalDateTime beginDateTime;
 
-        @NonNull
+        @NotNull
         private LocalDateTime endDateTime;
 
-        @NonNull
+        @NotNull
         private Duration timeLimit;
 
         private Integer passScore;
 
-        @NonNull
+        @NotNull
         private Boolean cancelled;
 
-        @NonNull
+        @NotNull
         private Boolean finished;
     }
 }

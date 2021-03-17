@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
+import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.StudentDto;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.service.StudentService;
@@ -30,7 +31,7 @@ public class StudentController {
 
     @PostMapping("/students")
     @ResponseStatus(HttpStatus.CREATED)
-    public StudentDto.Result post(@RequestBody StudentDto.Create dto) {
+    public StudentDto.Result post(@Valid @RequestBody StudentDto.Create dto) {
         return studentService.create(dto);
     }
 
@@ -70,33 +71,36 @@ public class StudentController {
     }
 
     @PatchMapping("/students/{id}")
-    public StudentDto.Result patch(@PathVariable Long id, @RequestBody StudentDto.Update dto) {
+    public StudentDto.Result patch(@PathVariable Long id,
+        @Valid @RequestBody StudentDto.Update dto) {
         return studentService.update(id, dto);
     }
 
     @PostMapping("/students/{id}/apply-academy")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void applyAcademy(@PathVariable Long id, @RequestBody StudentDto.ApplyAcademy dto) {
+    public void applyAcademy(@PathVariable Long id,
+        @Valid @RequestBody StudentDto.ApplyAcademy dto) {
         studentService.applyAcademy(id, dto);
     }
 
     @PostMapping("/students/{id}/remove-applied-academy")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAppliedAcademy(@PathVariable Long id,
-        @RequestBody StudentDto.RemoveAppliedAcademy dto) {
+        @Valid @RequestBody StudentDto.RemoveAppliedAcademy dto) {
         studentService.removeAppliedAcademy(id, dto);
     }
 
     @PostMapping("/students/{id}/apply-classroom")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void applyClassroom(@PathVariable Long id, @RequestBody StudentDto.ApplyClassroom dto) {
+    public void applyClassroom(@PathVariable Long id,
+        @Valid @RequestBody StudentDto.ApplyClassroom dto) {
         studentService.applyClassroom(id, dto);
     }
 
     @PostMapping("/students/{id}/remove-applied-classroom")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAppliedClassroom(@PathVariable Long id,
-        @RequestBody StudentDto.RemoveAppliedClassroom dto) {
+        @Valid @RequestBody StudentDto.RemoveAppliedClassroom dto) {
         studentService.removeAppliedClassroom(id, dto);
     }
 }

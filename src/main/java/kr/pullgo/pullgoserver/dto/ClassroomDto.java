@@ -1,9 +1,9 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 public interface ClassroomDto {
 
@@ -11,10 +11,10 @@ public interface ClassroomDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private String name;
 
-        @NonNull
+        @NotNull
         private Long academyId;
     }
 
@@ -34,13 +34,13 @@ public interface ClassroomDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private Long academyId;
 
-        @NonNull
+        @NotNull
         private String name;
     }
 
@@ -50,10 +50,10 @@ public interface ClassroomDto {
     @NoArgsConstructor
     class AcceptTeacher {
 
-        @NonNull
+        @NotNull
         private Long teacherId;
 
-        public AcceptTeacher(@NonNull Long teacherId) {
+        public AcceptTeacher(@NotNull Long teacherId) {
             this.teacherId = teacherId;
         }
     }
@@ -63,10 +63,10 @@ public interface ClassroomDto {
     @NoArgsConstructor
     class KickTeacher {
 
-        @NonNull
+        @NotNull
         private Long teacherId;
 
-        public KickTeacher(@NonNull Long teacherId) {
+        public KickTeacher(@NotNull Long teacherId) {
             this.teacherId = teacherId;
         }
     }
@@ -76,10 +76,10 @@ public interface ClassroomDto {
     @NoArgsConstructor
     class AcceptStudent {
 
-        @NonNull
+        @NotNull
         private Long studentId;
 
-        public AcceptStudent(@NonNull Long studentId) {
+        public AcceptStudent(@NotNull Long studentId) {
             this.studentId = studentId;
         }
     }
@@ -89,10 +89,10 @@ public interface ClassroomDto {
     @NoArgsConstructor
     class KickStudent {
 
-        @NonNull
+        @NotNull
         private Long studentId;
 
-        public KickStudent(@NonNull Long studentId) {
+        public KickStudent(@NotNull Long studentId) {
             this.studentId = studentId;
         }
     }

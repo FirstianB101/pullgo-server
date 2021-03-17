@@ -2,9 +2,9 @@ package kr.pullgo.pullgoserver.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 
 public interface ScheduleDto {
 
@@ -12,13 +12,13 @@ public interface ScheduleDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private LocalDate date;
 
-        @NonNull
+        @NotNull
         private LocalTime beginTime;
 
-        @NonNull
+        @NotNull
         private LocalTime endTime;
     }
 
@@ -37,13 +37,13 @@ public interface ScheduleDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private LocalDate date;
 
-        @NonNull
+        @NotNull
         private LocalTime beginTime;
 
-        @NonNull
+        @NotNull
         private LocalTime endTime;
     }
 }

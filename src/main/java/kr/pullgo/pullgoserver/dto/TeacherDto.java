@@ -1,9 +1,9 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 public interface TeacherDto {
 
@@ -12,10 +12,11 @@ public interface TeacherDto {
     @NoArgsConstructor
     class Create {
 
-        @NonNull
+        @NotNull
+        @NotNull
         private AccountDto.Create account;
 
-        public Create(@NonNull AccountDto.Create account) {
+        public Create(@NotNull AccountDto.Create account) {
             this.account = account;
         }
     }
@@ -36,10 +37,10 @@ public interface TeacherDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private AccountDto.Result account;
     }
 
@@ -48,10 +49,10 @@ public interface TeacherDto {
     @NoArgsConstructor
     class ApplyAcademy {
 
-        @NonNull
+        @NotNull
         private Long academyId;
 
-        public ApplyAcademy(@NonNull Long academyId) {
+        public ApplyAcademy(@NotNull Long academyId) {
             this.academyId = academyId;
         }
     }
@@ -61,10 +62,10 @@ public interface TeacherDto {
     @NoArgsConstructor
     class RemoveAppliedAcademy {
 
-        @NonNull
+        @NotNull
         private Long academyId;
 
-        public RemoveAppliedAcademy(@NonNull Long academyId) {
+        public RemoveAppliedAcademy(@NotNull Long academyId) {
             this.academyId = academyId;
         }
     }
@@ -74,10 +75,10 @@ public interface TeacherDto {
     @NoArgsConstructor
     class ApplyClassroom {
 
-        @NonNull
+        @NotNull
         private Long classroomId;
 
-        public ApplyClassroom(@NonNull Long classroomId) {
+        public ApplyClassroom(@NotNull Long classroomId) {
             this.classroomId = classroomId;
         }
     }
@@ -87,10 +88,10 @@ public interface TeacherDto {
     @NoArgsConstructor
     class RemoveAppliedClassroom {
 
-        @NonNull
+        @NotNull
         private Long classroomId;
 
-        public RemoveAppliedClassroom(@NonNull Long classroomId) {
+        public RemoveAppliedClassroom(@NotNull Long classroomId) {
             this.classroomId = classroomId;
         }
     }

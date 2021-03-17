@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.presentation.controller;
 
 
 import java.util.List;
+import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.service.AcademyService;
@@ -64,12 +65,13 @@ public class AcademyController {
 
     @PostMapping("/academies")
     @ResponseStatus(HttpStatus.CREATED)
-    public AcademyDto.Result post(@RequestBody AcademyDto.Create dto) {
+    public AcademyDto.Result post(@Valid @RequestBody AcademyDto.Create dto) {
         return academyService.create(dto);
     }
 
     @PatchMapping("/academies/{id}")
-    public AcademyDto.Result patch(@PathVariable Long id, @RequestBody AcademyDto.Update dto) {
+    public AcademyDto.Result patch(@PathVariable Long id,
+        @Valid @RequestBody AcademyDto.Update dto) {
         return academyService.update(id, dto);
     }
 
@@ -81,26 +83,28 @@ public class AcademyController {
 
     @PostMapping("/academies/{id}/accept-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void acceptTeacher(@PathVariable Long id, @RequestBody AcademyDto.AcceptTeacher dto) {
+    public void acceptTeacher(@PathVariable Long id,
+        @Valid @RequestBody AcademyDto.AcceptTeacher dto) {
         academyService.acceptTeacher(id, dto);
     }
 
     @PostMapping("/academies/{id}/kick-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void kickTeacher(@PathVariable Long id, @RequestBody AcademyDto.KickTeacher dto) {
+    public void kickTeacher(@PathVariable Long id, @Valid @RequestBody AcademyDto.KickTeacher dto) {
         academyService.kickTeacher(id, dto);
     }
 
 
     @PostMapping("/academies/{id}/accept-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void acceptStudent(@PathVariable Long id, @RequestBody AcademyDto.AcceptStudent dto) {
+    public void acceptStudent(@PathVariable Long id,
+        @Valid @RequestBody AcademyDto.AcceptStudent dto) {
         academyService.acceptStudent(id, dto);
     }
 
     @PostMapping("/academies/{id}/kick-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void kickStudent(@PathVariable Long id, @RequestBody AcademyDto.KickStudent dto) {
+    public void kickStudent(@PathVariable Long id, @Valid @RequestBody AcademyDto.KickStudent dto) {
         academyService.kickStudent(id, dto);
     }
 }

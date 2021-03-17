@@ -1,9 +1,9 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotNull;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 
 public interface AttenderStateDto {
 
@@ -11,10 +11,10 @@ public interface AttenderStateDto {
     @Builder
     class Create {
 
-        @NonNull
+        @NotNull
         private Long attenderId;
 
-        @NonNull
+        @NotNull
         private Long examId;
     }
 
@@ -31,16 +31,16 @@ public interface AttenderStateDto {
     @Builder
     class Result {
 
-        @NonNull
+        @NotNull
         private Long id;
 
-        @NonNull
+        @NotNull
         private Long attenderId;
 
-        @NonNull
+        @NotNull
         private Long examId;
 
-        @NonNull
+        @NotNull
         private AttendingProgress progress;
 
         private Integer score;
