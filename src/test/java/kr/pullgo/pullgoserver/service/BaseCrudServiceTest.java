@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -83,21 +85,29 @@ class BaseCrudServiceTest {
 
     @Test
     void search() {
+        // Given
+        given(repository.findAll(any(Pageable.class)))
+            .willReturn(Page.empty());
+
         // When
-        service.search();
+        service.search(Pageable.unpaged());
 
         // Then
-        verify(repository).findAll();
+        verify(repository).findAll(any(Pageable.class));
     }
 
     @SuppressWarnings("unchecked")
     @Test
     void searchBySpec() {
+        // Given
+        given(repository.findAll(any(Specification.class), any(Pageable.class)))
+            .willReturn(Page.empty());
+
         // When
-        service.search(Specification.where(null));
+        service.search(Specification.where(null), Pageable.unpaged());
 
         // Then
-        verify(repository).findAll(any(Specification.class));
+        verify(repository).findAll(any(Specification.class), any(Pageable.class));
     }
 
     @Test

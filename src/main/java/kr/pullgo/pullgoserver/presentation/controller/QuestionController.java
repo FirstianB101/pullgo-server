@@ -6,6 +6,7 @@ import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.service.QuestionService;
 import kr.pullgo.pullgoserver.service.spec.QuestionSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,14 +37,15 @@ public class QuestionController {
 
     @GetMapping("/exam/questions")
     public List<QuestionDto.Result> search(
-        @RequestParam(required = false) Long examId
+        @RequestParam(required = false) Long examId,
+        Pageable pageable
     ) {
         Specification<Question> spec = null;
         if (examId != null) {
             spec = QuestionSpecs.belongsTo(examId).and(spec);
         }
 
-        return questionService.search(spec);
+        return questionService.search(spec, pageable);
     }
 
     @GetMapping("/exam/questions/{id}")

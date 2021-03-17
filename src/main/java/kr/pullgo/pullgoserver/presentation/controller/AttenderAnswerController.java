@@ -7,6 +7,7 @@ import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
 import kr.pullgo.pullgoserver.service.AttenderAnswerService;
 import kr.pullgo.pullgoserver.service.spec.AttenderAnswerSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,14 +38,15 @@ public class AttenderAnswerController {
 
     @GetMapping("/exam/attender-state/answers")
     public List<Result> search(
-        @RequestParam(required = false) Long attenderStateId
+        @RequestParam(required = false) Long attenderStateId,
+        Pageable pageable
     ) {
         Specification<AttenderAnswer> spec = null;
         if (attenderStateId != null) {
             spec = AttenderAnswerSpecs.belongsTo(attenderStateId).and(spec);
         }
 
-        return attenderAnswerService.search(spec);
+        return attenderAnswerService.search(spec, pageable);
     }
 
     @GetMapping("/exam/attender-state/answers/{id}")

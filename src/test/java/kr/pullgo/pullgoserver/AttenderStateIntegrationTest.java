@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
@@ -135,6 +136,29 @@ public class AttenderStateIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     attenderStateA.getId().intValue(),
                     attenderStateB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void listAttenderStatesWithPaging() throws Exception {
+            // Given
+            createAndSaveAttenderState();
+            AttenderState attenderStateA = createAndSaveAttenderState();
+            AttenderState attenderStateB = createAndSaveAttenderState();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/attender-states")
+                .param("size", "2")
+                .param("page", "0")
+                .param("sort", "id,desc"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(contains(
+                    attenderStateB.getId().intValue(),
+                    attenderStateA.getId().intValue()
                 )));
         }
 

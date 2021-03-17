@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
@@ -167,7 +168,35 @@ public class TeacherIntegrationTest {
                 )));
 
             // Document
-            actions.andDo(document("teacher-list-example"));
+            actions.andDo(document("teacher-list-example",
+                requestParameters(
+                    ApiDocumentation.DOC_PARAMETER_PAGE,
+                    ApiDocumentation.DOC_PARAMETER_SIZE,
+                    ApiDocumentation.DOC_PARAMETER_SORT
+                )));
+        }
+
+        @Test
+        void listTeachersWithPaging() throws Exception {
+            // Given
+            createAndSaveTeacher();
+            Teacher teacherA = createAndSaveTeacher();
+            Teacher teacherB = createAndSaveTeacher();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/teachers")
+                .param("size", "2")
+                .param("page", "0")
+                .param("sort", "id,desc"));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(contains(
+                    teacherB.getId().intValue(),
+                    teacherA.getId().intValue()
+                )));
         }
 
         @Test
