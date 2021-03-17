@@ -59,7 +59,8 @@ class ExamTest {
         Student student = createAndSaveStudent();
         Exam exam = createAndSaveExam();
 
-        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
+        AttenderState attenderState = attenderStateRepository
+            .save(AttenderState.builder().examStartTime(LocalDateTime.now()).build());
         attenderState.setAttender(student);
         attenderState.setExam(exam);
         attenderStateRepository.flush();

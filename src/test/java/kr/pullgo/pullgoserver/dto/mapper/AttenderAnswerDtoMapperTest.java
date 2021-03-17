@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.dto.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
@@ -49,7 +50,8 @@ public class AttenderAnswerDtoMapperTest {
     }
 
     private AttenderState attenderStateWithId(Long id) {
-        AttenderState attenderState = new AttenderState();
+        AttenderState attenderState = AttenderState.builder()
+            .examStartTime(LocalDateTime.now()).build();
         attenderState.setId(id);
         return attenderState;
     }

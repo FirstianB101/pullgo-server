@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
+import java.time.LocalDateTime;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import org.springframework.stereotype.Component;
@@ -10,7 +11,7 @@ public class AttenderStateDtoMapper implements
 
     @Override
     public AttenderState asEntity(AttenderStateDto.Create dto) {
-        return new AttenderState();
+        return AttenderState.builder().examStartTime(LocalDateTime.now()).build();
     }
 
     @Override

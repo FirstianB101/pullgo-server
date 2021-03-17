@@ -15,6 +15,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import kr.pullgo.pullgoserver.error.exception.AttenderAnswerNotFoundException;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,7 +46,7 @@ public class AttenderState extends TimeEntity {
 
     @Enumerated(EnumType.STRING)
     @NotNull
-    private AttendingProgress progress;
+    private AttendingProgress progress = AttendingProgress.ONGOING;
 
     @ToString.Exclude
     @NotNull
@@ -54,8 +55,9 @@ public class AttenderState extends TimeEntity {
 
     private Integer score = null;
 
-    private LocalDateTime examStartTime = null;
-
+    @Setter(AccessLevel.NONE)
+    @NotNull
+    private LocalDateTime examStartTime;
 
     public boolean isOutOfTimeRange(LocalDateTime now) {
         return now.isBefore(exam.getBeginDateTime())
@@ -83,9 +85,16 @@ public class AttenderState extends TimeEntity {
     }
 
     public void removeAnswer(AttenderAnswer attenderAnswer) {
-        if (!answers.contains(attenderAnswer)) { throw new AttenderAnswerNotFoundException(); }
+        if (!answers.contains(attenderAnswer)) {
+            throw new AttenderAnswerNotFoundException();
+        }
 
         this.answers.remove(attenderAnswer);
         attenderAnswer.setAttenderState(null);
+    }
+
+    @Builder
+    public AttenderState(LocalDateTime examStartTime) {
+        this.examStartTime = examStartTime;
     }
 }

@@ -33,7 +33,7 @@ class AttenderStateDtoMapperTest {
     @Test
     void asResultDto() {
         // When
-        AttenderState entity = new AttenderState();
+        AttenderState entity = AttenderState.builder().examStartTime(LocalDateTime.now()).build();
         entity.setId(0L);
         entity.setAttender(studentWithId(1L));
         entity.setExam(examWithId(2L));

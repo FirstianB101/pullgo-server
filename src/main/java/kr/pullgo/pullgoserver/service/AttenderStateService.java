@@ -39,14 +39,14 @@ public class AttenderStateService extends
 
     @Override
     AttenderState createOnDB(AttenderStateDto.Create dto) {
-        AttenderState attenderState = new AttenderState();
+        AttenderState attenderState = AttenderState.builder().examStartTime(LocalDateTime.now())
+            .build();
+
         Student dtoAttender = studentRepository.findById(dto.getAttenderId())
             .orElseThrow(ResponseStatusExceptions::studentNotFound);
         Exam dtoExam = examRepository.findById(dto.getExamId())
             .orElseThrow(ResponseStatusExceptions::examNotFound);
 
-        attenderState.setProgress(AttendingProgress.ONGOING);
-        attenderState.setExamStartTime(LocalDateTime.now());
         attenderState.setAttender(dtoAttender);
         attenderState.setExam(dtoExam);
 
