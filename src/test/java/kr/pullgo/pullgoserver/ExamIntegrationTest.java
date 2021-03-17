@@ -628,7 +628,8 @@ public class ExamIntegrationTest {
     }
 
     private AttenderState createAndSaveAttenderState() {
-        AttenderState attenderState = new AttenderState();
+        AttenderState attenderState = AttenderState.builder().examStartTime(LocalDateTime.now())
+            .build();
         attenderState.setAttender(createAndSaveStudent());
         attenderState.setProgress(AttendingProgress.COMPLETE);
         attenderState.setScore(100);

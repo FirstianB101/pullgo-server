@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
@@ -279,11 +280,12 @@ public class AttenderAnswerIntegrationTest {
     }
 
     private AttenderState createAttenderState() {
-        return new AttenderState();
+        return AttenderState.builder().examStartTime(LocalDateTime.now()).build();
     }
 
     private AttenderState createAndSaveAttenderState() {
-        return attenderStateRepository.save(new AttenderState());
+        return attenderStateRepository
+            .save(AttenderState.builder().examStartTime(LocalDateTime.now()).build());
     }
 
     private AttenderAnswer createAndSaveAttenderAnswer() {

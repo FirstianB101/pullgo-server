@@ -34,7 +34,8 @@ class AttenderStateTest {
         Exam exam = createAndSaveExam();
 
         // When
-        AttenderState attenderState = attenderStateRepository.save(new AttenderState());
+        AttenderState attenderState = attenderStateRepository
+            .save(AttenderState.builder().examStartTime(LocalDateTime.now()).build());
         attenderState.setAttender(student);
         attenderState.setExam(exam);
 

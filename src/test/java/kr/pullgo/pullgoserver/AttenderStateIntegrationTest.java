@@ -81,8 +81,8 @@ public class AttenderStateIntegrationTest {
             // Given
             Exam exam = createAndSaveExam();
             Student attender = createAndSaveStudent();
-            AttenderState attenderState = new AttenderState();
-            attenderState.setProgress(AttendingProgress.ONGOING);
+            AttenderState attenderState = AttenderState.builder()
+                .examStartTime(LocalDateTime.now()).build();
             attenderState.setExam(exam);
             attenderState.setAttender(attender);
 
@@ -221,8 +221,8 @@ public class AttenderStateIntegrationTest {
             // Given
             Exam exam = createAndSaveExam();
             Student attender = createAndSaveStudent();
-            AttenderState attenderState = new AttenderState();
-            attenderState.setProgress(AttendingProgress.ONGOING);
+            AttenderState attenderState = AttenderState.builder()
+                .examStartTime(LocalDateTime.now()).build();
             attenderState.setExam(exam);
             attenderState.setAttender(attender);
 
@@ -276,11 +276,10 @@ public class AttenderStateIntegrationTest {
             // Given
             Exam exam = createAndSaveExam();
             Student attender = createAndSaveStudent();
-            AttenderState attenderState = new AttenderState();
+            AttenderState attenderState = AttenderState.builder()
+                .examStartTime(stringToLocalDateTime("2021-01-12T00:00:00")).build();
             attenderState.setExam(exam);
             attenderState.setAttender(attender);
-            attenderState.setProgress(AttendingProgress.ONGOING);
-            attenderState.setExamStartTime(stringToLocalDateTime("2021-01-12T00:00:00"));
             exam.setTimeLimit(stringToDuration("PT1H"));
             exam.setBeginDateTime(stringToLocalDateTime("2021-01-11T00:00:00"));
             exam.setEndDateTime(stringToLocalDateTime("2021-01-13T00:00:00"));
@@ -337,7 +336,6 @@ public class AttenderStateIntegrationTest {
             exam.setTimeLimit(stringToDuration("PT1H"));
             exam.setBeginDateTime(stringToLocalDateTime("2021-01-09T00:00:00"));
             exam.setEndDateTime(stringToLocalDateTime("2021-01-10T00:00:00"));
-            attenderState.setExamStartTime(stringToLocalDateTime("2021-01-12T00:00:00"));
 
             examRepository.save(exam);
             attenderStateRepository.save(attenderState);
@@ -499,9 +497,9 @@ public class AttenderStateIntegrationTest {
     }
 
     private AttenderState createAttenderState(Exam exam, Student attender) {
-        AttenderState attenderState = new AttenderState();
-        attenderState.setExamStartTime(stringToLocalDateTime("2021-01-12T00:00:00"));
-        attenderState.setProgress(AttendingProgress.ONGOING);
+        AttenderState attenderState = AttenderState.builder()
+            .examStartTime(stringToLocalDateTime("2021-01-12T00:00:00"))
+            .build();
         attenderState.setExam(exam);
         attenderState.setAttender(attender);
         return attenderState;
