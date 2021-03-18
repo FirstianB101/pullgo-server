@@ -42,6 +42,7 @@ public class Academy extends TimeEntity {
     private String address;
 
     @ToString.Exclude
+    @Setter(AccessLevel.NONE)
     @NotNull
     @ManyToOne
     private Teacher owner;
@@ -78,8 +79,17 @@ public class Academy extends TimeEntity {
         this.address = address;
     }
 
+    public void setOwner(Teacher teacher) {
+        if (!teachers.contains(teacher))
+            throw new TeacherNotFoundException();
+
+        this.owner = teacher;
+    }
+
     public void acceptStudent(Student student) {
-        if (!applyingStudents.contains(student)) { throw new StudentNotFoundException(); }
+        if (!applyingStudents.contains(student)) {
+            throw new StudentNotFoundException();
+        }
 
         addStudent(student);
         student.removeAppliedAcademy(this);
@@ -104,7 +114,7 @@ public class Academy extends TimeEntity {
         teacher.removeAppliedAcademy(this);
     }
 
-    private void addTeacher(Teacher teacher) {
+    public void addTeacher(Teacher teacher) {
         teachers.add(teacher);
         teacher.getAcademies().add(this);
     }

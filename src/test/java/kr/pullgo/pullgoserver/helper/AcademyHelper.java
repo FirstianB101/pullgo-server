@@ -11,6 +11,7 @@ import kr.pullgo.pullgoserver.dto.AcademyDto.KickTeacher;
 import kr.pullgo.pullgoserver.dto.AcademyDto.Result;
 import kr.pullgo.pullgoserver.dto.AcademyDto.Update;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
 
 public class AcademyHelper {
 
@@ -72,7 +73,11 @@ public class AcademyHelper {
             .address("Seoul")
             .build();
         academy.setId(id);
-        academy.setOwner(teacherWithId(0L));
+
+        Teacher teacher = teacherWithId(0L);
+        academy.addTeacher(teacher);
+        academy.setOwner(teacher);
+
         return academy;
     }
 

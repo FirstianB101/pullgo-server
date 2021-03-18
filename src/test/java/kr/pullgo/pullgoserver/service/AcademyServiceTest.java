@@ -107,7 +107,8 @@ class AcademyServiceTest {
         @Test
         void updateAcademy() {
             // Given
-            Teacher owner = teacherWithId(1L);
+            Teacher oldOwner = teacherWithId(1L);
+            Teacher newOwner = teacherWithId(2L);
 
             Academy entity = Academy.builder()
                 .name("Before")
@@ -115,7 +116,11 @@ class AcademyServiceTest {
                 .address("Zottopia")
                 .build();
             entity.setId(0L);
-            entity.setOwner(owner);
+
+            entity.addTeacher(oldOwner);
+            entity.addTeacher(newOwner);
+
+            entity.setOwner(oldOwner);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(entity));
@@ -124,7 +129,7 @@ class AcademyServiceTest {
                 .will(i -> i.getArgument(0));
 
             given(teacherRepository.findById(2L))
-                .willReturn(Optional.of(teacherWithId(2L)));
+                .willReturn(Optional.of(newOwner));
 
             // When
             AcademyDto.Update dto = AcademyDto.Update.builder()
@@ -167,7 +172,10 @@ class AcademyServiceTest {
                 .address("Zottopia")
                 .build();
             entity.setId(0L);
-            entity.setOwner(teacherWithId(1L));
+
+            Teacher teacher = teacherWithId(1L);
+            entity.addTeacher(teacher);
+            entity.setOwner(teacher);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(entity));
@@ -226,7 +234,10 @@ class AcademyServiceTest {
                 .address("Seoul")
                 .build();
             entity.setId(0L);
-            entity.setOwner(teacherWithId(1L));
+
+            Teacher teacher = teacherWithId(1L);
+            entity.addTeacher(teacher);
+            entity.setOwner(teacher);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(entity));
@@ -278,7 +289,7 @@ class AcademyServiceTest {
             academyService.acceptTeacher(0L, dto);
 
             // Then
-            assertThat(academy.getTeachers()).containsOnly(teacher);
+            assertThat(academy.getTeachers()).contains(teacher);
             assertThat(academy.getApplyingTeachers()).doesNotContain(teacher);
 
             assertThat(teacher.getAcademies()).containsOnly(academy);

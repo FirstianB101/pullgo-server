@@ -118,6 +118,7 @@ public class AcademyIntegrationTest {
                 .phone("01012345678")
                 .address("Seoul")
                 .build();
+            academy.addTeacher(owner);
             academy.setOwner(owner);
             academy = academyRepository.save(academy);
 
@@ -443,7 +444,12 @@ public class AcademyIntegrationTest {
                 .phone("01011112222")
                 .address("Busan")
                 .build();
+
+            academy.addTeacher(teacherA);
+            academy.addTeacher(teacherB);
+
             academy.setOwner(teacherA);
+
             academy = academyRepository.save(academy);
 
             // When
@@ -898,6 +904,7 @@ public class AcademyIntegrationTest {
             .phone("01012345678")
             .address("Seoul")
             .build();
+        academy.addTeacher(owner);
         academy.setOwner(owner);
         return academyRepository.save(academy);
     }
@@ -908,6 +915,7 @@ public class AcademyIntegrationTest {
             .phone("01012345678")
             .address("Seoul")
             .build();
+        academy.addTeacher(owner);
         academy.setOwner(owner);
         return academyRepository.save(academy);
     }

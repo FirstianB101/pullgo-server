@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import org.junit.jupiter.api.Test;
 
 class AcademyDtoMapperTest {
@@ -38,7 +39,10 @@ class AcademyDtoMapperTest {
             .address("test address")
             .build();
         entity.setId(0L);
-        entity.setOwner(teacherWithId(1L));
+
+        Teacher teacher = teacherWithId(1L);
+        entity.addTeacher(teacher);
+        entity.setOwner(teacher);
 
         AcademyDto.Result dto = dtoMapper.asResultDto(entity);
 
