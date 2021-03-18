@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
@@ -47,8 +48,11 @@ import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 @ExtendWith(RestDocumentationExtension.class)
@@ -84,6 +88,9 @@ public class ClassroomIntegrationTest {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -352,11 +359,13 @@ public class ClassroomIntegrationTest {
     void postClassroom() throws Exception {
         // Given
         Academy academy = createAndSaveAcademy();
+        Teacher creator = createAndSaveTeacher();
 
         // When
         ClassroomDto.Create dto = ClassroomDto.Create.builder()
             .name("test name")
             .academyId(academy.getId())
+            .creatorId(creator.getId())
             .build();
         String body = toJson(dto);
 
@@ -365,17 +374,29 @@ public class ClassroomIntegrationTest {
             .content(body));
 
         // Then
-        actions
+        MvcResult mvcResult = actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.name").value("test name"))
-            .andExpect(jsonPath("$.academyId").value(academy.getId()));
+            .andExpect(jsonPath("$.academyId").value(academy.getId()))
+            .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        ClassroomDto.Result resultDto = fromJson(responseBody, ClassroomDto.Result.class);
+
+        withTransaction(status -> {
+            Classroom classroom = classroomRepository.findById(resultDto.getId()).orElseThrow();
+
+            assertThat(classroom.getTeachers()).extracting("id")
+                .contains(creator.getId());
+        });
 
         // Document
         actions.andDo(document("classroom-create-example",
             requestFields(
                 DOC_FIELD_NAME,
-                DOC_FIELD_ACADEMY_ID
+                DOC_FIELD_ACADEMY_ID,
+                fieldWithPath("creatorId").description("반을 생성한 선생님 ID")
             )));
     }
 
@@ -815,6 +836,14 @@ public class ClassroomIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
+    }
+
+    private <T> T fromJson(String responseBody, Class<T> clazz) throws JsonProcessingException {
+        return objectMapper.readValue(responseBody, clazz);
+    }
+
+    private void withTransaction(Consumer<TransactionStatus> callback) {
+        transactionTemplate.executeWithoutResult(callback);
     }
 
     private Academy createAndSaveAcademy() {
