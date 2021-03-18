@@ -42,9 +42,11 @@ public class AcademyService extends
     Academy createOnDB(AcademyDto.Create dto) {
         Academy academy = dtoMapper.asEntity(dto);
 
-        Teacher teacher = teacherRepository.findById(dto.getOwnerId())
+        Teacher owner = teacherRepository.findById(dto.getOwnerId())
             .orElseThrow(ResponseStatusExceptions::teacherNotFound);
-        academy.setOwner(teacher);
+
+        academy.addTeacher(owner);
+        academy.setOwner(owner);
 
         return academyRepository.save(academy);
     }
@@ -63,7 +65,13 @@ public class AcademyService extends
         if (dto.getOwnerId() != null) {
             Teacher teacher = teacherRepository.findById(dto.getOwnerId())
                 .orElseThrow(ResponseStatusExceptions::teacherNotFound);
-            entity.setOwner(teacher);
+
+            try {
+                entity.setOwner(teacher);
+            } catch (TeacherNotFoundException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Not enrolled teacher couldn't be an owner");
+            }
         }
         return academyRepository.save(entity);
     }
