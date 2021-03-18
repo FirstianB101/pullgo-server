@@ -47,9 +47,15 @@ public class ClassroomService extends
     @Override
     Classroom createOnDB(ClassroomDto.Create dto) {
         Classroom classroom = dtoMapper.asEntity(dto);
+
         Academy academy = academyRepository.findById(dto.getAcademyId())
             .orElseThrow(ResponseStatusExceptions::academyNotFound);
         academy.addClassroom(classroom);
+
+        Teacher creator = teacherRepository.findById(dto.getCreatorId())
+            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+        classroom.addTeacher(creator);
+
         return classroomRepository.save(classroom);
     }
 

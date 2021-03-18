@@ -16,6 +16,9 @@ public interface ClassroomDto {
 
         @NotNull
         private Long academyId;
+
+        @NotNull
+        private Long creatorId;
     }
 
     @Data
