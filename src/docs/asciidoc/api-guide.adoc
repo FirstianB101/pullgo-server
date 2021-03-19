@@ -247,6 +247,7 @@ operation::academy-search-example[snippets='request-parameters,curl-request,http
 === Academy 생성
 
 `POST /academies` 요청으로 Academy를 생성합니다.
+ownerId로 지정한 선생님은 학원의 첫 선생님으로 등록됩니다.
 성공 시 생성한 Academy를 응답 Body로 전달합니다.
 
 operation::academy-create-example[snippets='request-fields,curl-request,http-response']
@@ -478,6 +479,7 @@ operation::classroom-search-example[snippets='request-parameters,curl-request,ht
 === Classroom 생성
 
 `POST /academy/classrooms` 요청으로 Classroom를 생성합니다.
+creatorId로 지정한 선생님은 반의 첫 선생님으로 등록됩니다.
 성공 시 생성한 Classroom를 응답 Body로 전달합니다.
 
 operation::classroom-create-example[snippets='request-fields,curl-request,http-response']
