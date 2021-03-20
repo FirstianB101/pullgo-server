@@ -37,6 +37,7 @@ public class ClassroomController {
         @RequestParam(required = false) Long applyingStudentId,
         @RequestParam(required = false) Long teacherId,
         @RequestParam(required = false) Long applyingTeacherId,
+        @RequestParam(required = false) String nameLike,
         Pageable pageable
     ) {
         Specification<Classroom> spec = null;
@@ -54,6 +55,9 @@ public class ClassroomController {
         }
         if (applyingTeacherId != null) {
             spec = ClassroomSpecs.hasApplyingTeacher(applyingTeacherId).and(spec);
+        }
+        if (nameLike != null) {
+            spec = ClassroomSpecs.nameLike("%" + nameLike + "%").and(spec);
         }
 
         return classroomService.search(spec, pageable);

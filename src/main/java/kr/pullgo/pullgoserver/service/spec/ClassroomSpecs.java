@@ -43,4 +43,8 @@ public class ClassroomSpecs {
         };
     }
 
+    public static Specification<Classroom> nameLike(String pattern) {
+        return (root, query, builder) -> builder.like(root.get("name"), pattern);
+    }
+
 }
