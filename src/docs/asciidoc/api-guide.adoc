@@ -214,6 +214,17 @@ include::{snippets}/academy-list-with-paging-example/curl-request.adoc[]
 
 include::{snippets}/academy-list-with-paging-example/response-body.adoc[]
 
+[[overview_base_uri]]
+== Base URI
+
+모든 API의 엔드포인트는 아래 URI를 기본 접두사로 갖습니다:
+
+ https://api.pullgo.kr/v1
+
+* 오직 `https` 연결만을 허용합니다.
+* `v1` 은 API의 버전이며, 현재는 v1만 지원합니다.
+* 예시로, `GET /academies` 는 `GET https://api.pullgo.kr/v1/academies` 의 함축적인 표현입니다.
+
 [[resources]]
 = Resources
 
