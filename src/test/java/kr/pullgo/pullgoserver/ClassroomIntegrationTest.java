@@ -235,7 +235,9 @@ public class ClassroomIntegrationTest {
                     parameterWithName("teacherId")
                         .description("반 선생님 ID").optional(),
                     parameterWithName("applyingTeacherId")
-                        .description("반에 가입 요청한 선생님 ID").optional()
+                        .description("반에 가입 요청한 선생님 ID").optional(),
+                    parameterWithName("nameLike")
+                        .description("유사한 반 이름").optional()
                 )));
         }
 
@@ -342,6 +344,27 @@ public class ClassroomIntegrationTest {
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
                 .param("applyingTeacherId", teacher.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    classroomA.getId().intValue(),
+                    classroomB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchClassroomsByNameLike() throws Exception {
+            // Given
+            Classroom classroomA = createAndSaveClassroomWithName("컴퓨터네트워크 월수 6시 최웅철");
+            Classroom classroomB = createAndSaveClassroomWithName("네트워크의 이해 화목 3시 이동호");
+            createAndSaveClassroomWithName("운영체제 화목 12시 안우현");
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classrooms")
+                .param("nameLike", "네트워크"));
 
             // Then
             actions
@@ -858,6 +881,17 @@ public class ClassroomIntegrationTest {
     private Classroom createAndSaveClassroom() {
         Classroom classroom = Classroom.builder()
             .name("test name")
+            .build();
+
+        Academy academy = createAndSaveAcademy();
+        classroom.setAcademy(academy);
+
+        return classroomRepository.save(classroom);
+    }
+
+    private Classroom createAndSaveClassroomWithName(String name) {
+        Classroom classroom = Classroom.builder()
+            .name(name)
             .build();
 
         Academy academy = createAndSaveAcademy();
