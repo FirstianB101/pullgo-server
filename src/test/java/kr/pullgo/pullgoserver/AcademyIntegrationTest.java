@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver;
 
+import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyCreateDtoWithOwnerId;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDtoWithOwnerId;
@@ -17,7 +18,6 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
 import javax.sql.DataSource;
+import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Account;
@@ -101,7 +102,7 @@ public class AcademyIntegrationTest {
         H2DbCleaner.clean(dataSource);
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-            .apply(documentationConfiguration(restDocumentation))
+            .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
     }
 
