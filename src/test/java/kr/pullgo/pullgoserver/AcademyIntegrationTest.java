@@ -248,7 +248,9 @@ public class AcademyIntegrationTest {
                     parameterWithName("teacherId")
                         .description("학원에 등록된 선생님 ID").optional(),
                     parameterWithName("applyingTeacherId")
-                        .description("학원에 가입 요청한 선생님 ID").optional()
+                        .description("학원에 가입 요청한 선생님 ID").optional(),
+                    parameterWithName("nameLike")
+                        .description("유사한 학원 이름").optional()
                 )));
         }
 
@@ -361,6 +363,27 @@ public class AcademyIntegrationTest {
             // When
             ResultActions actions = mockMvc.perform(get("/academies")
                 .param("applyingTeacherId", teacher.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    academyA.getId().intValue(),
+                    academyB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchAcademiesByNameLike() throws Exception {
+            // Given
+            Academy academyA = createAndSaveAcademyWithName("테라스터디");
+            Academy academyB = createAndSaveAcademyWithName("스터디 에듀");
+            createAndSaveAcademyWithName("마스터 학원");
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academies")
+                .param("nameLike", "스터디"));
 
             // Then
             actions
@@ -902,6 +925,18 @@ public class AcademyIntegrationTest {
         Teacher owner = createAndSaveTeacher();
         Academy academy = Academy.builder()
             .name("Test academy")
+            .phone("01012345678")
+            .address("Seoul")
+            .build();
+        academy.addTeacher(owner);
+        academy.setOwner(owner);
+        return academyRepository.save(academy);
+    }
+
+    private Academy createAndSaveAcademyWithName(String name) {
+        Teacher owner = createAndSaveTeacher();
+        Academy academy = Academy.builder()
+            .name(name)
             .phone("01012345678")
             .address("Seoul")
             .build();

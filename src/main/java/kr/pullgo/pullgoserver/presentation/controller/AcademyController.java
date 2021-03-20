@@ -38,6 +38,7 @@ public class AcademyController {
         @RequestParam(required = false) Long applyingStudentId,
         @RequestParam(required = false) Long teacherId,
         @RequestParam(required = false) Long applyingTeacherId,
+        @RequestParam(required = false) String nameLike,
         Pageable pageable
     ) {
         Specification<Academy> spec = null;
@@ -55,6 +56,9 @@ public class AcademyController {
         }
         if (applyingTeacherId != null) {
             spec = AcademySpecs.hasApplyingTeacher(applyingTeacherId).and(spec);
+        }
+        if (nameLike != null) {
+            spec = AcademySpecs.nameLike("%" + nameLike + "%").and(spec);
         }
 
         return academyService.search(spec, pageable);
