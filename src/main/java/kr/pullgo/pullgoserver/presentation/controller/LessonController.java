@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.LessonDto;
@@ -9,6 +10,7 @@ import kr.pullgo.pullgoserver.service.spec.LessonSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,6 +43,8 @@ public class LessonController {
         @RequestParam(required = false) Long classroomId,
         @RequestParam(required = false) Long studentId,
         @RequestParam(required = false) Long teacherId,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate sinceDate,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate untilDate,
         Pageable pageable
     ) {
         Specification<Lesson> spec = null;
@@ -52,6 +56,12 @@ public class LessonController {
         }
         if (teacherId != null) {
             spec = LessonSpecs.isAssignedToTeacher(teacherId).and(spec);
+        }
+        if (sinceDate != null) {
+            spec = LessonSpecs.sinceDate(sinceDate).and(spec);
+        }
+        if (untilDate != null) {
+            spec = LessonSpecs.untilDate(untilDate).and(spec);
         }
 
         return lessonService.search(spec, pageable);

@@ -251,7 +251,11 @@ public class LessonIntegrationTest {
                     parameterWithName("studentId")
                         .description("수업이 배정된 학생(소속된 반의 수강생) ID").optional(),
                     parameterWithName("teacherId")
-                        .description("수업이 배정된 선생님(소속된 반의 선생님) ID").optional()
+                        .description("수업이 배정된 선생님(소속된 반의 선생님) ID").optional(),
+                    parameterWithName("sinceDate")
+                        .description("수업 날짜 시작 범위").optional(),
+                    parameterWithName("untilDate")
+                        .description("수업 날짜 끝 범위 (exclusive)").optional()
                 )));
         }
 
@@ -302,6 +306,31 @@ public class LessonIntegrationTest {
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
                 .param("teacherId", teacher.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    lessonA.getId().intValue(),
+                    lessonB.getId().intValue()
+                )));
+        }
+
+        @Test
+        void searchLessonsByDateRange() throws Exception {
+            // Given
+            Lesson lessonA = createAndSaveLessonWithScheduleDate(
+                LocalDate.of(2021, 4, 1));
+            Lesson lessonB = createAndSaveLessonWithScheduleDate(
+                LocalDate.of(2021, 4, 15));
+            createAndSaveLessonWithScheduleDate(
+                LocalDate.of(2021, 5, 1));
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
+                .param("sinceDate", "2021-04-01")
+                .param("untilDate", "2021-05-01"));
 
             // Then
             actions
@@ -524,6 +553,24 @@ public class LessonIntegrationTest {
         classroom.addLesson(lesson);
 
         return lessonRepository.save(lesson);
+    }
+
+    private Lesson createAndSaveLessonWithScheduleDate(LocalDate date) {
+        Lesson lesson = Lesson.builder()
+            .name("test lesson")
+            .build();
+
+        Schedule schedule = Schedule.builder()
+            .date(date)
+            .beginTime(LocalTime.of(12, 0))
+            .endTime(LocalTime.of(13, 0))
+            .build();
+        Classroom classroom = createClassroom();
+        lesson.setSchedule(schedule);
+        classroom.addLesson(lesson);
+
+        classroomRepository.save(classroom);
+        return lesson;
     }
 
     private Student createAndSaveStudent() {
