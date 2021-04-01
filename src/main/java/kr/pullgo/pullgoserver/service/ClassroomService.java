@@ -67,6 +67,11 @@ public class ClassroomService extends
         return classroomRepository.save(entity);
     }
 
+    @Override
+    int removeOnDB(Long id) {
+        return classroomRepository.removeById(id);
+    }
+
     @Transactional
     public void acceptTeacher(Long classroomId, ClassroomDto.AcceptTeacher dto) {
         Classroom classroom = classroomRepository.findById(classroomId)

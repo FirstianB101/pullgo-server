@@ -133,17 +133,25 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
     abstract E updateOnDB(E entity, UPDATE_DTO dto);
 
     /**
-     * 리소스를 삭제합니다.
+     * 리소스를 삭제합니다. 내부적으로 {@link #removeOnDB(ID)}를 호출합니다.
      *
      * @param id 삭제할 리소스의 ID
      */
     @Transactional
     public void delete(ID id) {
-        int cnt = repository.removeById(id);
+        int cnt = removeOnDB(id);
         if (cnt == 0) {
             throw notFoundResponseStatusException();
         }
     }
+
+    /**
+     * Entity를 삭제합니다.
+     *
+     * @param id 삭제할 Entity의 ID
+     * @return 삭제한 Entity 수
+     */
+    abstract int removeOnDB(ID id);
 
     private ResponseStatusException notFoundResponseStatusException() {
         return ResponseStatusExceptions.notFound(entityClass);

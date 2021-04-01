@@ -59,4 +59,9 @@ public class LessonService extends
         }
         return lessonRepository.save(entity);
     }
+
+    @Override
+    int removeOnDB(Long id) {
+        return lessonRepository.removeById(id);
+    }
 }

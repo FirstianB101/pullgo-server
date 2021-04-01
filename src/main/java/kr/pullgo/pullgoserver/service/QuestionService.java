@@ -52,4 +52,9 @@ public class QuestionService extends
         }
         return questionRepository.save(entity);
     }
+
+    @Override
+    int removeOnDB(Long id) {
+        return questionRepository.removeById(id);
+    }
 }

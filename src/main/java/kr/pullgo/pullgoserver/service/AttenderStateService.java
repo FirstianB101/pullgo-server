@@ -64,6 +64,11 @@ public class AttenderStateService extends
         return attenderStateRepository.save(entity);
     }
 
+    @Override
+    int removeOnDB(Long id) {
+        return attenderStateRepository.removeById(id);
+    }
+
     @Transactional
     public void submit(Long id) {
         AttenderState attenderState = attenderStateRepository.findById(id)
@@ -90,6 +95,5 @@ public class AttenderStateService extends
         }
         attenderState.setProgress(AttendingProgress.COMPLETE);
     }
-
 
 }
