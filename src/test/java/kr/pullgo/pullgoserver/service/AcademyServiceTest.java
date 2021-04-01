@@ -198,6 +198,9 @@ class AcademyServiceTest {
         @Test
         void deleteAcademy() {
             // Given
+            given(academyRepository.findById(1L))
+                .willReturn(Optional.of(academyWithId(1L)));
+
             given(academyRepository.removeById(1L))
                 .willReturn(1);
 
@@ -211,6 +214,9 @@ class AcademyServiceTest {
         @Test
         void deleteAcademy_InvalidAcademyId_ExceptionThrown() {
             // Given
+            given(academyRepository.findById(1L))
+                .willReturn(Optional.of(academyWithId(1L)));
+
             given(academyRepository.removeById(1L))
                 .willReturn(0);
 

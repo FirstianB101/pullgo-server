@@ -66,6 +66,22 @@ public class TeacherService extends
 
     @Override
     int removeOnDB(Long id) {
+        Teacher teacher = teacherRepository.findById(id)
+            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+
+        teacher.getAppliedAcademies().clear();
+        teacher.getAppliedClassrooms().clear();
+        teacherRepository.save(teacher);
+
+        for (Academy academy : teacher.getAcademies()) {
+            academy.removeTeacher(teacher);
+            academyRepository.save(academy);
+        }
+        for (Classroom classroom : teacher.getClassrooms()) {
+            classroom.removeTeacher(teacher);
+            classroomRepository.save(classroom);
+        }
+
         return teacherRepository.removeById(id);
     }
 

@@ -69,6 +69,22 @@ public class ClassroomService extends
 
     @Override
     int removeOnDB(Long id) {
+        Classroom classroom = classroomRepository.findById(id)
+            .orElseThrow(ResponseStatusExceptions::classroomNotFound);
+
+        classroom.getStudents().clear();
+        classroom.getTeachers().clear();
+        classroomRepository.save(classroom);
+
+        for (Student student : classroom.getApplyingStudents()) {
+            student.removeAppliedClassroom(classroom);
+            studentRepository.save(student);
+        }
+        for (Teacher teacher : classroom.getApplyingTeachers()) {
+            teacher.removeAppliedClassroom(classroom);
+            teacherRepository.save(teacher);
+        }
+
         return classroomRepository.removeById(id);
     }
 

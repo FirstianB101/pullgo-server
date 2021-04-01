@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.AccountDto;
@@ -49,6 +50,8 @@ import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 @ExtendWith(RestDocumentationExtension.class)
@@ -85,6 +88,9 @@ public class TeacherIntegrationTest {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -437,17 +443,29 @@ public class TeacherIntegrationTest {
         @Test
         void deleteTeacher() throws Exception {
             // Given
-            Teacher teacher = createAndSaveTeacher();
+            Long teacherId = createAndSaveTeacher().getId();
+
+            Long academyAId = createAndSaveAcademy().getId();
+            addAcademy(teacherId, academyAId);
+
+            Long academyBId = createAndSaveAcademy().getId();
+            addAppliedAcademy(teacherId, academyBId);
+
+            Long classroomAId = createAndSaveClassroom().getId();
+            addClassroom(teacherId, classroomAId);
+
+            Long classroomBId = createAndSaveClassroom().getId();
+            addAppliedClassroom(teacherId, classroomBId);
 
             // When
-            ResultActions actions = mockMvc.perform(delete("/teachers/{id}", teacher.getId()));
+            ResultActions actions = mockMvc.perform(delete("/teachers/{id}", teacherId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            assertThat(teacherRepository.findById(teacher.getId())).isEmpty();
+            assertThat(teacherRepository.findById(teacherId)).isEmpty();
 
             // Document
             actions.andDo(document("teacher-delete-example"));
@@ -815,6 +833,10 @@ public class TeacherIntegrationTest {
         return objectMapper.writeValueAsString(object);
     }
 
+    private void withTransaction(Consumer<TransactionStatus> callback) {
+        transactionTemplate.executeWithoutResult(callback);
+    }
+
     private TeacherDto.Update teacherUpdateDto() {
         return TeacherDto.Update.builder()
             .account(AccountDto.Update.builder()
@@ -856,6 +878,42 @@ public class TeacherIntegrationTest {
         classroom.setAcademy(academy);
         classroomRepository.save(classroom);
         return classroom;
+    }
+
+    private void addAcademy(Long teacherId, Long academyId) {
+        withTransaction(status -> {
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+            Academy academy = academyRepository.findById(academyId).orElseThrow();
+
+            academy.addTeacher(teacher);
+        });
+    }
+
+    private void addAppliedAcademy(Long teacherId, Long academyId) {
+        withTransaction(status -> {
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+            Academy academy = academyRepository.findById(academyId).orElseThrow();
+
+            teacher.applyAcademy(academy);
+        });
+    }
+
+    private void addClassroom(Long teacherId, Long classroomId) {
+        withTransaction(status -> {
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
+
+            classroom.addTeacher(teacher);
+        });
+    }
+
+    private void addAppliedClassroom(Long teacherId, Long classroomId) {
+        withTransaction(status -> {
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
+
+            teacher.applyClassroom(classroom);
+        });
     }
 
     private TeacherDto.ApplyAcademy applyAcademyDto() {

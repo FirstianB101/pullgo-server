@@ -78,6 +78,22 @@ public class AcademyService extends
 
     @Override
     int removeOnDB(Long id) {
+        Academy academy = academyRepository.findById(id)
+            .orElseThrow(ResponseStatusExceptions::academyNotFound);
+
+        academy.getStudents().clear();
+        academy.getTeachers().clear();
+        academyRepository.save(academy);
+
+        for (Student student : academy.getApplyingStudents()) {
+            student.removeAppliedAcademy(academy);
+            studentRepository.save(student);
+        }
+        for (Teacher teacher : academy.getApplyingTeachers()) {
+            teacher.removeAppliedAcademy(academy);
+            teacherRepository.save(teacher);
+        }
+
         return academyRepository.removeById(id);
     }
 
