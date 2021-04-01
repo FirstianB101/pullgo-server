@@ -34,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
@@ -59,6 +60,8 @@ import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 @ExtendWith(RestDocumentationExtension.class)
@@ -95,6 +98,9 @@ public class AcademyIntegrationTest {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -544,17 +550,29 @@ public class AcademyIntegrationTest {
         @Test
         void deleteAcademy() throws Exception {
             // Given
-            Academy academy = createAndSaveAcademy();
+            Long academyId = createAndSaveAcademy().getId();
+
+            Long teacherAId = createAndSaveTeacher().getId();
+            addTeacher(academyId, teacherAId);
+
+            Long teacherBId = createAndSaveTeacher().getId();
+            addApplyingTeacher(academyId, teacherBId);
+
+            Long studentAId = createAndSaveStudent().getId();
+            addStudent(academyId, studentAId);
+
+            Long studentBId = createAndSaveStudent().getId();
+            addApplyingStudent(academyId, studentBId);
 
             // When
-            ResultActions actions = mockMvc.perform(delete("/academies/{id}", academy.getId()));
+            ResultActions actions = mockMvc.perform(delete("/academies/{id}", academyId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            assertThat(academyRepository.findById(academy.getId())).isEmpty();
+            assertThat(academyRepository.findById(academyId)).isEmpty();
 
             // Document
             actions.andDo(document("academy-delete-example"));
@@ -921,6 +939,10 @@ public class AcademyIntegrationTest {
         return objectMapper.writeValueAsString(object);
     }
 
+    private void withTransaction(Consumer<TransactionStatus> callback) {
+        transactionTemplate.executeWithoutResult(callback);
+    }
+
     private Academy createAndSaveAcademy() {
         Teacher owner = createAndSaveTeacher();
         Academy academy = Academy.builder()
@@ -988,6 +1010,43 @@ public class AcademyIntegrationTest {
         );
         teacher.setAccount(account);
         return teacher;
+    }
+
+    private void addTeacher(Long academyId, Long teacherId) {
+        withTransaction(status -> {
+            Academy academy = academyRepository.findById(academyId).orElseThrow();
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+
+            academy.addTeacher(teacher);
+        });
+    }
+
+    private void addApplyingTeacher(Long academyId, Long teacherId) {
+        withTransaction(status -> {
+            Academy academy = academyRepository.findById(academyId).orElseThrow();
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+
+            teacher.applyAcademy(academy);
+        });
+    }
+
+    private void addStudent(Long academyId, Long studentId) {
+        withTransaction(status -> {
+            Academy academy = academyRepository.findById(academyId).orElseThrow();
+            Student student = studentRepository.findById(studentId).orElseThrow();
+
+            student.applyAcademy(academy);
+            academy.acceptStudent(student);
+        });
+    }
+
+    private void addApplyingStudent(Long academyId, Long studentId) {
+        withTransaction(status -> {
+            Academy academy = academyRepository.findById(academyId).orElseThrow();
+            Student student = studentRepository.findById(studentId).orElseThrow();
+
+            student.applyAcademy(academy);
+        });
     }
 
 }

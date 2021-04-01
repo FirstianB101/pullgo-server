@@ -75,6 +75,22 @@ public class StudentService extends
 
     @Override
     int removeOnDB(Long id) {
+        Student student = studentRepository.findById(id)
+            .orElseThrow(ResponseStatusExceptions::studentNotFound);
+
+        student.getAppliedAcademies().clear();
+        student.getAppliedClassrooms().clear();
+        studentRepository.save(student);
+
+        for (Academy academy : student.getAcademies()) {
+            academy.removeStudent(student);
+            academyRepository.save(academy);
+        }
+        for (Classroom classroom : student.getClassrooms()) {
+            classroom.removeStudent(student);
+            classroomRepository.save(classroom);
+        }
+
         return studentRepository.removeById(id);
     }
 

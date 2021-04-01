@@ -485,17 +485,35 @@ public class ClassroomIntegrationTest {
         @Test
         void deleteClassroom() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Long classroomId = createAndSaveClassroom().getId();
+
+            Long teacherAId = createAndSaveTeacher().getId();
+            addTeacher(classroomId, teacherAId);
+
+            Long teacherBId = createAndSaveTeacher().getId();
+            addApplyingTeacher(classroomId, teacherBId);
+
+            Long studentAId = createAndSaveStudent().getId();
+            addStudent(classroomId, studentAId);
+
+            Long studentBId = createAndSaveStudent().getId();
+            addApplyingStudent(classroomId, studentBId);
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/academy/classrooms/{id}", classroom.getId()));
+                .perform(delete("/academy/classrooms/{id}", classroomId));
 
             // Then
             actions
                 .andExpect(status().isNoContent());
 
-            assertThat(classroomRepository.findById(classroom.getId())).isEmpty();
+            assertThat(classroomRepository.findById(classroomId)).isEmpty();
+
+            assertThat(teacherRepository.findById(teacherAId)).isNotEmpty();
+            assertThat(teacherRepository.findById(teacherBId)).isNotEmpty();
+
+            assertThat(studentRepository.findById(studentAId)).isNotEmpty();
+            assertThat(studentRepository.findById(studentBId)).isNotEmpty();
 
             // Document
             actions.andDo(document("classroom-delete-example"));
@@ -943,6 +961,43 @@ public class ClassroomIntegrationTest {
         );
         teacher.setAccount(account);
         return teacher;
+    }
+
+    private void addTeacher(Long classroomId, Long teacherId) {
+        withTransaction(status -> {
+            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+
+            classroom.addTeacher(teacher);
+        });
+    }
+
+    private void addApplyingTeacher(Long classroomId, Long teacherId) {
+        withTransaction(status -> {
+            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
+            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
+
+            teacher.applyClassroom(classroom);
+        });
+    }
+
+    private void addStudent(Long classroomId, Long studentId) {
+        withTransaction(status -> {
+            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
+            Student student = studentRepository.findById(studentId).orElseThrow();
+
+            student.applyClassroom(classroom);
+            classroom.acceptStudent(student);
+        });
+    }
+
+    private void addApplyingStudent(Long classroomId, Long studentId) {
+        withTransaction(status -> {
+            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
+            Student student = studentRepository.findById(studentId).orElseThrow();
+
+            student.applyClassroom(classroom);
+        });
     }
 
     private ClassroomDto.Update classroomUpdateDto() {
