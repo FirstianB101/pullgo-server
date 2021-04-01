@@ -76,6 +76,11 @@ public class AcademyService extends
         return academyRepository.save(entity);
     }
 
+    @Override
+    int removeOnDB(Long id) {
+        return academyRepository.removeById(id);
+    }
+
     @Transactional
     public void acceptTeacher(Long academyId, AcademyDto.AcceptTeacher dto) {
         Academy academy = academyRepository.findById(academyId)

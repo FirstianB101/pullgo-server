@@ -140,20 +140,20 @@ class BaseCrudServiceTest {
     @Test
     void delete() {
         // Given
-        given(repository.removeById(0L))
+        given(service.removeOnDB(0L))
             .willReturn(1);
 
         // When
         service.delete(0L);
 
         // Then
-        verify(repository).removeById(0L);
+        verify(service).removeOnDB(0L);
     }
 
     @Test
     void delete_ResourceNotFound_ExceptionThrown() {
         // Given
-        given(repository.removeById(0L))
+        given(service.removeOnDB(0L))
             .willReturn(0);
 
         // When

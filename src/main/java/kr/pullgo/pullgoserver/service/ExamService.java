@@ -66,6 +66,11 @@ public class ExamService extends
         return examRepository.save(entity);
     }
 
+    @Override
+    int removeOnDB(Long id) {
+        return examRepository.removeById(id);
+    }
+
     @Transactional
     public void cancelExam(Long id) {
         Exam exam = getOnGoingExam(id);

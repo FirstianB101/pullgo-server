@@ -64,6 +64,11 @@ public class TeacherService extends
         return teacherRepository.save(entity);
     }
 
+    @Override
+    int removeOnDB(Long id) {
+        return teacherRepository.removeById(id);
+    }
+
     @Transactional
     public void applyAcademy(Long teacherId, TeacherDto.ApplyAcademy dto) {
 

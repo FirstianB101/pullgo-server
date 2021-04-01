@@ -54,4 +54,9 @@ public class AttenderAnswerService extends
         }
         return attenderAnswerRepository.save(entity);
     }
+
+    @Override
+    int removeOnDB(Long id) {
+        return attenderAnswerRepository.removeById(id);
+    }
 }
