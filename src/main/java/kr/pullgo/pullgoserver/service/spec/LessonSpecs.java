@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.service.spec;
 
 import java.time.LocalDate;
 import javax.persistence.criteria.Join;
+import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
@@ -15,6 +16,14 @@ public class LessonSpecs {
         return (root, query, builder) -> {
             Join<Lesson, Classroom> classroom = root.join("classroom");
             return builder.equal(classroom.get("id"), classroomId);
+        };
+    }
+
+    public static Specification<Lesson> belongsToAcademy(Long academyId) {
+        return (root, query, builder) -> {
+            Join<Lesson, Classroom> classroom = root.join("classroom");
+            Join<Classroom, Academy> academy = classroom.join("academy");
+            return builder.equal(academy.get("id"), academyId);
         };
     }
 

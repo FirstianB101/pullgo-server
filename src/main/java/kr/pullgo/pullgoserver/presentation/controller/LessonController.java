@@ -41,6 +41,7 @@ public class LessonController {
     @GetMapping("/academy/classroom/lessons")
     public List<LessonDto.Result> search(
         @RequestParam(required = false) Long classroomId,
+        @RequestParam(required = false) Long academyId,
         @RequestParam(required = false) Long studentId,
         @RequestParam(required = false) Long teacherId,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate sinceDate,
@@ -50,6 +51,9 @@ public class LessonController {
         Specification<Lesson> spec = null;
         if (classroomId != null) {
             spec = LessonSpecs.belongsTo(classroomId).and(spec);
+        }
+        if (academyId != null) {
+            spec = LessonSpecs.belongsToAcademy(academyId).and(spec);
         }
         if (studentId != null) {
             spec = LessonSpecs.isAssignedToStudent(studentId).and(spec);
