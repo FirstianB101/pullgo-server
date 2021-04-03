@@ -31,12 +31,14 @@ import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.LessonDto;
 import kr.pullgo.pullgoserver.dto.LessonDto.Update;
 import kr.pullgo.pullgoserver.dto.ScheduleDto;
+import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
+import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
@@ -82,6 +84,9 @@ public class LessonIntegrationTest {
 
     @Autowired
     private LessonRepository lessonRepository;
+
+    @Autowired
+    private AcademyRepository academyRepository;
 
     @Autowired
     private ClassroomRepository classroomRepository;
@@ -256,6 +261,30 @@ public class LessonIntegrationTest {
                         .description("수업 날짜 시작 범위").optional(),
                     parameterWithName("untilDate")
                         .description("수업 날짜 끝 범위 (exclusive)").optional()
+                )));
+        }
+
+        @Test
+        void searchLessonsByAcademyId() throws Exception {
+            // Given
+            Academy academy = createAndSaveAcademy();
+            Classroom classroom = createAndSaveClassroomWithAcademy(academy);
+
+            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
+            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
+            createAndSaveLesson();
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
+                .param("academyId", academy.getId().toString()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    lessonA.getId().intValue(),
+                    lessonB.getId().intValue()
                 )));
         }
 
@@ -519,6 +548,28 @@ public class LessonIntegrationTest {
         return classroomRepository.save(Classroom.builder()
             .name("test classroom")
             .build());
+    }
+
+    private Classroom createAndSaveClassroomWithAcademy(Academy academy) {
+        Classroom classroom = Classroom.builder()
+            .name("test name")
+            .build();
+
+        classroom.setAcademy(academy);
+
+        return classroomRepository.save(classroom);
+    }
+
+    private Academy createAndSaveAcademy() {
+        Teacher owner = createAndSaveTeacher();
+        Academy academy = Academy.builder()
+            .name("Test academy")
+            .phone("01012345678")
+            .address("Seoul")
+            .build();
+        academy.addTeacher(owner);
+        academy.setOwner(owner);
+        return academyRepository.save(academy);
     }
 
     private Schedule createSchedule() {
