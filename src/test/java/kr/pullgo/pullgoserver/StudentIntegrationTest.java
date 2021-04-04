@@ -52,7 +52,9 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -412,7 +414,7 @@ public class StudentIntegrationTest {
     }
 
     @Test
-    void postStudent() throws Exception {
+    void postStudent(@Autowired PasswordEncoder passwordEncoder) throws Exception {
         // When
         StudentDto.Create dto = StudentDto.Create.builder()
             .parentPhone("01098765432")
@@ -432,7 +434,7 @@ public class StudentIntegrationTest {
             .content(body));
 
         // Then
-        actions
+        MvcResult mvcResult = actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.parentPhone").value("01098765432"))
@@ -442,7 +444,17 @@ public class StudentIntegrationTest {
             .andExpect(jsonPath("$.account.username").value("woodyn1002"))
             .andExpect(jsonPath("$.account.password").doesNotExist())
             .andExpect(jsonPath("$.account.fullName").value("최우진"))
-            .andExpect(jsonPath("$.account.phone").value("01012345678"));
+            .andExpect(jsonPath("$.account.phone").value("01012345678"))
+            .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        StudentDto.Result resultDto = fromJson(responseBody, StudentDto.Result.class);
+
+        String encodedPassword = trxHelper.doInTransaction(() -> {
+            Student student = studentRepository.findById(resultDto.getId()).orElseThrow();
+            return student.getAccount().getPassword();
+        });
+        assertThat(passwordEncoder.matches("this!sPassw0rd", encodedPassword)).isTrue();
 
         // Document
         actions.andDo(document("student-create-example",
@@ -461,7 +473,7 @@ public class StudentIntegrationTest {
     class PatchStudent {
 
         @Test
-        void patchStudent() throws Exception {
+        void patchStudent(@Autowired PasswordEncoder passwordEncoder) throws Exception {
             // Given
             Long studentId = trxHelper.doInTransaction(() -> {
                 Account account = entityHelper.generateAccount(it ->
@@ -497,7 +509,7 @@ public class StudentIntegrationTest {
                 .content(body));
 
             // Then
-            actions
+            MvcResult mvcResult = actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(studentId))
                 .andExpect(jsonPath("$.parentPhone").value("01098765432"))
@@ -507,7 +519,17 @@ public class StudentIntegrationTest {
                 .andExpect(jsonPath("$.account.username").value("woodyn1002"))
                 .andExpect(jsonPath("$.account.password").doesNotExist())
                 .andExpect(jsonPath("$.account.fullName").value("최우진"))
-                .andExpect(jsonPath("$.account.phone").value("01012345678"));
+                .andExpect(jsonPath("$.account.phone").value("01012345678"))
+                .andReturn();
+
+            String responseBody = mvcResult.getResponse().getContentAsString();
+            StudentDto.Result resultDto = fromJson(responseBody, StudentDto.Result.class);
+
+            String encodedPassword = trxHelper.doInTransaction(() -> {
+                Student student = studentRepository.findById(resultDto.getId()).orElseThrow();
+                return student.getAccount().getPassword();
+            });
+            assertThat(passwordEncoder.matches("newPassw0rd", encodedPassword)).isTrue();
 
             // Document
             actions.andDo(document("student-update-example",
@@ -1001,6 +1023,10 @@ public class StudentIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
+    }
+
+    private <T> T fromJson(String responseBody, Class<T> clazz) throws JsonProcessingException {
+        return objectMapper.readValue(responseBody, clazz);
     }
 
 }
