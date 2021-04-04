@@ -51,7 +51,11 @@ public class TeacherService {
 
     @Transactional
     public TeacherDto.Result create(TeacherDto.Create dto) {
-        return dtoMapper.asResultDto(teacherRepository.save(dtoMapper.asEntity(dto)));
+        Teacher teacher = teacherRepository.save(dtoMapper.asEntity(dto));
+
+        teacher.setAccount(accountService.create(dto.getAccount()));
+
+        return dtoMapper.asResultDto(teacher);
     }
 
     @Transactional(readOnly = true)
