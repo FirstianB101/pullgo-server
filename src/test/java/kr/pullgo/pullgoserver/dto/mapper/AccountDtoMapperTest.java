@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.persistence.model.Account;
+import kr.pullgo.pullgoserver.persistence.model.UserRole;
 import org.junit.jupiter.api.Test;
 
 public class AccountDtoMapperTest {
@@ -37,6 +38,7 @@ public class AccountDtoMapperTest {
             .password("testpassword")
             .fullName("Test FullName")
             .phone("01012345678")
+            .role(UserRole.USER)
             .build();
         entity.setId(0L);
 
@@ -46,6 +48,7 @@ public class AccountDtoMapperTest {
         assertThat(dto.getUsername()).isEqualTo("testusername");
         assertThat(dto.getFullName()).isEqualTo("Test FullName");
         assertThat(dto.getPhone()).isEqualTo("01012345678");
+        assertThat(dto.getRole()).isEqualTo(UserRole.USER);
     }
 
 }

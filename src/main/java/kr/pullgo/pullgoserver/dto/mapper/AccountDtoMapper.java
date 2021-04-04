@@ -23,6 +23,7 @@ public class AccountDtoMapper implements DtoMapper<Account, AccountDto.Create, A
             .username(account.getUsername())
             .fullName(account.getFullName())
             .phone(account.getPhone())
+            .role(account.getRole())
             .build();
     }
 

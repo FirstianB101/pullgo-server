@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.dto;
 
 import javax.validation.constraints.NotNull;
+import kr.pullgo.pullgoserver.persistence.model.UserRole;
 import lombok.Builder;
 import lombok.Data;
 import lombok.With;
@@ -50,5 +51,8 @@ public interface AccountDto {
 
         @NotNull
         private String phone;
+
+        @NotNull
+        private UserRole role;
     }
 }

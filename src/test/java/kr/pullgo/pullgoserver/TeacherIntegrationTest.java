@@ -39,6 +39,7 @@ import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
+import kr.pullgo.pullgoserver.persistence.model.UserRole;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,6 +71,8 @@ public class TeacherIntegrationTest {
         fieldWithPath("account.fullName").description("실명");
     private static final FieldDescriptor DOC_FIELD_ACCOUNT_PHONE =
         fieldWithPath("account.phone").description("전화번호");
+    private static final FieldDescriptor DOC_FIELD_ACCOUNT_ROLE =
+        fieldWithPath("account.role").description("시스템 역할 (`USER`, `ADMIN`)");
 
     private MockMvc mockMvc;
 
@@ -109,6 +112,7 @@ public class TeacherIntegrationTest {
                     it.withUsername("pte1024")
                         .withFullName("박태언")
                         .withPhone("01012345678")
+                        .withRole(UserRole.USER)
                 );
                 Teacher teacher = entityHelper.generateTeacher(it ->
                     it.withAccount(account)
@@ -135,7 +139,8 @@ public class TeacherIntegrationTest {
                     DOC_FIELD_ID,
                     DOC_FIELD_ACCOUNT_USERNAME,
                     DOC_FIELD_ACCOUNT_FULL_NAME,
-                    DOC_FIELD_ACCOUNT_PHONE
+                    DOC_FIELD_ACCOUNT_PHONE,
+                    DOC_FIELD_ACCOUNT_ROLE
                 )));
         }
 

@@ -39,6 +39,7 @@ import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Student;
+import kr.pullgo.pullgoserver.persistence.model.UserRole;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +77,8 @@ public class StudentIntegrationTest {
         fieldWithPath("account.fullName").description("실명");
     private static final FieldDescriptor DOC_FIELD_ACCOUNT_PHONE =
         fieldWithPath("account.phone").description("전화번호");
+    private static final FieldDescriptor DOC_FIELD_ACCOUNT_ROLE =
+        fieldWithPath("account.role").description("시스템 역할 (`USER`, `ADMIN`)");
 
     private MockMvc mockMvc;
 
@@ -115,6 +118,7 @@ public class StudentIntegrationTest {
                     it.withUsername("woodyn1002")
                         .withFullName("최우진")
                         .withPhone("01012345678")
+                        .withRole(UserRole.USER)
                 );
                 Student student = entityHelper.generateStudent(it ->
                     it.withAccount(account)
@@ -150,7 +154,8 @@ public class StudentIntegrationTest {
                     DOC_FIELD_SCHOOL_YEAR,
                     DOC_FIELD_ACCOUNT_USERNAME,
                     DOC_FIELD_ACCOUNT_FULL_NAME,
-                    DOC_FIELD_ACCOUNT_PHONE
+                    DOC_FIELD_ACCOUNT_PHONE,
+                    DOC_FIELD_ACCOUNT_ROLE
                 )));
         }
 
