@@ -113,7 +113,7 @@ public class ClassroomIntegrationTest {
             Struct given = trxHelper.doInTransaction(() -> {
                 Academy academy = entityHelper.generateAcademy();
                 Classroom classroom = entityHelper.generateClassroom(it ->
-                    it.withName("test name")
+                    it.withName("컴퓨터네트워크 최웅철 (월수금)")
                         .withAcademy(academy)
                 );
 
@@ -132,7 +132,7 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(classroomId))
-                .andExpect(jsonPath("$.name").value("test name"))
+                .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (월수금)"))
                 .andExpect(jsonPath("$.academyId").value(academyId));
 
             // Document
@@ -530,7 +530,7 @@ public class ClassroomIntegrationTest {
                 Academy academy = entityHelper.generateAcademy();
                 Classroom classroom = entityHelper.generateClassroom(it ->
                     it.withAcademy(academy)
-                        .withName("before name")
+                        .withName("컴퓨터네트워크 최웅철 (월수금)")
                 );
 
                 return new Struct()
@@ -542,7 +542,7 @@ public class ClassroomIntegrationTest {
 
             // When
             ClassroomDto.Update dto = ClassroomDto.Update.builder()
-                .name("test name")
+                .name("컴퓨터네트워크 최웅철 (화목)")
                 .build();
             String body = toJson(dto);
 
@@ -555,7 +555,7 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(classroomId))
-                .andExpect(jsonPath("$.name").value("test name"))
+                .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (화목)"))
                 .andExpect(jsonPath("$.academyId").value(academyId));
 
             // Document

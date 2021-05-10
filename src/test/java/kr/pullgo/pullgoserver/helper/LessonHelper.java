@@ -11,9 +11,11 @@ import kr.pullgo.pullgoserver.persistence.model.Lesson;
 
 public class LessonHelper {
 
+    private static final String ARBITRARY_NAME = "3월 1주차 월요일 수업";
+
     public static Lesson aLesson() {
         Lesson lesson = Lesson.builder()
-            .name("test name")
+            .name(ARBITRARY_NAME)
             .build();
         lesson.setId(0L);
         lesson.setClassroom(aClassroom());
@@ -24,14 +26,14 @@ public class LessonHelper {
     public static LessonDto.Create aLessonCreateDto() {
         return LessonDto.Create.builder()
             .classroomId(0L)
-            .name("test name")
+            .name(ARBITRARY_NAME)
             .schedule(aScheduleCreateDto())
             .build();
     }
 
     public static LessonDto.Update aLessonUpdateDto() {
         return LessonDto.Update.builder()
-            .name("test name")
+            .name(ARBITRARY_NAME)
             .schedule(aScheduleUpdateDto())
             .build();
     }
@@ -40,7 +42,7 @@ public class LessonHelper {
         return LessonDto.Result.builder()
             .id(0L)
             .classroomId(0L)
-            .name("test name")
+            .name(ARBITRARY_NAME)
             .schedule(aScheduleResultDto())
             .build();
     }

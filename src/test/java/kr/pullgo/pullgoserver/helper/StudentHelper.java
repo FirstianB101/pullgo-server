@@ -10,11 +10,15 @@ import kr.pullgo.pullgoserver.persistence.model.Student;
 
 public class StudentHelper {
 
+    private static final String ARBITRARY_PARENT_PHONE = "01098765432";
+    private static final String ARBITRARY_SCHOOL_NAME = "광운전자공업고등학교";
+    private static final int ARBITRARY_SCHOOL_YEAR = 3;
+
     public static Student aStudent() {
         Student student = Student.builder()
-            .parentPhone("01012345678")
-            .schoolName("KwangWoon")
-            .schoolYear(3)
+            .parentPhone(ARBITRARY_PARENT_PHONE)
+            .schoolName(ARBITRARY_SCHOOL_NAME)
+            .schoolYear(ARBITRARY_SCHOOL_YEAR)
             .build();
         student.setId(0L);
         student.setAccount(anAccount());
@@ -23,18 +27,18 @@ public class StudentHelper {
 
     public static StudentDto.Create aStudentCreateDto() {
         return StudentDto.Create.builder()
-            .parentPhone("01098765432")
-            .schoolName("test school")
-            .schoolYear(1)
+            .parentPhone(ARBITRARY_PARENT_PHONE)
+            .schoolName(ARBITRARY_SCHOOL_NAME)
+            .schoolYear(ARBITRARY_SCHOOL_YEAR)
             .account(anAccountCreateDto())
             .build();
     }
 
     public static StudentDto.Update aStudentUpdateDto() {
         return StudentDto.Update.builder()
-            .parentPhone("01098765432")
-            .schoolName("test school")
-            .schoolYear(1)
+            .parentPhone(ARBITRARY_PARENT_PHONE)
+            .schoolName(ARBITRARY_SCHOOL_NAME)
+            .schoolYear(ARBITRARY_SCHOOL_YEAR)
             .account(anAccountUpdateDto())
             .build();
     }
@@ -42,9 +46,9 @@ public class StudentHelper {
     public static StudentDto.Result aStudentResultDto() {
         return StudentDto.Result.builder()
             .id(0L)
-            .parentPhone("01098765432")
-            .schoolName("test school")
-            .schoolYear(1)
+            .parentPhone(ARBITRARY_PARENT_PHONE)
+            .schoolName(ARBITRARY_SCHOOL_NAME)
+            .schoolYear(ARBITRARY_SCHOOL_YEAR)
             .account(anAccountResultDto())
             .build();
     }

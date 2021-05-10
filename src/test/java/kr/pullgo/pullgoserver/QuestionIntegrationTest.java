@@ -103,8 +103,8 @@ public class QuestionIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Question question = entityHelper.generateQuestion(it ->
-                    it.withContent("Contents")
-                        .withPictureUrl("Url")
+                    it.withContent("4보다 작은 자연수는?")
+                        .withPictureUrl("https://i.imgur.com/JOKsNeT.jpg")
                         .withAnswer(new Answer(1, 2, 3))
                 );
                 return new Struct()
@@ -122,11 +122,9 @@ public class QuestionIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(questionId))
-                .andExpect(jsonPath("$.answer.[0]").value(1))
-                .andExpect(jsonPath("$.answer.[1]").value(2))
-                .andExpect(jsonPath("$.answer.[2]").value(3))
-                .andExpect(jsonPath("$.pictureUrl").value("Url"))
-                .andExpect(jsonPath("$.content").value("Contents"))
+                .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
+                .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
+                .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
                 .andExpect(jsonPath("$.examId").value(examId));
 
             // Document
@@ -268,9 +266,9 @@ public class QuestionIntegrationTest {
 
         // When
         QuestionDto.Create dto = QuestionDto.Create.builder()
+            .content("4보다 작은 자연수는?")
+            .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
             .answer(Set.of(1, 2, 3))
-            .pictureUrl("Url")
-            .content("Contents")
             .examId(examId)
             .build();
         String body = toJson(dto);
@@ -283,11 +281,9 @@ public class QuestionIntegrationTest {
         actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.answer.[0]").value(1))
-            .andExpect(jsonPath("$.answer.[1]").value(2))
-            .andExpect(jsonPath("$.answer.[2]").value(3))
-            .andExpect(jsonPath("$.pictureUrl").value("Url"))
-            .andExpect(jsonPath("$.content").value("Contents"))
+            .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
+            .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
+            .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
             .andExpect(jsonPath("$.examId").value(examId));
 
         // Document
@@ -308,9 +304,9 @@ public class QuestionIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Question question = entityHelper.generateQuestion(it ->
-                    it.withAnswer(new Answer(4, 5, 6))
-                        .withContent("Before contents")
-                        .withPictureUrl("Before url")
+                    it.withContent("2보다 작은 자연수는?")
+                        .withPictureUrl("https://i.imgur.com/oPR4BiX.jpeg")
+                        .withAnswer(new Answer(1))
                 );
                 return new Struct()
                     .withValue("questionId", question.getId())
@@ -321,9 +317,9 @@ public class QuestionIntegrationTest {
 
             // When
             Update dto = Update.builder()
+                .content("4보다 작은 자연수는?")
+                .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
                 .answer(Set.of(1, 2, 3))
-                .pictureUrl("Url")
-                .content("Contents")
                 .build();
             String body = toJson(dto);
 
@@ -336,11 +332,9 @@ public class QuestionIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.answer.[0]").value(1))
-                .andExpect(jsonPath("$.answer.[1]").value(2))
-                .andExpect(jsonPath("$.answer.[2]").value(3))
-                .andExpect(jsonPath("$.pictureUrl").value("Url"))
-                .andExpect(jsonPath("$.content").value("Contents"))
+                .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
+                .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
+                .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
                 .andExpect(jsonPath("$.examId").value(examId));
 
             // Document

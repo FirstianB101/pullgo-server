@@ -7,11 +7,15 @@ import kr.pullgo.pullgoserver.persistence.model.Schedule;
 
 public class ScheduleHelper {
 
+    private final static LocalDate ARBITRARY_DATE = LocalDate.of(2021, 3, 8);
+    private final static LocalTime ARBITRARY_BEGIN_TIME = LocalTime.of(16, 0);
+    private final static LocalTime ARBITRARY_END_TIME = LocalTime.of(17, 30);
+
     public static Schedule aSchedule() {
         Schedule schedule = Schedule.builder()
-            .date(LocalDate.of(2021, 2, 15))
-            .beginTime(LocalTime.of(16, 0))
-            .endTime(LocalTime.of(17, 0))
+            .date(ARBITRARY_DATE)
+            .beginTime(ARBITRARY_BEGIN_TIME)
+            .endTime(ARBITRARY_END_TIME)
             .build();
         schedule.setId(0L);
         return schedule;
@@ -19,25 +23,25 @@ public class ScheduleHelper {
 
     public static ScheduleDto.Create aScheduleCreateDto() {
         return ScheduleDto.Create.builder()
-            .date(LocalDate.of(2021, 2, 22))
-            .beginTime(LocalTime.of(12, 0))
-            .endTime(LocalTime.of(13, 0))
+            .date(ARBITRARY_DATE)
+            .beginTime(ARBITRARY_BEGIN_TIME)
+            .endTime(ARBITRARY_END_TIME)
             .build();
     }
 
     public static ScheduleDto.Update aScheduleUpdateDto() {
         return ScheduleDto.Update.builder()
-            .date(LocalDate.of(2021, 2, 22))
-            .beginTime(LocalTime.of(12, 0))
-            .endTime(LocalTime.of(13, 0))
+            .date(ARBITRARY_DATE)
+            .beginTime(ARBITRARY_BEGIN_TIME)
+            .endTime(ARBITRARY_END_TIME)
             .build();
     }
 
     public static ScheduleDto.Result aScheduleResultDto() {
         return ScheduleDto.Result.builder()
-            .date(LocalDate.of(2021, 2, 22))
-            .beginTime(LocalTime.of(12, 0))
-            .endTime(LocalTime.of(13, 0))
+            .date(ARBITRARY_DATE)
+            .beginTime(ARBITRARY_BEGIN_TIME)
+            .endTime(ARBITRARY_END_TIME)
             .build();
     }
 }

@@ -15,11 +15,15 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 
 public class AcademyHelper {
 
+    private static final String ARBITRARY_NAME = "퍼스티안 학원";
+    private static final String ARBITRARY_PHONE = "021234567";
+    private static final String ARBITRARY_ADDRESS = "서울특별시 노원구 월계1동 광운로 20";
+
     public static Academy anAcademy() {
         Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
+            .name(ARBITRARY_NAME)
+            .phone(ARBITRARY_PHONE)
+            .address(ARBITRARY_ADDRESS)
             .build();
         academy.setId(0L);
 
@@ -32,18 +36,18 @@ public class AcademyHelper {
 
     public static AcademyDto.Create anAcademyCreateDto() {
         return Create.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
+            .name(ARBITRARY_NAME)
+            .phone(ARBITRARY_PHONE)
+            .address(ARBITRARY_ADDRESS)
             .ownerId(0L)
             .build();
     }
 
     public static AcademyDto.Update anAcademyUpdateDto() {
         return Update.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
+            .name(ARBITRARY_NAME)
+            .phone(ARBITRARY_PHONE)
+            .address(ARBITRARY_ADDRESS)
             .ownerId(0L)
             .build();
     }
@@ -51,9 +55,9 @@ public class AcademyHelper {
     public static Result anAcademyResultDto() {
         return Result.builder()
             .id(0L)
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
+            .name(ARBITRARY_NAME)
+            .phone(ARBITRARY_PHONE)
+            .address(ARBITRARY_ADDRESS)
             .ownerId(0L)
             .build();
     }

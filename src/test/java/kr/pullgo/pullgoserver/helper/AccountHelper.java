@@ -5,12 +5,17 @@ import kr.pullgo.pullgoserver.persistence.model.Account;
 
 public class AccountHelper {
 
+    private static final String ARBITRARY_USERNAME = "woodyn1002";
+    private static final String ARBITRARY_PASSWORD = "this!sPassw0rd";
+    private static final String ARBITRARY_FULL_NAME = "최우진";
+    private static final String ARBITRARY_PHONE = "01012345678";
+
     public static Account anAccount() {
         Account account = Account.builder()
-            .username("testusername")
-            .password("testpassword")
-            .fullName("Test FullName")
-            .phone("01012345678")
+            .username(ARBITRARY_USERNAME)
+            .password(ARBITRARY_PASSWORD)
+            .fullName(ARBITRARY_FULL_NAME)
+            .phone(ARBITRARY_PHONE)
             .build();
         account.setId(0L);
         return account;
@@ -18,26 +23,26 @@ public class AccountHelper {
 
     public static AccountDto.Create anAccountCreateDto() {
         return AccountDto.Create.builder()
-            .username("testusername")
-            .password("testpassword")
-            .fullName("Test FullName")
-            .phone("01012345678")
+            .username(ARBITRARY_USERNAME)
+            .password(ARBITRARY_PASSWORD)
+            .fullName(ARBITRARY_FULL_NAME)
+            .phone(ARBITRARY_PHONE)
             .build();
     }
 
     public static AccountDto.Update anAccountUpdateDto() {
         return AccountDto.Update.builder()
-            .password("testpassword")
-            .fullName("Test FullName")
-            .phone("01012345678")
+            .password(ARBITRARY_PASSWORD)
+            .fullName(ARBITRARY_FULL_NAME)
+            .phone(ARBITRARY_PHONE)
             .build();
     }
 
     public static AccountDto.Result anAccountResultDto() {
         return AccountDto.Result.builder()
-            .username("testusername")
-            .fullName("Test FullName")
-            .phone("01012345678")
+            .username(ARBITRARY_USERNAME)
+            .fullName(ARBITRARY_FULL_NAME)
+            .phone(ARBITRARY_PHONE)
             .build();
     }
 
