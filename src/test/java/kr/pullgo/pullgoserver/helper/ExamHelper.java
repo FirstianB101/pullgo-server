@@ -10,12 +10,19 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 
 public class ExamHelper {
 
+    private static final String ARBITRARY_NAME = "기말시험";
+    private static final LocalDateTime ARBITRARY_BEGIN_DATE_TIME =
+        LocalDateTime.of(2021, 1, 28, 0, 0);
+    private static final LocalDateTime ARBITRARY_END_DATE_TIME =
+        LocalDateTime.of(2021, 1, 29, 0, 0);
+    private static final Duration ARBITRARY_TIME_LIMIT = Duration.ofHours(1);
+
     public static Exam anExam() {
         Exam exam = Exam.builder()
-            .name("Test")
-            .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-            .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-            .timeLimit(Duration.ZERO)
+            .name(ARBITRARY_NAME)
+            .beginDateTime(ARBITRARY_BEGIN_DATE_TIME)
+            .endDateTime(ARBITRARY_END_DATE_TIME)
+            .timeLimit(ARBITRARY_TIME_LIMIT)
             .build();
         exam.setId(0L);
         exam.setClassroom(aClassroom());
@@ -27,19 +34,19 @@ public class ExamHelper {
         return ExamDto.Create.builder()
             .classroomId(0L)
             .creatorId(0L)
-            .name("test name")
-            .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-            .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-            .timeLimit(Duration.ZERO)
+            .name(ARBITRARY_NAME)
+            .beginDateTime(ARBITRARY_BEGIN_DATE_TIME)
+            .endDateTime(ARBITRARY_END_DATE_TIME)
+            .timeLimit(ARBITRARY_TIME_LIMIT)
             .build();
     }
 
     public static ExamDto.Update anExamUpdateDto() {
         return ExamDto.Update.builder()
-            .name("test name")
-            .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-            .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-            .timeLimit(Duration.ZERO)
+            .name(ARBITRARY_NAME)
+            .beginDateTime(ARBITRARY_BEGIN_DATE_TIME)
+            .endDateTime(ARBITRARY_END_DATE_TIME)
+            .timeLimit(ARBITRARY_TIME_LIMIT)
             .build();
     }
 
@@ -48,10 +55,10 @@ public class ExamHelper {
             .id(0L)
             .classroomId(0L)
             .creatorId(0L)
-            .name("test name")
-            .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-            .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-            .timeLimit(Duration.ZERO)
+            .name(ARBITRARY_NAME)
+            .beginDateTime(ARBITRARY_BEGIN_DATE_TIME)
+            .endDateTime(ARBITRARY_END_DATE_TIME)
+            .timeLimit(ARBITRARY_TIME_LIMIT)
             .cancelled(false)
             .finished(false)
             .build();

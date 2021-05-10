@@ -106,9 +106,8 @@ public class TeacherIntegrationTest {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
                 Account account = entityHelper.generateAccount(it ->
-                    it.withUsername("testusername")
-                        .withPassword("testpassword")
-                        .withFullName("Test FullName")
+                    it.withUsername("pte1024")
+                        .withFullName("박태언")
                         .withPhone("01012345678")
                 );
                 Teacher teacher = entityHelper.generateTeacher(it ->
@@ -125,9 +124,9 @@ public class TeacherIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(teacherId))
                 .andExpect(jsonPath("$.account.id").doesNotExist())
-                .andExpect(jsonPath("$.account.username").value("testusername"))
+                .andExpect(jsonPath("$.account.username").value("pte1024"))
                 .andExpect(jsonPath("$.account.password").doesNotExist())
-                .andExpect(jsonPath("$.account.fullName").value("Test FullName"))
+                .andExpect(jsonPath("$.account.fullName").value("박태언"))
                 .andExpect(jsonPath("$.account.phone").value("01012345678"));
 
             // Document
@@ -401,9 +400,9 @@ public class TeacherIntegrationTest {
         // When
         TeacherDto.Create dto = TeacherDto.Create.builder()
             .account(AccountDto.Create.builder()
-                .username("testusername")
-                .password("testpassword")
-                .fullName("Test FullName")
+                .username("pte1024")
+                .password("this!sPassw0rd")
+                .fullName("박태언")
                 .phone("01012345678")
                 .build())
             .build();
@@ -418,9 +417,9 @@ public class TeacherIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.account.id").doesNotExist())
-            .andExpect(jsonPath("$.account.username").value("testusername"))
+            .andExpect(jsonPath("$.account.username").value("pte1024"))
             .andExpect(jsonPath("$.account.password").doesNotExist())
-            .andExpect(jsonPath("$.account.fullName").value("Test FullName"))
+            .andExpect(jsonPath("$.account.fullName").value("박태언"))
             .andExpect(jsonPath("$.account.phone").value("01012345678"));
 
         // Document
@@ -441,9 +440,9 @@ public class TeacherIntegrationTest {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
                 Account account = entityHelper.generateAccount(it ->
-                    it.withUsername("testusername")
-                        .withPassword("beforePwd")
-                        .withFullName("Before FullName")
+                    it.withUsername("pte1024")
+                        .withPassword("oldPassw0rd")
+                        .withFullName("박언태")
                         .withPhone("01011112222")
                 );
                 Teacher teacher = entityHelper.generateTeacher(it ->
@@ -455,8 +454,8 @@ public class TeacherIntegrationTest {
             // When
             TeacherDto.Update dto = TeacherDto.Update.builder()
                 .account(AccountDto.Update.builder()
-                    .password("testpassword")
-                    .fullName("Test FullName")
+                    .password("newPassw0rd")
+                    .fullName("박태언")
                     .phone("01012345678")
                     .build())
                 .build();
@@ -471,9 +470,9 @@ public class TeacherIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(teacherId))
                 .andExpect(jsonPath("$.account.id").doesNotExist())
-                .andExpect(jsonPath("$.account.username").value("testusername"))
+                .andExpect(jsonPath("$.account.username").value("pte1024"))
                 .andExpect(jsonPath("$.account.password").doesNotExist())
-                .andExpect(jsonPath("$.account.fullName").value("Test FullName"))
+                .andExpect(jsonPath("$.account.fullName").value("박태언"))
                 .andExpect(jsonPath("$.account.phone").value("01012345678"));
 
             // Document

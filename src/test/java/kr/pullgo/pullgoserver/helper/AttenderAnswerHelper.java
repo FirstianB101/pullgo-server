@@ -10,9 +10,11 @@ import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
 
 public class AttenderAnswerHelper {
 
+    private static final Set<Integer> ARBITRARY_ANSWER = Set.of(1, 4);
+
     public static AttenderAnswer anAttenderAnswer() {
         AttenderAnswer attenderAnswer = AttenderAnswer.builder()
-            .answer(new Answer(4, 5, 6))
+            .answer(new Answer(ARBITRARY_ANSWER))
             .build();
         attenderAnswer.setId(0L);
         attenderAnswer.setAttenderState(anAttenderState());
@@ -24,13 +26,13 @@ public class AttenderAnswerHelper {
         return AttenderAnswerDto.Create.builder()
             .attenderStateId(0L)
             .questionId(0L)
-            .answer(Set.of(4, 5, 6))
+            .answer(ARBITRARY_ANSWER)
             .build();
     }
 
     public static AttenderAnswerDto.Update anAttenderAnswerUpdateDto() {
         return AttenderAnswerDto.Update.builder()
-            .answer(Set.of(4, 5, 6))
+            .answer(ARBITRARY_ANSWER)
             .build();
     }
 
@@ -39,7 +41,7 @@ public class AttenderAnswerHelper {
             .id(0L)
             .attenderStateId(0L)
             .questionId(0L)
-            .answer(Set.of(4, 5, 6))
+            .answer(ARBITRARY_ANSWER)
             .build();
     }
 

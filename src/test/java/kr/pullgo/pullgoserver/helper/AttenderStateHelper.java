@@ -10,6 +10,9 @@ import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 
 public class AttenderStateHelper {
 
+    private static final AttendingProgress ARBITRARY_PROGRESS = AttendingProgress.COMPLETE;
+    private static final int ARBITRARY_SCORE = 85;
+
     public static AttenderState anAttenderState() {
         AttenderState attenderState = AttenderState.builder()
             .examStartTime(LocalDateTime.now())
@@ -29,8 +32,8 @@ public class AttenderStateHelper {
 
     public static AttenderStateDto.Update anAttenderStateUpdateDto() {
         return AttenderStateDto.Update.builder()
-            .progress(AttendingProgress.COMPLETE)
-            .score(85)
+            .progress(ARBITRARY_PROGRESS)
+            .score(ARBITRARY_SCORE)
             .build();
     }
 
@@ -39,8 +42,8 @@ public class AttenderStateHelper {
             .id(0L)
             .attenderId(0L)
             .examId(0L)
-            .progress(AttendingProgress.COMPLETE)
-            .score(85)
+            .progress(ARBITRARY_PROGRESS)
+            .score(ARBITRARY_SCORE)
             .build();
     }
 

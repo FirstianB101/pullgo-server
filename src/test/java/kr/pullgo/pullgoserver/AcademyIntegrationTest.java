@@ -107,9 +107,9 @@ public class AcademyIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Academy academy = entityHelper.generateAcademy(it ->
-                    it.withName("Test academy")
-                        .withPhone("01012345678")
-                        .withAddress("Seoul")
+                    it.withName("퍼스티안 학원")
+                        .withPhone("021234567")
+                        .withAddress("서울특별시 노원구 월계1동 광운로 20")
                 );
 
                 return new Struct()
@@ -126,9 +126,9 @@ public class AcademyIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(academyId))
-                .andExpect(jsonPath("$.name").value("Test academy"))
-                .andExpect(jsonPath("$.phone").value("01012345678"))
-                .andExpect(jsonPath("$.address").value("Seoul"))
+                .andExpect(jsonPath("$.name").value("퍼스티안 학원"))
+                .andExpect(jsonPath("$.phone").value("021234567"))
+                .andExpect(jsonPath("$.address").value("서울특별시 노원구 월계1동 광운로 20"))
                 .andExpect(jsonPath("$.ownerId").value(ownerId));
 
             // Document
@@ -479,9 +479,9 @@ public class AcademyIntegrationTest {
 
             // When
             AcademyDto.Create dto = AcademyDto.Create.builder()
-                .name("Test academy")
-                .phone("01012345678")
-                .address("Seoul")
+                .name("퍼스티안 학원")
+                .phone("021234567")
+                .address("서울특별시 노원구 월계1동 광운로 20")
                 .ownerId(creatorId)
                 .build();
             String body = toJson(dto);
@@ -494,9 +494,9 @@ public class AcademyIntegrationTest {
             actions
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.name").value("Test academy"))
-                .andExpect(jsonPath("$.phone").value("01012345678"))
-                .andExpect(jsonPath("$.address").value("Seoul"))
+                .andExpect(jsonPath("$.name").value("퍼스티안 학원"))
+                .andExpect(jsonPath("$.phone").value("021234567"))
+                .andExpect(jsonPath("$.address").value("서울특별시 노원구 월계1동 광운로 20"))
                 .andExpect(jsonPath("$.ownerId").value(creatorId));
 
             // Document
@@ -537,9 +537,9 @@ public class AcademyIntegrationTest {
                 Teacher teacherB = entityHelper.generateTeacher();
 
                 Academy academy = entityHelper.generateAcademy(it -> {
-                    it = it.withName("Before academy")
-                        .withPhone("01011112222")
-                        .withAddress("Busan");
+                    it = it.withName("퍼스티안 학원")
+                        .withPhone("021234567")
+                        .withAddress("서울특별시 노원구 월계1동 광운로 20");
 
                     it.addTeacher(teacherA);
                     it.addTeacher(teacherB);
@@ -557,9 +557,9 @@ public class AcademyIntegrationTest {
 
             // When
             AcademyDto.Update dto = AcademyDto.Update.builder()
-                .name("Test academy")
-                .phone("01012345678")
-                .address("Seoul")
+                .name("세컨디안 학원")
+                .phone("029876543")
+                .address("서울특별시 노원구 광운로21 광운대학교 빛솔재(행복기숙사)")
                 .ownerId(teacherBId)
                 .build();
             String body = toJson(dto);
@@ -572,9 +572,9 @@ public class AcademyIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(academyId))
-                .andExpect(jsonPath("$.name").value("Test academy"))
-                .andExpect(jsonPath("$.phone").value("01012345678"))
-                .andExpect(jsonPath("$.address").value("Seoul"))
+                .andExpect(jsonPath("$.name").value("세컨디안 학원"))
+                .andExpect(jsonPath("$.phone").value("029876543"))
+                .andExpect(jsonPath("$.address").value("서울특별시 노원구 광운로21 광운대학교 빛솔재(행복기숙사)"))
                 .andExpect(jsonPath("$.ownerId").value(teacherBId));
 
             // Document

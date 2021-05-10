@@ -114,7 +114,7 @@ public class ExamIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
-                    it.withName("test name")
+                    it.withName("3월 모의고사")
                         .withBeginDateTime(LocalDateTime.of(2021, 3, 2, 0, 0))
                         .withEndDateTime(LocalDateTime.of(2021, 3, 4, 12, 0))
                         .withTimeLimit(Duration.ofHours(1))
@@ -140,7 +140,7 @@ public class ExamIntegrationTest {
                 .andExpect(jsonPath("$.id").value(examId))
                 .andExpect(jsonPath("$.classroomId").value(classroomId))
                 .andExpect(jsonPath("$.creatorId").value(creatorId))
-                .andExpect(jsonPath("$.name").value("test name"))
+                .andExpect(jsonPath("$.name").value("3월 모의고사"))
                 .andExpect(jsonPath("$.beginDateTime").value("2021-03-02T00:00:00"))
                 .andExpect(jsonPath("$.endDateTime").value("2021-03-04T12:00:00"))
                 .andExpect(jsonPath("$.timeLimit").value("PT1H"))
@@ -378,7 +378,7 @@ public class ExamIntegrationTest {
         ExamDto.Create dto = ExamDto.Create.builder()
             .classroomId(classroomId)
             .creatorId(creatorId)
-            .name("test name")
+            .name("3월 모의고사")
             .beginDateTime(LocalDateTime.of(2021, 3, 2, 0, 0))
             .endDateTime(LocalDateTime.of(2021, 3, 4, 12, 0))
             .timeLimit(Duration.ofHours(1))
@@ -396,7 +396,7 @@ public class ExamIntegrationTest {
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.classroomId").value(classroomId))
             .andExpect(jsonPath("$.creatorId").value(creatorId))
-            .andExpect(jsonPath("$.name").value("test name"))
+            .andExpect(jsonPath("$.name").value("3월 모의고사"))
             .andExpect(jsonPath("$.beginDateTime").value("2021-03-02T00:00:00"))
             .andExpect(jsonPath("$.endDateTime").value("2021-03-04T12:00:00"))
             .andExpect(jsonPath("$.timeLimit").value("PT1H"))
@@ -425,7 +425,7 @@ public class ExamIntegrationTest {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
-                    it.withName("before name")
+                    it.withName("3월 모의고사")
                         .withBeginDateTime(LocalDateTime.of(2021, 3, 2, 0, 0))
                         .withEndDateTime(LocalDateTime.of(2021, 3, 4, 12, 0))
                         .withTimeLimit(Duration.ofHours(1))
@@ -436,9 +436,9 @@ public class ExamIntegrationTest {
 
             // When
             Update dto = Update.builder()
-                .name("test name")
-                .beginDateTime(LocalDateTime.of(2021, 5, 12, 0, 0))
-                .endDateTime(LocalDateTime.of(2021, 5, 17, 12, 30))
+                .name("4월 모의고사")
+                .beginDateTime(LocalDateTime.of(2021, 4, 12, 0, 0))
+                .endDateTime(LocalDateTime.of(2021, 4, 17, 12, 30))
                 .timeLimit(Duration.ofHours(3))
                 .passScore(80)
                 .build();
@@ -452,9 +452,9 @@ public class ExamIntegrationTest {
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("test name"))
-                .andExpect(jsonPath("$.beginDateTime").value("2021-05-12T00:00:00"))
-                .andExpect(jsonPath("$.endDateTime").value("2021-05-17T12:30:00"))
+                .andExpect(jsonPath("$.name").value("4월 모의고사"))
+                .andExpect(jsonPath("$.beginDateTime").value("2021-04-12T00:00:00"))
+                .andExpect(jsonPath("$.endDateTime").value("2021-04-17T12:30:00"))
                 .andExpect(jsonPath("$.timeLimit").value("PT3H"))
                 .andExpect(jsonPath("$.passScore").value(80));
 

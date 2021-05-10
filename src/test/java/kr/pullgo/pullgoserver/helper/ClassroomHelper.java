@@ -7,9 +7,11 @@ import kr.pullgo.pullgoserver.persistence.model.Classroom;
 
 public class ClassroomHelper {
 
+    private static final String ARBITRARY_NAME = "컴퓨터네트워크 최웅철 (월수금)";
+
     public static Classroom aClassroom() {
         Classroom classroom = Classroom.builder()
-            .name("Test")
+            .name(ARBITRARY_NAME)
             .build();
         classroom.setId(0L);
         classroom.setAcademy(anAcademy());
@@ -18,13 +20,13 @@ public class ClassroomHelper {
 
     public static ClassroomDto.Create aClassroomCreateDto() {
         return ClassroomDto.Create.builder()
-            .name("test name")
+            .name(ARBITRARY_NAME)
             .build();
     }
 
     public static ClassroomDto.Update aClassroomUpdateDto() {
         return ClassroomDto.Update.builder()
-            .name("test name")
+            .name(ARBITRARY_NAME)
             .build();
     }
 
@@ -32,7 +34,7 @@ public class ClassroomHelper {
         return ClassroomDto.Result.builder()
             .id(0L)
             .academyId(0L)
-            .name("test name")
+            .name(ARBITRARY_NAME)
             .build();
     }
 

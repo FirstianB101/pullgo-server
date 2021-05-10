@@ -108,12 +108,12 @@ public class LessonIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Schedule schedule = entityHelper.generateSchedule(it ->
-                    it.withDate(LocalDate.of(1111, 11, 11))
-                        .withBeginTime(LocalTime.of(22, 22, 22))
-                        .withEndTime(LocalTime.of(0, 0, 0))
+                    it.withDate(LocalDate.of(2021, 5, 13))
+                        .withBeginTime(LocalTime.of(16, 30))
+                        .withEndTime(LocalTime.of(18, 0))
                 );
                 Lesson lesson = entityHelper.generateLesson(it ->
-                    it.withName("test name")
+                    it.withName("5월 13일 4시 반 수업")
                         .withSchedule(schedule)
                 );
 
@@ -132,12 +132,12 @@ public class LessonIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(lessonId))
-                .andExpect(jsonPath("$.name").value("test name"))
+                .andExpect(jsonPath("$.name").value("5월 13일 4시 반 수업"))
                 .andExpect(jsonPath("$.classroomId").value(classroomId))
                 .andExpect(jsonPath("$.schedule.id").doesNotExist())
-                .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
-                .andExpect(jsonPath("$.schedule.beginTime").value("22:22:22"))
-                .andExpect(jsonPath("$.schedule.endTime").value("00:00:00"));
+                .andExpect(jsonPath("$.schedule.date").value("2021-05-13"))
+                .andExpect(jsonPath("$.schedule.beginTime").value("16:30:00"))
+                .andExpect(jsonPath("$.schedule.endTime").value("18:00:00"));
 
             // Document
             actions.andDo(document("lesson-retrieve-example",
@@ -440,12 +440,12 @@ public class LessonIntegrationTest {
 
         // When
         LessonDto.Create dto = LessonDto.Create.builder()
-            .name("test name")
+            .name("5월 13일 4시 반 수업")
             .classroomId(classroomId)
             .schedule(ScheduleDto.Create.builder()
-                .date(LocalDate.of(1111, 11, 11))
-                .beginTime(LocalTime.of(22, 22, 22))
-                .endTime(LocalTime.of(0, 0, 0))
+                .date(LocalDate.of(2021, 5, 13))
+                .beginTime(LocalTime.of(16, 30))
+                .endTime(LocalTime.of(18, 0))
                 .build())
             .build();
         String body = toJson(dto);
@@ -459,11 +459,11 @@ public class LessonIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.classroomId").value(classroomId))
-            .andExpect(jsonPath("$.name").value("test name"))
+            .andExpect(jsonPath("$.name").value("5월 13일 4시 반 수업"))
             .andExpect(jsonPath("$.schedule.id").doesNotExist())
-            .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
-            .andExpect(jsonPath("$.schedule.beginTime").value("22:22:22"))
-            .andExpect(jsonPath("$.schedule.endTime").value("00:00:00"));
+            .andExpect(jsonPath("$.schedule.date").value("2021-05-13"))
+            .andExpect(jsonPath("$.schedule.beginTime").value("16:30:00"))
+            .andExpect(jsonPath("$.schedule.endTime").value("18:00:00"));
 
         // Document
         actions.andDo(document("lesson-create-example",
@@ -484,12 +484,12 @@ public class LessonIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Schedule schedule = entityHelper.generateSchedule(it ->
-                    it.withDate(LocalDate.of(1111, 11, 11))
-                        .withBeginTime(LocalTime.of(22, 22, 22))
-                        .withEndTime(LocalTime.of(0, 0, 0))
+                    it.withDate(LocalDate.of(2021, 5, 13))
+                        .withBeginTime(LocalTime.of(16, 30))
+                        .withEndTime(LocalTime.of(18, 0))
                 );
                 Lesson lesson = entityHelper.generateLesson(it ->
-                    it.withName("before name")
+                    it.withName("5월 13일 4시 반 수업")
                         .withSchedule(schedule)
                 );
                 return new Struct()
@@ -501,11 +501,11 @@ public class LessonIntegrationTest {
 
             // When
             LessonDto.Update dto = Update.builder()
-                .name("test name")
+                .name("5월 14일 3시 수업")
                 .schedule(ScheduleDto.Update.builder()
-                    .date(LocalDate.of(2021, 3, 2))
-                    .beginTime(LocalTime.of(8, 0, 0))
-                    .endTime(LocalTime.of(21, 59, 59))
+                    .date(LocalDate.of(2021, 5, 14))
+                    .beginTime(LocalTime.of(15, 0))
+                    .endTime(LocalTime.of(16, 30))
                     .build())
                 .build();
             String body = toJson(dto);
@@ -519,12 +519,12 @@ public class LessonIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(lessonId))
-                .andExpect(jsonPath("$.name").value("test name"))
+                .andExpect(jsonPath("$.name").value("5월 14일 3시 수업"))
                 .andExpect(jsonPath("$.classroomId").value(classroomId))
                 .andExpect(jsonPath("$.schedule.id").doesNotExist())
-                .andExpect(jsonPath("$.schedule.date").value("2021-03-02"))
-                .andExpect(jsonPath("$.schedule.beginTime").value("08:00:00"))
-                .andExpect(jsonPath("$.schedule.endTime").value("21:59:59"));
+                .andExpect(jsonPath("$.schedule.date").value("2021-05-14"))
+                .andExpect(jsonPath("$.schedule.beginTime").value("15:00:00"))
+                .andExpect(jsonPath("$.schedule.endTime").value("16:30:00"));
 
             // Document
             actions.andDo(document("lesson-update-example",
