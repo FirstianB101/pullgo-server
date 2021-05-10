@@ -1,6 +1,6 @@
 package kr.pullgo.pullgoserver.helper;
 
-import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.AcademyDto.AcceptStudent;
@@ -15,22 +15,22 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 
 public class AcademyHelper {
 
-    public static Academy withId(Academy entity, Long id) {
-        entity.setId(id);
-        return entity;
-    }
-
-    public static Result academyResultDtoWithId(Long id) {
-        return Result.builder()
-            .id(id)
+    public static Academy anAcademy() {
+        Academy academy = Academy.builder()
             .name("Test academy")
             .phone("01012345678")
             .address("Seoul")
-            .ownerId(0L)
             .build();
+        academy.setId(0L);
+
+        Teacher owner = aTeacher();
+        academy.addTeacher(owner);
+        academy.setOwner(owner);
+
+        return academy;
     }
 
-    public static Create academyCreateDto() {
+    public static AcademyDto.Create anAcademyCreateDto() {
         return Create.builder()
             .name("Test academy")
             .phone("01012345678")
@@ -39,25 +39,7 @@ public class AcademyHelper {
             .build();
     }
 
-    public static Create academyCreateDtoWithOwnerId(long ownerId) {
-        return AcademyDto.Create.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .ownerId(ownerId)
-            .build();
-    }
-
-    public static Update academyUpdateDtoWithOwnerId(long ownerId) {
-        return AcademyDto.Update.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .ownerId(ownerId)
-            .build();
-    }
-
-    public static Update academyUpdateDto() {
+    public static AcademyDto.Update anAcademyUpdateDto() {
         return Update.builder()
             .name("Test academy")
             .phone("01012345678")
@@ -66,66 +48,38 @@ public class AcademyHelper {
             .build();
     }
 
-    public static Academy academyWithId(Long id) {
-        Academy academy = Academy.builder()
+    public static Result anAcademyResultDto() {
+        return Result.builder()
+            .id(0L)
             .name("Test academy")
             .phone("01012345678")
             .address("Seoul")
+            .ownerId(0L)
             .build();
-        academy.setId(id);
-
-        Teacher teacher = teacherWithId(0L);
-        academy.addTeacher(teacher);
-        academy.setOwner(teacher);
-
-        return academy;
     }
 
-    public static AcceptTeacher acceptTeacherDto() {
+    public static AcceptTeacher anAcademyAcceptTeacherDto() {
         return AcceptTeacher.builder()
             .teacherId(0L)
             .build();
     }
 
-    public static AcceptTeacher acceptTeacherDtoWithTeacherId(Long teacherId) {
-        return AcceptTeacher.builder()
-            .teacherId(teacherId)
-            .build();
-    }
-
-    public static KickTeacher kickTeacherDto() {
+    public static KickTeacher anAcademyKickTeacherDto() {
         return KickTeacher.builder()
             .teacherId(0L)
             .build();
     }
 
-    public static KickTeacher kickTeacherDtoWithTeacherId(Long teacherId) {
-        return KickTeacher.builder()
-            .teacherId(teacherId)
-            .build();
-    }
-
-    public static AcceptStudent acceptStudentDto() {
+    public static AcceptStudent anAcademyAcceptStudentDto() {
         return AcceptStudent.builder()
             .studentId(0L)
             .build();
     }
 
-    public static AcceptStudent acceptStudentDtoWithStudentId(Long studentId) {
-        return AcceptStudent.builder()
-            .studentId(studentId)
-            .build();
-    }
-
-    public static KickStudent kickStudentDto() {
+    public static KickStudent anAcademyKickStudentDto() {
         return KickStudent.builder()
             .studentId(0L)
             .build();
     }
 
-    public static KickStudent kickStudentDtoWithStudentId(Long studentId) {
-        return KickStudent.builder()
-            .studentId(studentId)
-            .build();
-    }
 }

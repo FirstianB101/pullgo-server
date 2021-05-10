@@ -1,12 +1,12 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyCreateDto;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyResultDtoWithId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDtoWithStudentId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDtoWithTeacherId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickStudentDtoWithStudentId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickTeacherDtoWithTeacherId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyAcceptStudentDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyAcceptTeacherDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyCreateDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyKickStudentDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyKickTeacherDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyResultDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyUpdateDto;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -77,12 +77,12 @@ class AcademyControllerTest {
     void postAcademy() throws Exception {
         // Given
         given(academyService.create(any()))
-            .willReturn(academyResultDtoWithId(0L));
+            .willReturn(anAcademyResultDto().withId(0L));
 
         // When
         ResultActions actions = mockMvc.perform(post("/academies")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(academyCreateDto())))
+            .content(toJson(anAcademyCreateDto())))
             .andDo(print());
 
         // Then
@@ -95,12 +95,12 @@ class AcademyControllerTest {
     void patchAcademy() throws Exception {
         // Given
         given(academyService.update(eq(0L), any()))
-            .willReturn(academyResultDtoWithId(0L));
+            .willReturn(anAcademyResultDto().withId(0L));
 
         // When
         ResultActions actions = mockMvc.perform(patch("/academies/0")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(academyUpdateDto())))
+            .content(toJson(anAcademyUpdateDto())))
             .andDo(print());
 
         // Then
@@ -127,7 +127,7 @@ class AcademyControllerTest {
         // When
         ResultActions actions = mockMvc.perform(post("/academies/0/accept-teacher")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(acceptTeacherDtoWithTeacherId(0L))))
+            .content(toJson(anAcademyAcceptTeacherDto().withTeacherId(0L))))
             .andDo(print());
 
         // Then
@@ -142,7 +142,7 @@ class AcademyControllerTest {
         // When
         ResultActions actions = mockMvc.perform(post("/academies/0/kick-teacher")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(kickTeacherDtoWithTeacherId(0L))))
+            .content(toJson(anAcademyKickTeacherDto().withTeacherId(0L))))
             .andDo(print());
 
         // Then
@@ -157,7 +157,7 @@ class AcademyControllerTest {
         // When
         ResultActions actions = mockMvc.perform(post("/academies/0/accept-student")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(acceptStudentDtoWithStudentId(0L))))
+            .content(toJson(anAcademyAcceptStudentDto().withStudentId(0L))))
             .andDo(print());
 
         // Then
@@ -172,7 +172,7 @@ class AcademyControllerTest {
         // When
         ResultActions actions = mockMvc.perform(post("/academies/0/kick-student")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(toJson(kickStudentDtoWithStudentId(0L))))
+            .content(toJson(anAcademyKickStudentDto().withStudentId(0L))))
             .andDo(print());
 
         // Then

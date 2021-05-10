@@ -5,11 +5,13 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 
 public interface AttenderAnswerDto {
 
     @Data
     @Builder
+    @With
     class Create {
 
         @NotNull
@@ -25,6 +27,7 @@ public interface AttenderAnswerDto {
     @Data
     @Builder
     @NoArgsConstructor
+    @With
     class Update {
 
         private Set<Integer> answer;
@@ -36,6 +39,7 @@ public interface AttenderAnswerDto {
 
     @Data
     @Builder
+    @With
     class Result {
 
         @NotNull

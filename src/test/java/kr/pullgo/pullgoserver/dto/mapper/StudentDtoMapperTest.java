@@ -1,5 +1,8 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
+import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccount;
+import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccountCreateDto;
+import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccountResultDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -27,11 +30,11 @@ class StudentDtoMapperTest {
     void asEntity() {
         // Given
         given(accountDtoMapper.asEntity(any(AccountDto.Create.class)))
-            .willReturn(accountWithId(0L));
+            .willReturn(anAccount().withId(0L));
 
         // When
         StudentDto.Create dto = StudentDto.Create.builder()
-            .account(accountCreateDto())
+            .account(anAccountCreateDto())
             .parentPhone("01012345678")
             .schoolName("test school")
             .schoolYear(1)
@@ -50,7 +53,7 @@ class StudentDtoMapperTest {
     void asResultDto() {
         // Given
         given(accountDtoMapper.asResultDto(any(Account.class)))
-            .willReturn(accountResultDto());
+            .willReturn(anAccountResultDto());
 
         // When
         Student entity = Student.builder()
@@ -59,7 +62,7 @@ class StudentDtoMapperTest {
             .schoolYear(1)
             .build();
         entity.setId(0L);
-        entity.setAccount(accountWithId(1L));
+        entity.setAccount(anAccount().withId(1L));
 
         StudentDto.Result dto = dtoMapper.asResultDto(entity);
 
@@ -69,34 +72,6 @@ class StudentDtoMapperTest {
         assertThat(dto.getSchoolName()).isEqualTo("test school");
         assertThat(dto.getSchoolYear()).isEqualTo(1);
         assertThat(dto.getAccount()).isNotNull();
-    }
-
-    private Account accountWithId(Long id) {
-        Account account = Account.builder()
-            .username("testusername")
-            .password("testpassword")
-            .fullName("Test FullName")
-            .phone("01012345678")
-            .build();
-        account.setId(id);
-        return account;
-    }
-
-    private AccountDto.Create accountCreateDto() {
-        return AccountDto.Create.builder()
-            .username("testusername")
-            .password("testpassword")
-            .fullName("Test FullName")
-            .phone("01012345678")
-            .build();
-    }
-
-    private AccountDto.Result accountResultDto() {
-        return AccountDto.Result.builder()
-            .username("testusername")
-            .fullName("Test FullName")
-            .phone("01012345678")
-            .build();
     }
 
 }

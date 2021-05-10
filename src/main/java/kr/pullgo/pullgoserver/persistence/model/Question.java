@@ -9,15 +9,19 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.With;
 
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
+@With
 @ToString
 @Entity
 public class Question extends TimeEntity {

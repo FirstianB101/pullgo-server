@@ -1,14 +1,12 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
-import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroom;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.ExamDto;
-import kr.pullgo.pullgoserver.dto.TeacherDto;
-import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,8 +60,8 @@ class ExamDtoMapperTest {
             .passScore(null)
             .build();
         entity.setId(0L);
-        entity.setClassroom(classroomWithId(1L));
-        entity.setCreator(teacherWithId(2L));
+        entity.setClassroom(aClassroom().withId(1L));
+        entity.setCreator(aTeacher().withId(2L));
         entity.setCancelled(false);
         entity.setFinished(true);
 
@@ -81,41 +79,4 @@ class ExamDtoMapperTest {
         assertThat(dto.getTimeLimit()).isEqualTo(Duration.ofHours(1));
     }
 
-    private TeacherDto.Create teacherCreateDto() {
-        return TeacherDto.Create.builder()
-            .account(accountCreateDto())
-            .build();
-    }
-
-    private TeacherDto.Result teacherResultDtoWithId(Long id) {
-        return TeacherDto.Result.builder()
-            .id(id)
-            .account(accountResultDto())
-            .build();
-    }
-
-    private AccountDto.Create accountCreateDto() {
-        return AccountDto.Create.builder()
-            .username("testusername")
-            .password("testpassword")
-            .fullName("Test FullName")
-            .phone("01012345678")
-            .build();
-    }
-
-    private AccountDto.Result accountResultDto() {
-        return AccountDto.Result.builder()
-            .username("testusername")
-            .fullName("Test FullName")
-            .phone("01012345678")
-            .build();
-    }
-
-    private Classroom classroomWithId(Long id) {
-        Classroom classroom = Classroom.builder()
-            .name("test name")
-            .build();
-        classroom.setId(id);
-        return classroom;
-    }
 }

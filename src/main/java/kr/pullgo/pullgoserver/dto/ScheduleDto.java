@@ -5,11 +5,13 @@ import java.time.LocalTime;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.With;
 
 public interface ScheduleDto {
 
     @Data
     @Builder
+    @With
     class Create {
 
         @NotNull
@@ -24,6 +26,7 @@ public interface ScheduleDto {
 
     @Data
     @Builder
+    @With
     class Update {
 
         private LocalDate date;
@@ -35,6 +38,7 @@ public interface ScheduleDto {
 
     @Data
     @Builder
+    @With
     class Result {
 
         @NotNull

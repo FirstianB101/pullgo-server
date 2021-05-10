@@ -1,16 +1,14 @@
 package kr.pullgo.pullgoserver.service;
 
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyCreateDtoWithOwnerId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDto;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyUpdateDtoWithOwnerId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyWithId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptStudentDtoWithStudentId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.acceptTeacherDtoWithTeacherId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickStudentDtoWithStudentId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.kickTeacherDtoWithTeacherId;
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.withId;
-import static kr.pullgo.pullgoserver.helper.StudentHelper.studentWithId;
-import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademy;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyAcceptStudentDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyAcceptTeacherDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyCreateDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyKickStudentDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyKickTeacherDto;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyUpdateDto;
+import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudent;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.BDDMockito.given;
@@ -72,10 +70,10 @@ class AcademyServiceTest {
                 .build();
 
             given(academyRepository.save(any()))
-                .will(i -> withId(i.getArgument(0), 0L));
+                .will(i -> ((Academy) i.getArgument(0)).withId(0L));
 
             given(teacherRepository.findById(0L))
-                .willReturn(Optional.of(teacherWithId(0L)));
+                .willReturn(Optional.of(aTeacher().withId(0L)));
 
             // When
             AcademyDto.Result result = academyService.create(dto);
@@ -93,7 +91,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.empty());
 
             // When
-            AcademyDto.Create dto = academyCreateDtoWithOwnerId(0L);
+            AcademyDto.Create dto = anAcademyCreateDto().withOwnerId(0L);
             Throwable thrown = catchThrowable(() -> academyService.create(dto));
 
             // Then
@@ -107,8 +105,8 @@ class AcademyServiceTest {
         @Test
         void updateAcademy() {
             // Given
-            Teacher oldOwner = teacherWithId(1L);
-            Teacher newOwner = teacherWithId(2L);
+            Teacher oldOwner = aTeacher().withId(1L);
+            Teacher newOwner = aTeacher().withId(2L);
 
             Academy entity = Academy.builder()
                 .name("Before")
@@ -151,7 +149,7 @@ class AcademyServiceTest {
         @Test
         void updateAcademy_InvalidAcademyId_ExceptionThrown() {
             // Given
-            AcademyDto.Update dto = academyUpdateDto();
+            AcademyDto.Update dto = anAcademyUpdateDto();
 
             given(academyRepository.findById(1L))
                 .willReturn(Optional.empty());
@@ -173,7 +171,7 @@ class AcademyServiceTest {
                 .build();
             entity.setId(0L);
 
-            Teacher teacher = teacherWithId(1L);
+            Teacher teacher = aTeacher().withId(1L);
             entity.addTeacher(teacher);
             entity.setOwner(teacher);
 
@@ -184,7 +182,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.empty());
 
             // When
-            AcademyDto.Update dto = academyUpdateDtoWithOwnerId(2L);
+            AcademyDto.Update dto = anAcademyUpdateDto().withOwnerId(2L);
             Throwable thrown = catchThrowable(() -> academyService.update(0L, dto));
 
             // Then
@@ -199,7 +197,7 @@ class AcademyServiceTest {
         void deleteAcademy() {
             // Given
             given(academyRepository.findById(1L))
-                .willReturn(Optional.of(academyWithId(1L)));
+                .willReturn(Optional.of(anAcademy().withId(1L)));
 
             given(academyRepository.removeById(1L))
                 .willReturn(1);
@@ -215,7 +213,7 @@ class AcademyServiceTest {
         void deleteAcademy_InvalidAcademyId_ExceptionThrown() {
             // Given
             given(academyRepository.findById(1L))
-                .willReturn(Optional.of(academyWithId(1L)));
+                .willReturn(Optional.of(anAcademy().withId(1L)));
 
             given(academyRepository.removeById(1L))
                 .willReturn(0);
@@ -241,7 +239,7 @@ class AcademyServiceTest {
                 .build();
             entity.setId(0L);
 
-            Teacher teacher = teacherWithId(1L);
+            Teacher teacher = aTeacher().withId(1L);
             entity.addTeacher(teacher);
             entity.setOwner(teacher);
 
@@ -279,8 +277,8 @@ class AcademyServiceTest {
         @Test
         void acceptTeacher() {
             // Given
-            Academy academy = academyWithId(0L);
-            Teacher teacher = teacherWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Teacher teacher = aTeacher().withId(0L);
 
             teacher.applyAcademy(academy);
 
@@ -291,7 +289,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(teacher));
 
             // When
-            AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
+            AcademyDto.AcceptTeacher dto = anAcademyAcceptTeacherDto().withTeacherId(0L);
             academyService.acceptTeacher(0L, dto);
 
             // Then
@@ -305,8 +303,8 @@ class AcademyServiceTest {
         @Test
         void acceptTeacher_TeacherNotApplied_ExceptionThrown() {
             // Given
-            Academy academy = academyWithId(0L);
-            Teacher teacher = teacherWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Teacher teacher = aTeacher().withId(0L);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(academy));
@@ -315,7 +313,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(teacher));
 
             // When
-            AcademyDto.AcceptTeacher dto = acceptTeacherDtoWithTeacherId(0L);
+            AcademyDto.AcceptTeacher dto = anAcademyAcceptTeacherDto().withTeacherId(0L);
             Throwable thrown = catchThrowable(() -> academyService.acceptTeacher(0L, dto));
 
             // Then
@@ -330,8 +328,8 @@ class AcademyServiceTest {
         @Test
         void kickTeacher() {
             // Given
-            Academy academy = academyWithId(0L);
-            Teacher teacher = teacherWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Teacher teacher = aTeacher().withId(0L);
 
             teacher.applyAcademy(academy);
             academy.acceptTeacher(teacher);
@@ -343,7 +341,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(teacher));
 
             // When
-            AcademyDto.KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
+            AcademyDto.KickTeacher dto = anAcademyKickTeacherDto().withTeacherId(0L);
             academyService.kickTeacher(0L, dto);
 
             // Then
@@ -354,8 +352,8 @@ class AcademyServiceTest {
         @Test
         void kickTeacher_TeacherNotEnrolled_ExceptionThrown() {
             // Given
-            Academy academy = academyWithId(0L);
-            Teacher teacher = teacherWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Teacher teacher = aTeacher().withId(0L);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(academy));
@@ -364,7 +362,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(teacher));
 
             // When
-            AcademyDto.KickTeacher dto = kickTeacherDtoWithTeacherId(0L);
+            AcademyDto.KickTeacher dto = anAcademyKickTeacherDto().withTeacherId(0L);
             Throwable thrown = catchThrowable(() -> academyService.kickTeacher(0L, dto));
 
             // Then
@@ -379,8 +377,8 @@ class AcademyServiceTest {
         @Test
         void acceptStudent() {
             // Given
-            Academy academy = academyWithId(0L);
-            Student student = studentWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Student student = aStudent().withId(0L);
 
             student.applyAcademy(academy);
 
@@ -391,7 +389,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(student));
 
             // When
-            AcademyDto.AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
+            AcademyDto.AcceptStudent dto = anAcademyAcceptStudentDto().withStudentId(0L);
             academyService.acceptStudent(0L, dto);
 
             // Then
@@ -405,8 +403,8 @@ class AcademyServiceTest {
         @Test
         void acceptStudent_StudentNotApplied_ExceptionThrown() {
             // Given
-            Academy academy = academyWithId(0L);
-            Student student = studentWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Student student = aStudent().withId(0L);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(academy));
@@ -415,7 +413,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(student));
 
             // When
-            AcademyDto.AcceptStudent dto = acceptStudentDtoWithStudentId(0L);
+            AcademyDto.AcceptStudent dto = anAcademyAcceptStudentDto().withStudentId(0L);
             Throwable thrown = catchThrowable(() -> academyService.acceptStudent(0L, dto));
 
             // Then
@@ -430,8 +428,8 @@ class AcademyServiceTest {
         @Test
         void kickStudent() {
             // Given
-            Academy academy = academyWithId(0L);
-            Student student = studentWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Student student = aStudent().withId(0L);
 
             student.applyAcademy(academy);
             academy.acceptStudent(student);
@@ -443,7 +441,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(student));
 
             // When
-            AcademyDto.KickStudent dto = kickStudentDtoWithStudentId(0L);
+            AcademyDto.KickStudent dto = anAcademyKickStudentDto().withStudentId(0L);
             academyService.kickStudent(0L, dto);
 
             // Then
@@ -454,8 +452,8 @@ class AcademyServiceTest {
         @Test
         void kickStudent_StudentNotEnrolled_ExceptionThrown() {
             // Given
-            Academy academy = academyWithId(0L);
-            Student student = studentWithId(0L);
+            Academy academy = anAcademy().withId(0L);
+            Student student = aStudent().withId(0L);
 
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(academy));
@@ -464,7 +462,7 @@ class AcademyServiceTest {
                 .willReturn(Optional.of(student));
 
             // When
-            AcademyDto.KickStudent dto = kickStudentDtoWithStudentId(0L);
+            AcademyDto.KickStudent dto = anAcademyKickStudentDto().withStudentId(0L);
             Throwable thrown = catchThrowable(() -> academyService.kickStudent(0L, dto));
 
             // Then

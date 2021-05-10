@@ -1,6 +1,11 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherApplyAcademyDto;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherApplyClassroomDto;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherRemoveAppliedAcademyDto;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherRemoveAppliedClassroomDto;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherUpdateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -424,7 +429,7 @@ public class TeacherIntegrationTest {
         @Test
         void patchTeacher_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(teacherUpdateDto());
+            String body = toJson(aTeacherUpdateDto());
 
             ResultActions actions = mockMvc.perform(patch("/teachers/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -493,7 +498,7 @@ public class TeacherIntegrationTest {
             Academy academy = createAndSaveAcademy();
 
             // When
-            String body = toJson(applyAcademyDtoWithAcademyId(academy.getId()));
+            String body = toJson(aTeacherApplyAcademyDto().withAcademyId(academy.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", teacher.getId())
@@ -515,7 +520,7 @@ public class TeacherIntegrationTest {
         @Test
         void applyAcademy_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(applyAcademyDto());
+            String body = toJson(aTeacherApplyAcademyDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", 0L)
@@ -533,7 +538,7 @@ public class TeacherIntegrationTest {
             Teacher teacher = createAndSaveTeacher();
 
             // When
-            String body = toJson(applyAcademyDtoWithAcademyId(0L));
+            String body = toJson(aTeacherApplyAcademyDto().withAcademyId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", teacher.getId())
@@ -556,7 +561,7 @@ public class TeacherIntegrationTest {
             academyRepository.save(academy);
 
             // When
-            String body = toJson(applyAcademyDtoWithAcademyId(academy.getId()));
+            String body = toJson(aTeacherApplyAcademyDto().withAcademyId(academy.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-academy", teacher.getId())
@@ -583,7 +588,7 @@ public class TeacherIntegrationTest {
             teacherRepository.save(teacher);
 
             // When
-            String body = toJson(removeAppliedAcademyDtoWithAcademyId(academy.getId()));
+            String body = toJson(aTeacherRemoveAppliedAcademyDto().withAcademyId(academy.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", teacher.getId())
@@ -605,7 +610,7 @@ public class TeacherIntegrationTest {
         @Test
         void removeAppliedAcademy_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(removeAppliedAcademyDto());
+            String body = toJson(aTeacherRemoveAppliedAcademyDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", 0L)
@@ -623,7 +628,7 @@ public class TeacherIntegrationTest {
             Teacher teacher = createAndSaveTeacher();
 
             // When
-            String body = toJson(removeAppliedAcademyDtoWithAcademyId(0L));
+            String body = toJson(aTeacherRemoveAppliedAcademyDto().withAcademyId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", teacher.getId())
@@ -642,7 +647,7 @@ public class TeacherIntegrationTest {
             Academy academy = createAndSaveAcademy();
 
             // When
-            String body = toJson(removeAppliedAcademyDtoWithAcademyId(academy.getId()));
+            String body = toJson(aTeacherRemoveAppliedAcademyDto().withAcademyId(academy.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-academy", teacher.getId())
@@ -666,7 +671,7 @@ public class TeacherIntegrationTest {
             Classroom classroom = createAndSaveClassroom();
 
             // When
-            String body = toJson(applyClassroomDtoWithClassroomId(classroom.getId()));
+            String body = toJson(aTeacherApplyClassroomDto().withClassroomId(classroom.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", teacher.getId())
@@ -688,7 +693,7 @@ public class TeacherIntegrationTest {
         @Test
         void applyClassroom_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(applyClassroomDto());
+            String body = toJson(aTeacherApplyClassroomDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", 0L)
@@ -706,7 +711,7 @@ public class TeacherIntegrationTest {
             Teacher teacher = createAndSaveTeacher();
 
             // When
-            String body = toJson(applyClassroomDtoWithClassroomId(0L));
+            String body = toJson(aTeacherApplyClassroomDto().withClassroomId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", teacher.getId())
@@ -729,7 +734,7 @@ public class TeacherIntegrationTest {
             classroomRepository.save(classroom);
 
             // When
-            String body = toJson(applyClassroomDtoWithClassroomId(classroom.getId()));
+            String body = toJson(aTeacherApplyClassroomDto().withClassroomId(classroom.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/apply-classroom", teacher.getId())
@@ -756,7 +761,8 @@ public class TeacherIntegrationTest {
             teacherRepository.save(teacher);
 
             // When
-            String body = toJson(removeAppliedClassroomDtoWithClassroomId(classroom.getId()));
+            String body = toJson(
+                aTeacherRemoveAppliedClassroomDto().withClassroomId(classroom.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", teacher.getId())
@@ -778,7 +784,7 @@ public class TeacherIntegrationTest {
         @Test
         void removeAppliedClassroom_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(removeAppliedClassroomDto());
+            String body = toJson(aTeacherRemoveAppliedClassroomDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", 0L)
@@ -796,7 +802,7 @@ public class TeacherIntegrationTest {
             Teacher teacher = createAndSaveTeacher();
 
             // When
-            String body = toJson(removeAppliedClassroomDtoWithClassroomId(0L));
+            String body = toJson(aTeacherRemoveAppliedClassroomDto().withClassroomId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", teacher.getId())
@@ -815,7 +821,8 @@ public class TeacherIntegrationTest {
             Classroom classroom = createAndSaveClassroom();
 
             // When
-            String body = toJson(removeAppliedClassroomDtoWithClassroomId(classroom.getId()));
+            String body = toJson(
+                aTeacherRemoveAppliedClassroomDto().withClassroomId(classroom.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/teachers/{id}/remove-applied-classroom", teacher.getId())
@@ -835,16 +842,6 @@ public class TeacherIntegrationTest {
 
     private void withTransaction(Consumer<TransactionStatus> callback) {
         transactionTemplate.executeWithoutResult(callback);
-    }
-
-    private TeacherDto.Update teacherUpdateDto() {
-        return TeacherDto.Update.builder()
-            .account(AccountDto.Update.builder()
-                .password("testpassword")
-                .fullName("Test FullName")
-                .phone("01012345678")
-                .build())
-            .build();
     }
 
     private Teacher createAndSaveTeacher() {
@@ -914,54 +911,6 @@ public class TeacherIntegrationTest {
 
             teacher.applyClassroom(classroom);
         });
-    }
-
-    private TeacherDto.ApplyAcademy applyAcademyDto() {
-        return TeacherDto.ApplyAcademy.builder()
-            .academyId(0L)
-            .build();
-    }
-
-    private TeacherDto.ApplyAcademy applyAcademyDtoWithAcademyId(Long id) {
-        return TeacherDto.ApplyAcademy.builder()
-            .academyId(id)
-            .build();
-    }
-
-    private TeacherDto.RemoveAppliedAcademy removeAppliedAcademyDto() {
-        return TeacherDto.RemoveAppliedAcademy.builder()
-            .academyId(0L)
-            .build();
-    }
-
-    private TeacherDto.RemoveAppliedAcademy removeAppliedAcademyDtoWithAcademyId(Long id) {
-        return TeacherDto.RemoveAppliedAcademy.builder()
-            .academyId(id)
-            .build();
-    }
-
-    private TeacherDto.ApplyClassroom applyClassroomDto() {
-        return TeacherDto.ApplyClassroom.builder()
-            .classroomId(0L)
-            .build();
-    }
-
-    private TeacherDto.ApplyClassroom applyClassroomDtoWithClassroomId(Long id) {
-        return TeacherDto.ApplyClassroom.builder()
-            .classroomId(id)
-            .build();
-    }
-
-    private TeacherDto.RemoveAppliedClassroom removeAppliedClassroomDto() {
-        return TeacherDto.RemoveAppliedClassroom.builder()
-            .classroomId(0L)
-            .build();
-    }
-
-    private TeacherDto.RemoveAppliedClassroom removeAppliedClassroomDtoWithClassroomId(Long id) {
-        return TeacherDto.RemoveAppliedClassroom.builder()
-            .classroomId(id)
-            .build();
     }
 
 }

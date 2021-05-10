@@ -15,15 +15,19 @@ import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentAlreadyEnrolledException;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.With;
 
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
+@With
 @ToString
 @Entity
 public class Student extends TimeEntity {

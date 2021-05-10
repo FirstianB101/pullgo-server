@@ -1,6 +1,6 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.academyWithId;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
@@ -32,7 +32,7 @@ class ClassroomDtoMapperTest {
             .name("test name")
             .build();
         entity.setId(0L);
-        entity.setAcademy(academyWithId(1L));
+        entity.setAcademy(anAcademy().withId(1L));
 
         ClassroomDto.Result dto = dtoMapper.asResultDto(entity);
 

@@ -1,13 +1,12 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
+import static kr.pullgo.pullgoserver.helper.AttenderStateHelper.anAttenderState;
+import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestion;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDateTime;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
-import kr.pullgo.pullgoserver.persistence.model.AttenderState;
-import kr.pullgo.pullgoserver.persistence.model.Question;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
@@ -37,8 +36,8 @@ public class AttenderAnswerDtoMapperTest {
             .answer(new Answer(1, 3))
             .build();
         entity.setId(0L);
-        entity.setAttenderState(attenderStateWithId(1L));
-        entity.setQuestion(questionWithId(2L));
+        entity.setAttenderState(anAttenderState().withId(1L));
+        entity.setQuestion(aQuestion().withId(2L));
 
         AttenderAnswerDto.Result dto = dtoMapper.asResultDto(entity);
 
@@ -49,18 +48,4 @@ public class AttenderAnswerDtoMapperTest {
         assertThat(dto.getAnswer()).containsOnly(1, 3);
     }
 
-    private AttenderState attenderStateWithId(Long id) {
-        AttenderState attenderState = AttenderState.builder()
-            .examStartTime(LocalDateTime.now()).build();
-        attenderState.setId(id);
-        return attenderState;
-    }
-
-    private Question questionWithId(Long id) {
-        Question question = Question.builder()
-            .content("Test question")
-            .build();
-        question.setId(id);
-        return question;
-    }
 }
