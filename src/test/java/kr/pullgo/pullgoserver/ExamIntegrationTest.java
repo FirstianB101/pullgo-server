@@ -1,6 +1,8 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.ExamHelper.anExamUpdateDto;
+import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -31,7 +33,6 @@ import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.ExamDto.Update;
 import kr.pullgo.pullgoserver.persistence.model.Account;
-import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
@@ -439,7 +440,7 @@ public class ExamIntegrationTest {
         @Test
         void patchExam_ExamNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(examUpdateDto());
+            String body = toJson(anExamUpdateDto());
 
             ResultActions actions = mockMvc.perform(patch("/exams/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -685,14 +686,6 @@ public class ExamIntegrationTest {
         return student;
     }
 
-    private Question createQuestion() {
-        return Question.builder()
-            .answer(new Answer(1, 2, 3))
-            .pictureUrl("Url")
-            .content("Contents")
-            .build();
-    }
-
     private Exam createAndSaveExam() {
         Exam exam = Exam.builder()
             .name("test name")
@@ -703,7 +696,7 @@ public class ExamIntegrationTest {
             .build();
         Teacher creator = createAndSaveTeacher();
         AttenderState attenderState = createAndSaveAttenderState();
-        Question question = createQuestion();
+        Question question = aQuestion().withId(null);
         Classroom classroom = createAndSaveClassroom();
 
         exam.setCreator(creator);
@@ -725,7 +718,7 @@ public class ExamIntegrationTest {
             .build();
         Teacher creator = createAndSaveTeacher();
         AttenderState attenderState = createAndSaveAttenderState();
-        Question question = createQuestion();
+        Question question = aQuestion().withId(null);
 
         exam.setCreator(creator);
         attenderState.setExam(exam);
@@ -744,7 +737,7 @@ public class ExamIntegrationTest {
             .passScore(70)
             .build();
         AttenderState attenderState = createAndSaveAttenderState();
-        Question question = createQuestion();
+        Question question = aQuestion().withId(null);
 
         exam.setCreator(creator);
         attenderState.setExam(exam);
@@ -754,9 +747,4 @@ public class ExamIntegrationTest {
         return examRepository.save(exam);
     }
 
-    private Update examUpdateDto() {
-        return Update.builder()
-            .name("test name")
-            .build();
-    }
 }

@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver;
 
+import static kr.pullgo.pullgoserver.helper.AttenderStateHelper.anAttenderStateUpdateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -279,7 +280,7 @@ public class AttenderStateIntegrationTest {
         @Test
         void patchAttenderState_AttenderStateNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(attenderStateUpdateDto());
+            String body = toJson(anAttenderStateUpdateDto());
 
             ResultActions actions = mockMvc.perform(patch("/exam/attender-states/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -547,10 +548,4 @@ public class AttenderStateIntegrationTest {
         return attenderState;
     }
 
-    private Update attenderStateUpdateDto() {
-        return Update.builder()
-            .progress(AttendingProgress.COMPLETE)
-            .score(85)
-            .build();
-    }
 }

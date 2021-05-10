@@ -15,15 +15,19 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import kr.pullgo.pullgoserver.error.exception.AttenderAnswerNotFoundException;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.With;
 
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor
 @Getter
 @Setter
+@With
 @ToString
 @Entity
 public class AttenderState extends TimeEntity {

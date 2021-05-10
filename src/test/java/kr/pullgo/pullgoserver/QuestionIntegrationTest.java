@@ -1,6 +1,8 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.ExamHelper.anExam;
+import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestionUpdateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -16,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -106,14 +109,17 @@ public class QuestionIntegrationTest {
                 .pictureUrl("Url")
                 .content("Contents")
                 .build();
-            Exam exam = createExam();
+            Exam exam = anExam()
+                .withId(null)
+                .withClassroom(null)
+                .withCreator(null);
 
             exam.addQuestion(question);
             examRepository.save(exam);
 
             // When
             ResultActions actions = mockMvc
-                .perform(get("/exam/questions/{id}", question.getId()));
+                .perform(get("/exam/questions/{id}", question.getId())).andDo(print());
 
             // Then
             actions
@@ -283,7 +289,10 @@ public class QuestionIntegrationTest {
                 .pictureUrl("Before url")
                 .content("Before contents")
                 .build();
-            Exam exam = createExam();
+            Exam exam = anExam()
+                .withId(null)
+                .withClassroom(null)
+                .withCreator(null);
 
             exam.addQuestion(question);
             examRepository.save(exam);
@@ -324,7 +333,7 @@ public class QuestionIntegrationTest {
         @Test
         void patchQuestion_QuestionNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(questionUpdateDto());
+            String body = toJson(aQuestionUpdateDto());
 
             ResultActions actions = mockMvc.perform(patch("/exam/questions/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -384,16 +393,6 @@ public class QuestionIntegrationTest {
         return LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
     }
 
-    private Exam createExam() {
-        return Exam.builder()
-            .name("test name")
-            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-            .timeLimit(stringToDuration("PT1H"))
-            .passScore(70)
-            .build();
-    }
-
     private Exam createAndSaveExam() {
         return examRepository.save(Exam.builder()
             .name("test name")
@@ -410,7 +409,10 @@ public class QuestionIntegrationTest {
             .pictureUrl("Before url")
             .content("Before contents")
             .build();
-        Exam exam = createExam();
+        Exam exam = anExam()
+            .withId(null)
+            .withClassroom(null)
+            .withCreator(null);
         exam.addQuestion(question);
         examRepository.save(exam);
 
@@ -428,11 +430,4 @@ public class QuestionIntegrationTest {
         return questionRepository.save(question);
     }
 
-    private Update questionUpdateDto() {
-        return Update.builder()
-            .answer(Set.of(1, 2, 3))
-            .pictureUrl("Url")
-            .content("Contents")
-            .build();
-    }
 }

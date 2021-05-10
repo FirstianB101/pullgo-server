@@ -1,6 +1,9 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroom;
+import static kr.pullgo.pullgoserver.helper.LessonHelper.aLessonUpdateDto;
+import static kr.pullgo.pullgoserver.helper.ScheduleHelper.aSchedule;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -127,7 +130,7 @@ public class LessonIntegrationTest {
                 .beginTime(stringToLocalTime("22:22:22"))
                 .endTime(stringToLocalTime("00:00:00"))
                 .build();
-            Classroom classroom = createClassroom();
+            Classroom classroom = aClassroom().withId(null).withAcademy(null);
 
             lesson.setSchedule(schedule);
             classroom.addLesson(lesson);
@@ -431,7 +434,7 @@ public class LessonIntegrationTest {
                 .beginTime(stringToLocalTime("22:22:22"))
                 .endTime(stringToLocalTime("00:00:00"))
                 .build();
-            Classroom classroom = createClassroom();
+            Classroom classroom = aClassroom().withId(null).withAcademy(null);
 
             lesson.setSchedule(schedule);
             classroom.addLesson(lesson);
@@ -478,7 +481,7 @@ public class LessonIntegrationTest {
         @Test
         void patchLesson_LessonNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(lessonUpdateDto());
+            String body = toJson(aLessonUpdateDto());
 
             ResultActions actions = mockMvc.perform(patch("/academy/classroom/lessons/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -538,12 +541,6 @@ public class LessonIntegrationTest {
         return LocalTime.parse(date);
     }
 
-    private Classroom createClassroom() {
-        return Classroom.builder()
-            .name("test classroom")
-            .build();
-    }
-
     private Classroom createAndSaveClassroom() {
         return classroomRepository.save(Classroom.builder()
             .name("test classroom")
@@ -572,21 +569,13 @@ public class LessonIntegrationTest {
         return academyRepository.save(academy);
     }
 
-    private Schedule createSchedule() {
-        return Schedule.builder()
-            .date(stringToLocalDate("2021-03-02"))
-            .beginTime(stringToLocalTime("08:00:00"))
-            .endTime(stringToLocalTime("21:59:59"))
-            .build();
-    }
-
     private Lesson createAndSaveLesson() {
         Lesson lesson = Lesson.builder()
             .name("test lesson")
             .build();
 
-        Schedule schedule = createSchedule();
-        Classroom classroom = createClassroom();
+        Schedule schedule = aSchedule().withId(null);
+        Classroom classroom = aClassroom().withId(null).withAcademy(null);
         lesson.setSchedule(schedule);
         classroom.addLesson(lesson);
 
@@ -599,7 +588,7 @@ public class LessonIntegrationTest {
             .name("test lesson")
             .build();
 
-        Schedule schedule = createSchedule();
+        Schedule schedule = aSchedule().withId(null);
         lesson.setSchedule(schedule);
         classroom.addLesson(lesson);
 
@@ -616,7 +605,7 @@ public class LessonIntegrationTest {
             .beginTime(LocalTime.of(12, 0))
             .endTime(LocalTime.of(13, 0))
             .build();
-        Classroom classroom = createClassroom();
+        Classroom classroom = aClassroom().withId(null).withAcademy(null);
         lesson.setSchedule(schedule);
         classroom.addLesson(lesson);
 
@@ -658,9 +647,4 @@ public class LessonIntegrationTest {
         return teacher;
     }
 
-    private LessonDto.Update lessonUpdateDto() {
-        return LessonDto.Update.builder()
-            .name("test name")
-            .build();
-    }
 }

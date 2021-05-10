@@ -1,6 +1,11 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroomAcceptStudentDto;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroomAcceptTeacherDto;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroomKickStudentDto;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroomKickTeacherDto;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroomUpdateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -466,7 +471,7 @@ public class ClassroomIntegrationTest {
         @Test
         void patchClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(classroomUpdateDto());
+            String body = toJson(aClassroomUpdateDto());
 
             ResultActions actions = mockMvc.perform(patch("/academy/classrooms/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -544,7 +549,7 @@ public class ClassroomIntegrationTest {
             teacherRepository.save(teacher);
 
             // When
-            String body = toJson(acceptTeacherDtoWithTeacherId(teacher.getId()));
+            String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(teacher.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-teacher", classroom.getId())
@@ -566,7 +571,7 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptTeacher_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(acceptTeacherDto());
+            String body = toJson(aClassroomAcceptTeacherDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-teacher", 0L)
@@ -584,7 +589,7 @@ public class ClassroomIntegrationTest {
             Classroom classroom = createAndSaveClassroom();
 
             // When
-            String body = toJson(acceptTeacherDtoWithTeacherId(0L));
+            String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-teacher", classroom.getId())
@@ -603,7 +608,7 @@ public class ClassroomIntegrationTest {
             Teacher teacher = createAndSaveTeacher();
 
             // When
-            String body = toJson(acceptTeacherDtoWithTeacherId(teacher.getId()));
+            String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(teacher.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-teacher", classroom.getId())
@@ -630,7 +635,7 @@ public class ClassroomIntegrationTest {
             classroomRepository.save(classroom);
 
             // When
-            String body = toJson(kickTeacherDtoWithTeacherId(teacher.getId()));
+            String body = toJson(aClassroomKickTeacherDto().withTeacherId(teacher.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-teacher", classroom.getId())
@@ -652,7 +657,7 @@ public class ClassroomIntegrationTest {
         @Test
         void kickTeacher_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(kickTeacherDto());
+            String body = toJson(aClassroomKickTeacherDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-teacher", 0L)
@@ -670,7 +675,7 @@ public class ClassroomIntegrationTest {
             Classroom classroom = createAndSaveClassroom();
 
             // When
-            String body = toJson(kickTeacherDtoWithTeacherId(0L));
+            String body = toJson(aClassroomKickTeacherDto().withTeacherId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-teacher", classroom.getId())
@@ -689,7 +694,7 @@ public class ClassroomIntegrationTest {
             Teacher teacher = createAndSaveTeacher();
 
             // When
-            String body = toJson(kickTeacherDtoWithTeacherId(teacher.getId()));
+            String body = toJson(aClassroomKickTeacherDto().withTeacherId(teacher.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-teacher", classroom.getId())
@@ -716,7 +721,7 @@ public class ClassroomIntegrationTest {
             studentRepository.save(student);
 
             // When
-            String body = toJson(acceptStudentDtoWithStudentId(student.getId()));
+            String body = toJson(aClassroomAcceptStudentDto().withStudentId(student.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-student", classroom.getId())
@@ -738,7 +743,7 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptStudent_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(acceptStudentDto());
+            String body = toJson(aClassroomAcceptStudentDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-student", 0L)
@@ -756,7 +761,7 @@ public class ClassroomIntegrationTest {
             Classroom classroom = createAndSaveClassroom();
 
             // When
-            String body = toJson(acceptStudentDtoWithStudentId(0L));
+            String body = toJson(aClassroomAcceptStudentDto().withStudentId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-student", classroom.getId())
@@ -775,7 +780,7 @@ public class ClassroomIntegrationTest {
             Student student = createAndSaveStudent();
 
             // When
-            String body = toJson(acceptStudentDtoWithStudentId(student.getId()));
+            String body = toJson(aClassroomAcceptStudentDto().withStudentId(student.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-student", classroom.getId())
@@ -803,7 +808,7 @@ public class ClassroomIntegrationTest {
             classroomRepository.save(classroom);
 
             // When
-            String body = toJson(kickStudentDtoWithStudentId(student.getId()));
+            String body = toJson(aClassroomKickStudentDto().withStudentId(student.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-student", classroom.getId())
@@ -825,7 +830,7 @@ public class ClassroomIntegrationTest {
         @Test
         void kickStudent_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(kickStudentDto());
+            String body = toJson(aClassroomKickStudentDto());
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-student", 0L)
@@ -843,7 +848,7 @@ public class ClassroomIntegrationTest {
             Classroom classroom = createAndSaveClassroom();
 
             // When
-            String body = toJson(kickStudentDtoWithStudentId(0L));
+            String body = toJson(aClassroomKickStudentDto().withStudentId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-student", classroom.getId())
@@ -862,7 +867,7 @@ public class ClassroomIntegrationTest {
             Student student = createAndSaveStudent();
 
             // When
-            String body = toJson(kickStudentDtoWithStudentId(student.getId()));
+            String body = toJson(aClassroomKickStudentDto().withStudentId(student.getId()));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-student", classroom.getId())
@@ -998,60 +1003,6 @@ public class ClassroomIntegrationTest {
 
             student.applyClassroom(classroom);
         });
-    }
-
-    private ClassroomDto.Update classroomUpdateDto() {
-        return ClassroomDto.Update.builder()
-            .name("test name")
-            .build();
-    }
-
-    private ClassroomDto.AcceptTeacher acceptTeacherDto() {
-        return ClassroomDto.AcceptTeacher.builder()
-            .teacherId(0L)
-            .build();
-    }
-
-    private ClassroomDto.AcceptTeacher acceptTeacherDtoWithTeacherId(Long id) {
-        return ClassroomDto.AcceptTeacher.builder()
-            .teacherId(id)
-            .build();
-    }
-
-    private ClassroomDto.KickTeacher kickTeacherDto() {
-        return ClassroomDto.KickTeacher.builder()
-            .teacherId(0L)
-            .build();
-    }
-
-    private ClassroomDto.KickTeacher kickTeacherDtoWithTeacherId(Long id) {
-        return ClassroomDto.KickTeacher.builder()
-            .teacherId(id)
-            .build();
-    }
-
-    private ClassroomDto.AcceptStudent acceptStudentDto() {
-        return ClassroomDto.AcceptStudent.builder()
-            .studentId(0L)
-            .build();
-    }
-
-    private ClassroomDto.AcceptStudent acceptStudentDtoWithStudentId(Long id) {
-        return ClassroomDto.AcceptStudent.builder()
-            .studentId(id)
-            .build();
-    }
-
-    private ClassroomDto.KickStudent kickStudentDto() {
-        return ClassroomDto.KickStudent.builder()
-            .studentId(0L)
-            .build();
-    }
-
-    private ClassroomDto.KickStudent kickStudentDtoWithStudentId(Long id) {
-        return ClassroomDto.KickStudent.builder()
-            .studentId(id)
-            .build();
     }
 
 }

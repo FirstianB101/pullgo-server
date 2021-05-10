@@ -4,12 +4,14 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 
 public interface TeacherDto {
 
     @Data
     @Builder
     @NoArgsConstructor
+    @With
     class Create {
 
         @NotNull
@@ -24,6 +26,7 @@ public interface TeacherDto {
     @Data
     @Builder
     @NoArgsConstructor
+    @With
     class Update {
 
         private AccountDto.Update account;
@@ -35,6 +38,7 @@ public interface TeacherDto {
 
     @Data
     @Builder
+    @With
     class Result {
 
         @NotNull
@@ -47,6 +51,7 @@ public interface TeacherDto {
     @Data
     @Builder
     @NoArgsConstructor
+    @With
     class ApplyAcademy {
 
         @NotNull
@@ -60,6 +65,7 @@ public interface TeacherDto {
     @Data
     @Builder
     @NoArgsConstructor
+    @With
     class RemoveAppliedAcademy {
 
         @NotNull
@@ -73,6 +79,7 @@ public interface TeacherDto {
     @Data
     @Builder
     @NoArgsConstructor
+    @With
     class ApplyClassroom {
 
         @NotNull
@@ -86,6 +93,7 @@ public interface TeacherDto {
     @Data
     @Builder
     @NoArgsConstructor
+    @With
     class RemoveAppliedClassroom {
 
         @NotNull

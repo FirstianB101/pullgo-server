@@ -1,6 +1,6 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
-import static kr.pullgo.pullgoserver.helper.TeacherHelper.teacherWithId;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import kr.pullgo.pullgoserver.dto.AcademyDto;
@@ -40,7 +40,7 @@ class AcademyDtoMapperTest {
             .build();
         entity.setId(0L);
 
-        Teacher teacher = teacherWithId(1L);
+        Teacher teacher = aTeacher().withId(1L);
         entity.addTeacher(teacher);
         entity.setOwner(teacher);
 

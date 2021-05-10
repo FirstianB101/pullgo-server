@@ -5,11 +5,13 @@ import java.time.LocalDateTime;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.With;
 
 public interface ExamDto {
 
     @Data
     @Builder
+    @With
     class Create {
 
         @NotNull
@@ -35,6 +37,7 @@ public interface ExamDto {
 
     @Data
     @Builder
+    @With
     class Update {
 
         private String name;
@@ -50,6 +53,7 @@ public interface ExamDto {
 
     @Data
     @Builder
+    @With
     class Result {
 
         @NotNull

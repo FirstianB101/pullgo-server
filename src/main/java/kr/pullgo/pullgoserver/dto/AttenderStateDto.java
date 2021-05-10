@@ -4,11 +4,13 @@ import javax.validation.constraints.NotNull;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import lombok.Builder;
 import lombok.Data;
+import lombok.With;
 
 public interface AttenderStateDto {
 
     @Data
     @Builder
+    @With
     class Create {
 
         @NotNull
@@ -20,6 +22,7 @@ public interface AttenderStateDto {
 
     @Data
     @Builder
+    @With
     class Update {
 
         private AttendingProgress progress;
@@ -29,6 +32,7 @@ public interface AttenderStateDto {
 
     @Data
     @Builder
+    @With
     class Result {
 
         @NotNull

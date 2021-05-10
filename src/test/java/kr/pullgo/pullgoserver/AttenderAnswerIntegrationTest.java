@@ -1,5 +1,13 @@
 package kr.pullgo.pullgoserver;
 
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademy;
+import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccount;
+import static kr.pullgo.pullgoserver.helper.AttenderAnswerHelper.anAttenderAnswerUpdateDto;
+import static kr.pullgo.pullgoserver.helper.AttenderStateHelper.anAttenderState;
+import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroom;
+import static kr.pullgo.pullgoserver.helper.ExamHelper.anExam;
+import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudent;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -22,13 +30,24 @@ import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto.Update;
+import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
+import kr.pullgo.pullgoserver.persistence.model.Classroom;
+import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
+import kr.pullgo.pullgoserver.persistence.model.Student;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
+import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
+import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderAnswerRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
+import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
+import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
+import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
+import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -58,6 +77,24 @@ public class AttenderAnswerIntegrationTest {
     private AttenderStateRepository attenderStateRepository;
 
     @Autowired
+    private AcademyRepository academyRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private TeacherRepository teacherRepository;
+
+    @Autowired
+    private ClassroomRepository classroomRepository;
+
+    @Autowired
+    private ExamRepository examRepository;
+
+    @Autowired
     private QuestionRepository questionRepository;
 
     @Autowired
@@ -77,10 +114,12 @@ public class AttenderAnswerIntegrationTest {
             AttenderAnswer attenderAnswer = AttenderAnswer.builder()
                 .answer(new Answer(1, 2, 3))
                 .build();
-            AttenderState attenderState = createAttenderState();
+            AttenderState attenderState = anAttenderState().withId(null);
             Question question = createAndSaveQuestion();
 
             attenderAnswer.setQuestion(question);
+            attenderState.setExam(createAndSaveExam());
+            attenderState.setAttender(createAndSaveStudent());
             attenderState.addAnswer(attenderAnswer);
             attenderStateRepository.save(attenderState);
 
@@ -254,7 +293,7 @@ public class AttenderAnswerIntegrationTest {
         @Test
         void patchAttenderAnswer_AttenderAnswerNotFound_NotFoundStatus() throws Exception {
             // When
-            String body = toJson(attenderAnswerUpdateDto());
+            String body = toJson(anAttenderAnswerUpdateDto());
 
             ResultActions actions = mockMvc.perform(patch("/exam/attender-state/answers/{id}", 0)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -303,10 +342,6 @@ public class AttenderAnswerIntegrationTest {
         return objectMapper.writeValueAsString(object);
     }
 
-    private AttenderState createAttenderState() {
-        return AttenderState.builder().examStartTime(LocalDateTime.now()).build();
-    }
-
     private AttenderState createAndSaveAttenderState() {
         return attenderStateRepository
             .save(AttenderState.builder().examStartTime(LocalDateTime.now()).build());
@@ -347,9 +382,42 @@ public class AttenderAnswerIntegrationTest {
             .build());
     }
 
-    private Update attenderAnswerUpdateDto() {
-        return Update.builder()
-            .answer(new Answer(1, 2, 3).getObjectiveNumbers())
-            .build();
+    private Student createAndSaveStudent() {
+        return studentRepository.save(aStudent()
+            .withId(null)
+            .withAccount(anAccount().withId(null)));
     }
+
+    private Teacher createAndSaveTeacher() {
+        return teacherRepository.save(aTeacher()
+            .withId(null)
+            .withAccount(anAccount().withId(null)));
+    }
+
+    private Academy createAndSaveAcademy() {
+        Teacher owner = createAndSaveTeacher();
+        Academy academy = anAcademy().withId(null)
+            .withTeachers(Set.of(owner))
+            .withOwner(owner);
+
+        return academyRepository.save(academy);
+    }
+
+    private Classroom createAndSaveClassroom() {
+        Classroom classroom = aClassroom().withId(null);
+
+        Academy academy = createAndSaveAcademy();
+        classroom.setAcademy(academy);
+
+        return classroomRepository.save(classroom);
+    }
+
+    private Exam createAndSaveExam() {
+        Exam exam = anExam()
+            .withId(null)
+            .withClassroom(createAndSaveClassroom())
+            .withCreator(createAndSaveTeacher());
+        return examRepository.save(exam);
+    }
+
 }

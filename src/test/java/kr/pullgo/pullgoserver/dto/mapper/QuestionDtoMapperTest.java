@@ -1,13 +1,11 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
+import static kr.pullgo.pullgoserver.helper.ExamHelper.anExam;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Set;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
-import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +40,7 @@ class QuestionDtoMapperTest {
             .answer(new Answer(1, 3))
             .build();
         entity.setId(0L);
-        entity.setExam(examWithId(1L));
+        entity.setExam(anExam().withId(1L));
 
         QuestionDto.Result dto = dtoMapper.asResultDto(entity);
 
@@ -52,17 +50,6 @@ class QuestionDtoMapperTest {
         assertThat(dto.getContent()).isEqualTo("test content");
         assertThat(dto.getPictureUrl()).isNull();
         assertThat(dto.getAnswer()).containsOnly(1, 3);
-    }
-
-    private Exam examWithId(Long id) {
-        Exam exam = Exam.builder()
-            .name("Test")
-            .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-            .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-            .timeLimit(Duration.ZERO)
-            .build();
-        exam.setId(id);
-        return exam;
     }
 
 }
