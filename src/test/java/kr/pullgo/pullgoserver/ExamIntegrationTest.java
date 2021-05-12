@@ -2,7 +2,6 @@ package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
 import static kr.pullgo.pullgoserver.helper.ExamHelper.anExamUpdateDto;
-import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestion;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -27,25 +26,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.ExamDto.Update;
-import kr.pullgo.pullgoserver.persistence.model.Account;
-import kr.pullgo.pullgoserver.persistence.model.AttenderState;
-import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
+import kr.pullgo.pullgoserver.helper.Struct;
+import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
-import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
-import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
-import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
-import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -96,22 +88,13 @@ public class ExamIntegrationTest {
     private ExamRepository examRepository;
 
     @Autowired
-    private ClassroomRepository classroomRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private TeacherRepository teacherRepository;
-
-    @Autowired
-    private AttenderStateRepository attenderStateRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionHelper trxHelper;
+
+    @Autowired
+    private EntityHelper entityHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -129,32 +112,34 @@ public class ExamIntegrationTest {
         @Test
         void getExam() throws Exception {
             // Given
-            Exam exam = Exam.builder()
-                .name("test name")
-                .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-                .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-                .timeLimit(stringToDuration("PT1H"))
-                .passScore(70)
-                .build();
-            Teacher creator = createAndSaveTeacher();
-            Classroom classroom = createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withName("test name")
+                        .withBeginDateTime(LocalDateTime.of(2021, 3, 2, 0, 0))
+                        .withEndDateTime(LocalDateTime.of(2021, 3, 4, 12, 0))
+                        .withTimeLimit(Duration.ofHours(1))
+                        .withPassScore(70)
+                );
 
-            exam.setCreator(creator);
-            classroom.addExam(exam);
-
-            classroomRepository.save(classroom);
-            examRepository.save(exam);
+                return new Struct()
+                    .withValue("examId", exam.getId())
+                    .withValue("classroomId", exam.getClassroom().getId())
+                    .withValue("creatorId", exam.getCreator().getId());
+            });
+            Long examId = given.valueOf("examId");
+            Long classroomId = given.valueOf("classroomId");
+            Long creatorId = given.valueOf("creatorId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(get("/exams/{id}", exam.getId()));
+                .perform(get("/exams/{id}", examId));
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(exam.getId()))
-                .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
-                .andExpect(jsonPath("$.creatorId").value(creator.getId()))
+                .andExpect(jsonPath("$.id").value(examId))
+                .andExpect(jsonPath("$.classroomId").value(classroomId))
+                .andExpect(jsonPath("$.creatorId").value(creatorId))
                 .andExpect(jsonPath("$.name").value("test name"))
                 .andExpect(jsonPath("$.beginDateTime").value("2021-03-02T00:00:00"))
                 .andExpect(jsonPath("$.endDateTime").value("2021-03-04T12:00:00"))
@@ -196,8 +181,16 @@ public class ExamIntegrationTest {
         @Test
         void listExams() throws Exception {
             // Given
-            Exam examA = createAndSaveExam();
-            Exam examB = createAndSaveExam();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam examA = entityHelper.generateExam();
+                Exam examB = entityHelper.generateExam();
+
+                return new Struct()
+                    .withValue("examAId", examA.getId())
+                    .withValue("examBId", examB.getId());
+            });
+            Long examAId = given.valueOf("examAId");
+            Long examBId = given.valueOf("examBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exams"));
@@ -207,8 +200,8 @@ public class ExamIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    examA.getId().intValue(),
-                    examB.getId().intValue()
+                    examAId.intValue(),
+                    examBId.intValue()
                 )));
 
             // Document
@@ -223,9 +216,17 @@ public class ExamIntegrationTest {
         @Test
         void listExamsWithPaging() throws Exception {
             // Given
-            createAndSaveExam();
-            Exam examA = createAndSaveExam();
-            Exam examB = createAndSaveExam();
+            Struct given = trxHelper.doInTransaction(() -> {
+                entityHelper.generateExam();
+                Exam examA = entityHelper.generateExam();
+                Exam examB = entityHelper.generateExam();
+
+                return new Struct()
+                    .withValue("examAId", examA.getId())
+                    .withValue("examBId", examB.getId());
+            });
+            Long examAId = given.valueOf("examAId");
+            Long examBId = given.valueOf("examBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exams")
@@ -238,31 +239,41 @@ public class ExamIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(contains(
-                    examB.getId().intValue(),
-                    examA.getId().intValue()
+                    examBId.intValue(),
+                    examAId.intValue()
                 )));
         }
 
         @Test
         void searchExamsByClassroomId() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
 
-            Exam examA = createAndSaveExamWithClassroom(classroom);
-            Exam examB = createAndSaveExamWithClassroom(classroom);
-            createAndSaveExam();
+                Exam examA = entityHelper.generateExam(it -> it.withClassroom(classroom));
+                Exam examB = entityHelper.generateExam(it -> it.withClassroom(classroom));
+                entityHelper.generateExam();
+
+                return new Struct()
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("examAId", examA.getId())
+                    .withValue("examBId", examB.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long examAId = given.valueOf("examAId");
+            Long examBId = given.valueOf("examBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exams")
-                .param("classroomId", classroom.getId().toString()));
+                .param("classroomId", classroomId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    examA.getId().intValue(),
-                    examB.getId().intValue()
+                    examAId.intValue(),
+                    examBId.intValue()
                 )));
 
             // Document
@@ -280,52 +291,70 @@ public class ExamIntegrationTest {
         @Test
         void searchExamsByCreatorId() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Teacher creator = createAndSaveTeacher();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Teacher creator = entityHelper.generateTeacher();
 
-            Exam examA = createAndSaveExamWithClassroomAndCreator(classroom, creator);
-            Exam examB = createAndSaveExamWithClassroomAndCreator(classroom, creator);
-            createAndSaveExam();
+                Exam examA = entityHelper.generateExam(it -> it.withCreator(creator));
+                Exam examB = entityHelper.generateExam(it -> it.withCreator(creator));
+                entityHelper.generateExam();
+
+                return new Struct()
+                    .withValue("creatorId", creator.getId())
+                    .withValue("examAId", examA.getId())
+                    .withValue("examBId", examB.getId());
+            });
+            Long creatorId = given.valueOf("creatorId");
+            Long examAId = given.valueOf("examAId");
+            Long examBId = given.valueOf("examBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exams")
-                .param("creatorId", creator.getId().toString()));
+                .param("creatorId", creatorId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    examA.getId().intValue(),
-                    examB.getId().intValue()
+                    examAId.intValue(),
+                    examBId.intValue()
                 )));
         }
 
         @Test
         void searchExamsByStudentId() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Student student = createAndSaveStudent();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                Student student = entityHelper.generateStudent(it -> {
+                    classroom.addStudent(it);
+                    return it;
+                });
 
-            student.applyClassroom(classroom);
-            classroom.acceptStudent(student);
-            classroomRepository.save(classroom);
+                Exam examA = entityHelper.generateExam(it -> it.withClassroom(classroom));
+                Exam examB = entityHelper.generateExam(it -> it.withClassroom(classroom));
+                entityHelper.generateExam();
 
-            Exam examA = createAndSaveExamWithClassroom(classroom);
-            Exam examB = createAndSaveExamWithClassroom(classroom);
-            createAndSaveExam();
+                return new Struct()
+                    .withValue("studentId", student.getId())
+                    .withValue("examAId", examA.getId())
+                    .withValue("examBId", examB.getId());
+            });
+            Long studentId = given.valueOf("studentId");
+            Long examAId = given.valueOf("examAId");
+            Long examBId = given.valueOf("examBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exams")
-                .param("studentId", student.getId().toString()));
+                .param("studentId", studentId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    examA.getId().intValue(),
-                    examB.getId().intValue()
+                    examAId.intValue(),
+                    examBId.intValue()
                 )));
         }
 
@@ -334,17 +363,25 @@ public class ExamIntegrationTest {
     @Test
     void postExam() throws Exception {
         // Given
-        Teacher creator = createAndSaveTeacher();
-        Classroom classroom = createAndSaveClassroom();
+        Struct given = trxHelper.doInTransaction(() -> {
+            Classroom classroom = entityHelper.generateClassroom();
+            Teacher creator = entityHelper.generateTeacher();
+
+            return new Struct()
+                .withValue("classroomId", classroom.getId())
+                .withValue("creatorId", creator.getId());
+        });
+        Long classroomId = given.valueOf("classroomId");
+        Long creatorId = given.valueOf("creatorId");
 
         // When
         ExamDto.Create dto = ExamDto.Create.builder()
-            .classroomId(classroom.getId())
-            .creatorId(creator.getId())
+            .classroomId(classroomId)
+            .creatorId(creatorId)
             .name("test name")
-            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-            .timeLimit(stringToDuration("PT1H"))
+            .beginDateTime(LocalDateTime.of(2021, 3, 2, 0, 0))
+            .endDateTime(LocalDateTime.of(2021, 3, 4, 12, 0))
+            .timeLimit(Duration.ofHours(1))
             .passScore(70)
             .build();
         String body = toJson(dto);
@@ -357,8 +394,8 @@ public class ExamIntegrationTest {
         actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
-            .andExpect(jsonPath("$.creatorId").value(creator.getId()))
+            .andExpect(jsonPath("$.classroomId").value(classroomId))
+            .andExpect(jsonPath("$.creatorId").value(creatorId))
             .andExpect(jsonPath("$.name").value("test name"))
             .andExpect(jsonPath("$.beginDateTime").value("2021-03-02T00:00:00"))
             .andExpect(jsonPath("$.endDateTime").value("2021-03-04T12:00:00"))
@@ -386,34 +423,29 @@ public class ExamIntegrationTest {
         @Test
         void patchExam() throws Exception {
             // Given
-            Exam exam = Exam.builder()
-                .name("before name")
-                .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-                .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-                .timeLimit(stringToDuration("PT1H"))
-                .passScore(70)
-                .build();
-            Teacher creator = createAndSaveTeacher();
-            Classroom classroom = createAndSaveClassroom();
-
-            exam.setCreator(creator);
-            classroom.addExam(exam);
-
-            classroomRepository.save(classroom);
-            examRepository.save(exam);
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withName("before name")
+                        .withBeginDateTime(LocalDateTime.of(2021, 3, 2, 0, 0))
+                        .withEndDateTime(LocalDateTime.of(2021, 3, 4, 12, 0))
+                        .withTimeLimit(Duration.ofHours(1))
+                        .withPassScore(70)
+                );
+                return exam.getId();
+            });
 
             // When
             Update dto = Update.builder()
                 .name("test name")
-                .beginDateTime(stringToLocalDateTime("2021-05-12T00:00:00"))
-                .endDateTime(stringToLocalDateTime("2021-05-17T12:30:00"))
-                .timeLimit(stringToDuration("PT3H"))
+                .beginDateTime(LocalDateTime.of(2021, 5, 12, 0, 0))
+                .endDateTime(LocalDateTime.of(2021, 5, 17, 12, 30))
+                .timeLimit(Duration.ofHours(3))
                 .passScore(80)
                 .build();
             String body = toJson(dto);
 
             ResultActions actions = mockMvc
-                .perform(patch("/exams/{id}", exam.getId())
+                .perform(patch("/exams/{id}", examId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -459,18 +491,21 @@ public class ExamIntegrationTest {
         @Test
         void deleteExam() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                return exam.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/exams/{id}", exam.getId()));
+                .perform(delete("/exams/{id}", examId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            assertThat(examRepository.findById(exam.getId())).isEmpty();
+            assertThat(examRepository.findById(examId)).isEmpty();
 
             // Document
             actions.andDo(document("exam-delete-example"));
@@ -494,20 +529,26 @@ public class ExamIntegrationTest {
         @Test
         void cancelExam() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                return exam.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exams/{id}/cancel", exam.getId()));
+                .perform(post("/exams/{id}/cancel", examId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            Exam result = findExamById(exam.getId());
+            boolean isCancelled = trxHelper.doInTransaction(() -> {
+                Exam exam = examRepository.findById(examId).orElseThrow();
+                return exam.isCancelled();
+            });
 
-            assertThat(result.isCancelled()).isTrue();
+            assertThat(isCancelled).isTrue();
 
             // Document
             actions.andDo(document("exam-cancel-example"));
@@ -526,12 +567,13 @@ public class ExamIntegrationTest {
         @Test
         void cancelExam_ExamAlreadyFinished_BadRequestStatus() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
-            exam.setFinished(true);
-            examRepository.save(exam);
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it -> it.withFinished(true));
+                return exam.getId();
+            });
 
             // When
-            ResultActions actions = mockMvc.perform(post("/exams/{id}/cancel", exam.getId()));
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/cancel", examId));
 
             // Then
             actions
@@ -541,12 +583,13 @@ public class ExamIntegrationTest {
         @Test
         void cancelExam_ExamAlreadyCancelled_BadRequestStatus() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
-            exam.setCancelled(true);
-            examRepository.save(exam);
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it -> it.withCancelled(true));
+                return exam.getId();
+            });
 
             // When
-            ResultActions actions = mockMvc.perform(post("/exams/{id}/cancel", exam.getId()));
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/cancel", examId));
 
             // Then
             actions
@@ -560,20 +603,26 @@ public class ExamIntegrationTest {
         @Test
         void finishExam() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                return exam.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exams/{id}/finish", exam.getId()));
+                .perform(post("/exams/{id}/finish", examId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            Exam result = findExamById(exam.getId());
+            boolean isFinished = trxHelper.doInTransaction(() -> {
+                Exam exam = examRepository.findById(examId).orElseThrow();
+                return exam.isFinished();
+            });
 
-            assertThat(result.isFinished()).isTrue();
+            assertThat(isFinished).isTrue();
 
             // Document
             actions.andDo(document("exam-finish-example"));
@@ -592,12 +641,13 @@ public class ExamIntegrationTest {
         @Test
         void finishExam_ExamAlreadyCancelled_BadRequestStatus() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
-            exam.setCancelled(true);
-            examRepository.save(exam);
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it -> it.withCancelled(true));
+                return exam.getId();
+            });
 
             // When
-            ResultActions actions = mockMvc.perform(post("/exams/{id}/finish", exam.getId()));
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/finish", examId));
 
             // Then
             actions
@@ -607,12 +657,13 @@ public class ExamIntegrationTest {
         @Test
         void finishExam_ExamAlreadyFinished_BadRequestStatus() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
-            exam.setFinished(true);
-            examRepository.save(exam);
+            Long examId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it -> it.withFinished(true));
+                return exam.getId();
+            });
 
             // When
-            ResultActions actions = mockMvc.perform(post("/exams/{id}/finish", exam.getId()));
+            ResultActions actions = mockMvc.perform(post("/exams/{id}/finish", examId));
 
             // Then
             actions
@@ -620,131 +671,8 @@ public class ExamIntegrationTest {
         }
     }
 
-    private Exam findExamById(Long id) {
-        return examRepository.findById(id).orElseThrow();
-    }
-
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
-    }
-
-    private Teacher createAndSaveTeacher() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Teacher teacher = teacherRepository.save(
-            new Teacher()
-        );
-        teacher.setAccount(account);
-        return teacher;
-    }
-
-    private Duration stringToDuration(String duration) {
-        return Duration.parse(duration);
-    }
-
-    private LocalDateTime stringToLocalDateTime(String date) {
-        return LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
-    }
-
-    private Classroom createAndSaveClassroom() {
-        return classroomRepository.save(
-            Classroom.builder()
-                .name("test classroom")
-                .build());
-    }
-
-    private AttenderState createAndSaveAttenderState() {
-        AttenderState attenderState = AttenderState.builder().examStartTime(LocalDateTime.now())
-            .build();
-        attenderState.setAttender(createAndSaveStudent());
-        attenderState.setProgress(AttendingProgress.COMPLETE);
-        attenderState.setScore(100);
-        return attenderStateRepository.save(attenderState);
-    }
-
-    private Student createAndSaveStudent() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-        return student;
-    }
-
-    private Exam createAndSaveExam() {
-        Exam exam = Exam.builder()
-            .name("test name")
-            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-            .timeLimit(stringToDuration("PT1H"))
-            .passScore(70)
-            .build();
-        Teacher creator = createAndSaveTeacher();
-        AttenderState attenderState = createAndSaveAttenderState();
-        Question question = aQuestion().withId(null);
-        Classroom classroom = createAndSaveClassroom();
-
-        exam.setCreator(creator);
-        attenderState.setExam(exam);
-        exam.addQuestion(question);
-        classroom.addExam(exam);
-
-        classroomRepository.save(classroom);
-        return examRepository.save(exam);
-    }
-
-    private Exam createAndSaveExamWithClassroom(Classroom classroom) {
-        Exam exam = Exam.builder()
-            .name("test name")
-            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-            .timeLimit(stringToDuration("PT1H"))
-            .passScore(70)
-            .build();
-        Teacher creator = createAndSaveTeacher();
-        AttenderState attenderState = createAndSaveAttenderState();
-        Question question = aQuestion().withId(null);
-
-        exam.setCreator(creator);
-        attenderState.setExam(exam);
-        exam.addQuestion(question);
-        classroom.addExam(exam);
-
-        return examRepository.save(exam);
-    }
-
-    private Exam createAndSaveExamWithClassroomAndCreator(Classroom classroom, Teacher creator) {
-        Exam exam = Exam.builder()
-            .name("test name")
-            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-            .timeLimit(stringToDuration("PT1H"))
-            .passScore(70)
-            .build();
-        AttenderState attenderState = createAndSaveAttenderState();
-        Question question = aQuestion().withId(null);
-
-        exam.setCreator(creator);
-        attenderState.setExam(exam);
-        exam.addQuestion(question);
-        classroom.addExam(exam);
-
-        return examRepository.save(exam);
     }
 
 }

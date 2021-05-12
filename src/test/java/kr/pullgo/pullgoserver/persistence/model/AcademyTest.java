@@ -5,29 +5,19 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
-import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
-import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
-import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 @DataJpaTest
+@Import(EntityHelper.class)
 class AcademyTest {
 
     @Autowired
-    private AcademyRepository academyRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private TeacherRepository teacherRepository;
+    private EntityHelper entityHelper;
 
     @Nested
     class AcceptStudent {
@@ -35,10 +25,11 @@ class AcademyTest {
         @Test
         void acceptStudent() {
             // Given
-            Student student = createAndSaveStudent();
-            Academy academy = createAndSaveAcademy();
-
-            student.applyAcademy(academy);
+            Academy academy = entityHelper.generateAcademy();
+            Student student = entityHelper.generateStudent(it -> {
+                it.applyAcademy(academy);
+                return it;
+            });
 
             // When
             academy.acceptStudent(student);
@@ -53,8 +44,8 @@ class AcademyTest {
         @Test
         void acceptStudent_NotApplied_ExceptionThrown() {
             // Given
-            Student student = createAndSaveStudent();
-            Academy academy = createAndSaveAcademy();
+            Academy academy = entityHelper.generateAcademy();
+            Student student = entityHelper.generateStudent();
 
             // When
             Throwable thrown = catchThrowable(() -> academy.acceptStudent(student));
@@ -70,10 +61,11 @@ class AcademyTest {
         @Test
         void acceptTeacher() {
             // Given
-            Teacher teacher = createAndSaveTeacher();
-            Academy academy = createAndSaveAcademy();
-
-            teacher.applyAcademy(academy);
+            Academy academy = entityHelper.generateAcademy();
+            Teacher teacher = entityHelper.generateTeacher(it -> {
+                it.applyAcademy(academy);
+                return it;
+            });
 
             // When
             academy.acceptTeacher(teacher);
@@ -88,8 +80,8 @@ class AcademyTest {
         @Test
         void acceptTeacher_NotApplied_ExceptionThrown() {
             // Given
-            Teacher teacher = createAndSaveTeacher();
-            Academy academy = createAndSaveAcademy();
+            Academy academy = entityHelper.generateAcademy();
+            Teacher teacher = entityHelper.generateTeacher();
 
             // When
             Throwable thrown = catchThrowable(() -> academy.acceptTeacher(teacher));
@@ -99,47 +91,4 @@ class AcademyTest {
         }
     }
 
-    private Academy createAndSaveAcademy() {
-        return academyRepository.save(
-            Academy.builder()
-                .name("name")
-                .phone("phone")
-                .address("address")
-                .build()
-        );
-    }
-
-    private Student createAndSaveStudent() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-        return student;
-    }
-
-    private Teacher createAndSaveTeacher() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Teacher teacher = teacherRepository.save(
-            new Teacher()
-        );
-        teacher.setAccount(account);
-        return teacher;
-    }
 }

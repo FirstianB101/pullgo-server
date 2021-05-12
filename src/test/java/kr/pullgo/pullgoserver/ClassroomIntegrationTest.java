@@ -28,17 +28,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
+import kr.pullgo.pullgoserver.helper.Struct;
+import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
-import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
-import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
@@ -57,8 +58,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
 @ExtendWith(RestDocumentationExtension.class)
@@ -81,12 +80,6 @@ public class ClassroomIntegrationTest {
     private ClassroomRepository classroomRepository;
 
     @Autowired
-    private AcademyRepository academyRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
     private TeacherRepository teacherRepository;
 
     @Autowired
@@ -96,7 +89,10 @@ public class ClassroomIntegrationTest {
     private DataSource dataSource;
 
     @Autowired
-    private TransactionTemplate transactionTemplate;
+    private TransactionHelper trxHelper;
+
+    @Autowired
+    private EntityHelper entityHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -114,24 +110,30 @@ public class ClassroomIntegrationTest {
         @Test
         void getClassroom() throws Exception {
             // Given
-            Classroom classroom = classroomRepository.save(Classroom.builder()
-                .name("test name")
-                .build());
+            Struct given = trxHelper.doInTransaction(() -> {
+                Academy academy = entityHelper.generateAcademy();
+                Classroom classroom = entityHelper.generateClassroom(it ->
+                    it.withName("test name")
+                        .withAcademy(academy)
+                );
 
-            Academy academy = createAndSaveAcademy();
-            classroom.setAcademy(academy);
-            classroomRepository.save(classroom);
+                return new Struct()
+                    .withValue("academyId", academy.getId())
+                    .withValue("classroomId", classroom.getId());
+            });
+            Long academyId = given.valueOf("academyId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(get("/academy/classrooms/{id}", classroom.getId()));
+                .perform(get("/academy/classrooms/{id}", classroomId));
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(classroom.getId()))
+                .andExpect(jsonPath("$.id").value(classroomId))
                 .andExpect(jsonPath("$.name").value("test name"))
-                .andExpect(jsonPath("$.academyId").value(academy.getId()));
+                .andExpect(jsonPath("$.academyId").value(academyId));
 
             // Document
             actions.andDo(document("classroom-retrieve-example",
@@ -160,8 +162,16 @@ public class ClassroomIntegrationTest {
         @Test
         void listClassrooms() throws Exception {
             // Given
-            Classroom classroomA = createAndSaveClassroom();
-            Classroom classroomB = createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroomA = entityHelper.generateClassroom();
+                Classroom classroomB = entityHelper.generateClassroom();
+
+                return new Struct()
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms"));
@@ -171,8 +181,8 @@ public class ClassroomIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    classroomA.getId().intValue(),
-                    classroomB.getId().intValue()
+                    classroomAId.intValue(),
+                    classroomBId.intValue()
                 )));
 
             // Document
@@ -187,9 +197,17 @@ public class ClassroomIntegrationTest {
         @Test
         void listClassroomsWithPaging() throws Exception {
             // Given
-            createAndSaveClassroom();
-            Classroom classroomA = createAndSaveClassroom();
-            Classroom classroomB = createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                entityHelper.generateClassroom();
+                Classroom classroomA = entityHelper.generateClassroom();
+                Classroom classroomB = entityHelper.generateClassroom();
+
+                return new Struct()
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
@@ -202,31 +220,43 @@ public class ClassroomIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(contains(
-                    classroomB.getId().intValue(),
-                    classroomA.getId().intValue()
+                    classroomBId.intValue(),
+                    classroomAId.intValue()
                 )));
         }
 
         @Test
         void searchClassroomsByAcademyId() throws Exception {
             // Given
-            Academy academy = createAndSaveAcademy();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Academy academy = entityHelper.generateAcademy();
 
-            Classroom classroomA = createAndSaveClassroomWithAcademy(academy);
-            Classroom classroomB = createAndSaveClassroomWithAcademy(academy);
-            createAndSaveClassroom();
+                Classroom classroomA = entityHelper
+                    .generateClassroom(it -> it.withAcademy(academy));
+                Classroom classroomB = entityHelper
+                    .generateClassroom(it -> it.withAcademy(academy));
+                entityHelper.generateClassroom();
+
+                return new Struct()
+                    .withValue("academyId", academy.getId())
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long academyId = given.valueOf("academyId");
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
-                .param("academyId", academy.getId().toString()));
+                .param("academyId", academyId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    classroomA.getId().intValue(),
-                    classroomB.getId().intValue()
+                    classroomAId.intValue(),
+                    classroomBId.intValue()
                 )));
 
             // Document
@@ -250,123 +280,175 @@ public class ClassroomIntegrationTest {
         @Test
         void searchClassroomsByStudentId() throws Exception {
             // Given
-            Classroom classroomA = createAndSaveClassroom();
-            Classroom classroomB = createAndSaveClassroom();
-            createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Student student = entityHelper.generateStudent();
 
-            Student student = createAndSaveStudent();
-            student.applyClassroom(classroomA);
-            student.applyClassroom(classroomB);
-            classroomA.acceptStudent(student);
-            classroomB.acceptStudent(student);
+                Classroom classroomA = entityHelper.generateClassroom(it -> {
+                    it.addStudent(student);
+                    return it;
+                });
+                Classroom classroomB = entityHelper.generateClassroom(it -> {
+                    it.addStudent(student);
+                    return it;
+                });
+                entityHelper.generateClassroom();
 
-            classroomRepository.save(classroomA);
-            classroomRepository.save(classroomB);
+                return new Struct()
+                    .withValue("studentId", student.getId())
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long studentId = given.valueOf("studentId");
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
-                .param("studentId", student.getId().toString()));
+                .param("studentId", studentId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    classroomA.getId().intValue(),
-                    classroomB.getId().intValue()
+                    classroomAId.intValue(),
+                    classroomBId.intValue()
                 )));
         }
 
         @Test
         void searchClassroomsByApplyingStudentId() throws Exception {
             // Given
-            Classroom classroomA = createAndSaveClassroom();
-            Classroom classroomB = createAndSaveClassroom();
-            createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroomA = entityHelper.generateClassroom();
+                Classroom classroomB = entityHelper.generateClassroom();
+                entityHelper.generateClassroom();
 
-            Student student = createAndSaveStudent();
-            student.applyClassroom(classroomA);
-            student.applyClassroom(classroomB);
+                Student student = entityHelper.generateStudent(it -> {
+                    it.applyClassroom(classroomA);
+                    it.applyClassroom(classroomB);
+                    return it;
+                });
 
-            studentRepository.save(student);
+                return new Struct()
+                    .withValue("studentId", student.getId())
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long studentId = given.valueOf("studentId");
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
-                .param("applyingStudentId", student.getId().toString()));
+                .param("applyingStudentId", studentId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    classroomA.getId().intValue(),
-                    classroomB.getId().intValue()
+                    classroomAId.intValue(),
+                    classroomBId.intValue()
                 )));
         }
 
         @Test
         void searchClassroomsByTeacherId() throws Exception {
             // Given
-            Classroom classroomA = createAndSaveClassroom();
-            Classroom classroomB = createAndSaveClassroom();
-            createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Teacher teacher = entityHelper.generateTeacher();
 
-            Teacher teacher = createAndSaveTeacher();
-            teacher.applyClassroom(classroomA);
-            teacher.applyClassroom(classroomB);
-            classroomA.acceptTeacher(teacher);
-            classroomB.acceptTeacher(teacher);
+                Classroom classroomA = entityHelper.generateClassroom(it -> {
+                    it.addTeacher(teacher);
+                    return it;
+                });
+                Classroom classroomB = entityHelper.generateClassroom(it -> {
+                    it.addTeacher(teacher);
+                    return it;
+                });
+                entityHelper.generateClassroom();
 
-            classroomRepository.save(classroomA);
-            classroomRepository.save(classroomB);
+                return new Struct()
+                    .withValue("teacherId", teacher.getId())
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long teacherId = given.valueOf("teacherId");
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
-                .param("teacherId", teacher.getId().toString()));
+                .param("teacherId", teacherId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    classroomA.getId().intValue(),
-                    classroomB.getId().intValue()
+                    classroomAId.intValue(),
+                    classroomBId.intValue()
                 )));
         }
 
         @Test
         void searchClassroomsByApplyingTeacherId() throws Exception {
             // Given
-            Classroom classroomA = createAndSaveClassroom();
-            Classroom classroomB = createAndSaveClassroom();
-            createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroomA = entityHelper.generateClassroom();
+                Classroom classroomB = entityHelper.generateClassroom();
+                entityHelper.generateClassroom();
 
-            Teacher teacher = createAndSaveTeacher();
-            teacher.applyClassroom(classroomA);
-            teacher.applyClassroom(classroomB);
+                Teacher teacher = entityHelper.generateTeacher(it -> {
+                    it.applyClassroom(classroomA);
+                    it.applyClassroom(classroomB);
+                    return it;
+                });
 
-            teacherRepository.save(teacher);
+                return new Struct()
+                    .withValue("teacherId", teacher.getId())
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long teacherId = given.valueOf("teacherId");
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
-                .param("applyingTeacherId", teacher.getId().toString()));
+                .param("applyingTeacherId", teacherId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    classroomA.getId().intValue(),
-                    classroomB.getId().intValue()
+                    classroomAId.intValue(),
+                    classroomBId.intValue()
                 )));
         }
 
         @Test
         void searchClassroomsByNameLike() throws Exception {
             // Given
-            Classroom classroomA = createAndSaveClassroomWithName("컴퓨터네트워크 월수 6시 최웅철");
-            Classroom classroomB = createAndSaveClassroomWithName("네트워크의 이해 화목 3시 이동호");
-            createAndSaveClassroomWithName("운영체제 화목 12시 안우현");
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroomA = entityHelper.generateClassroom(it ->
+                    it.withName("컴퓨터네트워크 월수 6시 최웅철")
+                );
+                Classroom classroomB = entityHelper.generateClassroom(it ->
+                    it.withName("네트워크의 이해 화목 3시 이동호")
+                );
+                entityHelper.generateClassroom(it ->
+                    it.withName("운영체제 화목 12시 안우현")
+                );
+
+                return new Struct()
+                    .withValue("classroomAId", classroomA.getId())
+                    .withValue("classroomBId", classroomB.getId());
+            });
+            Long classroomAId = given.valueOf("classroomAId");
+            Long classroomBId = given.valueOf("classroomBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classrooms")
@@ -377,8 +459,8 @@ public class ClassroomIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    classroomA.getId().intValue(),
-                    classroomB.getId().intValue()
+                    classroomAId.intValue(),
+                    classroomBId.intValue()
                 )));
         }
 
@@ -387,14 +469,22 @@ public class ClassroomIntegrationTest {
     @Test
     void postClassroom() throws Exception {
         // Given
-        Academy academy = createAndSaveAcademy();
-        Teacher creator = createAndSaveTeacher();
+        Struct given = trxHelper.doInTransaction(() -> {
+            Academy academy = entityHelper.generateAcademy();
+            Teacher creator = entityHelper.generateTeacher();
+
+            return new Struct()
+                .withValue("academyId", academy.getId())
+                .withValue("creatorId", creator.getId());
+        });
+        Long academyId = given.valueOf("academyId");
+        Long creatorId = given.valueOf("creatorId");
 
         // When
         ClassroomDto.Create dto = ClassroomDto.Create.builder()
             .name("test name")
-            .academyId(academy.getId())
-            .creatorId(creator.getId())
+            .academyId(academyId)
+            .creatorId(creatorId)
             .build();
         String body = toJson(dto);
 
@@ -407,18 +497,19 @@ public class ClassroomIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.name").value("test name"))
-            .andExpect(jsonPath("$.academyId").value(academy.getId()))
+            .andExpect(jsonPath("$.academyId").value(academyId))
             .andReturn();
 
         String responseBody = mvcResult.getResponse().getContentAsString();
         ClassroomDto.Result resultDto = fromJson(responseBody, ClassroomDto.Result.class);
 
-        withTransaction(status -> {
+        List<Long> teacherIds = trxHelper.doInTransaction(() -> {
             Classroom classroom = classroomRepository.findById(resultDto.getId()).orElseThrow();
-
-            assertThat(classroom.getTeachers()).extracting("id")
-                .contains(creator.getId());
+            return classroom.getTeachers().stream()
+                .map(Teacher::getId)
+                .collect(Collectors.toList());
         });
+        assertThat(teacherIds).contains(creatorId);
 
         // Document
         actions.andDo(document("classroom-create-example",
@@ -435,13 +526,19 @@ public class ClassroomIntegrationTest {
         @Test
         void patchClassroom() throws Exception {
             // Given
-            Classroom classroom = classroomRepository.save(Classroom.builder()
-                .name("before name")
-                .build());
+            Struct given = trxHelper.doInTransaction(() -> {
+                Academy academy = entityHelper.generateAcademy();
+                Classroom classroom = entityHelper.generateClassroom(it ->
+                    it.withAcademy(academy)
+                        .withName("before name")
+                );
 
-            Academy academy = createAndSaveAcademy();
-            classroom.setAcademy(academy);
-            classroomRepository.save(classroom);
+                return new Struct()
+                    .withValue("academyId", academy.getId())
+                    .withValue("classroomId", classroom.getId());
+            });
+            Long academyId = given.valueOf("academyId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
             ClassroomDto.Update dto = ClassroomDto.Update.builder()
@@ -450,16 +547,16 @@ public class ClassroomIntegrationTest {
             String body = toJson(dto);
 
             ResultActions actions = mockMvc
-                .perform(patch("/academy/classrooms/{id}", classroom.getId())
+                .perform(patch("/academy/classrooms/{id}", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(classroom.getId()))
+                .andExpect(jsonPath("$.id").value(classroomId))
                 .andExpect(jsonPath("$.name").value("test name"))
-                .andExpect(jsonPath("$.academyId").value(academy.getId()));
+                .andExpect(jsonPath("$.academyId").value(academyId));
 
             // Document
             actions.andDo(document("classroom-update-example",
@@ -490,19 +587,39 @@ public class ClassroomIntegrationTest {
         @Test
         void deleteClassroom() throws Exception {
             // Given
-            Long classroomId = createAndSaveClassroom().getId();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
 
-            Long teacherAId = createAndSaveTeacher().getId();
-            addTeacher(classroomId, teacherAId);
+                Teacher joinedTeacher = entityHelper.generateTeacher(it -> {
+                    classroom.addTeacher(it);
+                    return it;
+                });
+                Student joinedStudent = entityHelper.generateStudent(it -> {
+                    classroom.addStudent(it);
+                    return it;
+                });
 
-            Long teacherBId = createAndSaveTeacher().getId();
-            addApplyingTeacher(classroomId, teacherBId);
+                Teacher appliedTeacher = entityHelper.generateTeacher(it -> {
+                    it.applyClassroom(classroom);
+                    return it;
+                });
+                Student appliedStudent = entityHelper.generateStudent(it -> {
+                    it.applyClassroom(classroom);
+                    return it;
+                });
 
-            Long studentAId = createAndSaveStudent().getId();
-            addStudent(classroomId, studentAId);
-
-            Long studentBId = createAndSaveStudent().getId();
-            addApplyingStudent(classroomId, studentBId);
+                return new Struct()
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("joinedTeacherId", joinedTeacher.getId())
+                    .withValue("joinedStudentId", joinedStudent.getId())
+                    .withValue("appliedTeacherId", appliedTeacher.getId())
+                    .withValue("appliedStudentId", appliedStudent.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long joinedTeacherId = given.valueOf("joinedTeacherId");
+            Long joinedStudentId = given.valueOf("joinedStudentId");
+            Long appliedTeacherId = given.valueOf("appliedTeacherId");
+            Long appliedStudentId = given.valueOf("appliedStudentId");
 
             // When
             ResultActions actions = mockMvc
@@ -512,13 +629,13 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isNoContent());
 
-            assertThat(classroomRepository.findById(classroomId)).isEmpty();
+            assertThat(classroomRepository.existsById(classroomId)).isFalse();
 
-            assertThat(teacherRepository.findById(teacherAId)).isNotEmpty();
-            assertThat(teacherRepository.findById(teacherBId)).isNotEmpty();
+            assertThat(teacherRepository.existsById(joinedTeacherId)).isTrue();
+            assertThat(studentRepository.existsById(joinedStudentId)).isTrue();
 
-            assertThat(studentRepository.findById(studentAId)).isNotEmpty();
-            assertThat(studentRepository.findById(studentBId)).isNotEmpty();
+            assertThat(teacherRepository.existsById(appliedTeacherId)).isTrue();
+            assertThat(studentRepository.existsById(appliedStudentId)).isTrue();
 
             // Document
             actions.andDo(document("classroom-delete-example"));
@@ -542,17 +659,26 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptTeacher() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Teacher teacher = createAndSaveTeacher();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
 
-            teacher.applyClassroom(classroom);
-            teacherRepository.save(teacher);
+                Teacher teacher = entityHelper.generateTeacher(it -> {
+                    it.applyClassroom(classroom);
+                    return it;
+                });
+
+                return new Struct()
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("teacherId", teacher.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long teacherId = given.valueOf("teacherId");
 
             // When
-            String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(teacher.getId()));
+            String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(teacherId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/accept-teacher", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/accept-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -586,13 +712,16 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptTeacher_TeacherNotFound_NotFoundStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Long classroomId = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                return classroom.getId();
+            });
 
             // When
             String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(0L));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/accept-teacher", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/accept-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -604,14 +733,22 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptTeacher_TeacherNotApplied_BadRequestStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Teacher teacher = createAndSaveTeacher();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                Teacher teacher = entityHelper.generateTeacher();
+
+                return new Struct()
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("teacherId", teacher.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long teacherId = given.valueOf("teacherId");
 
             // When
-            String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(teacher.getId()));
+            String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(teacherId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/accept-teacher", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/accept-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -627,18 +764,25 @@ public class ClassroomIntegrationTest {
         @Test
         void kickTeacher() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Teacher teacher = createAndSaveTeacher();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Teacher teacher = entityHelper.generateTeacher();
+                Classroom classroom = entityHelper.generateClassroom(it -> {
+                    it.addTeacher(teacher);
+                    return it;
+                });
 
-            teacher.applyClassroom(classroom);
-            classroom.acceptTeacher(teacher);
-            classroomRepository.save(classroom);
+                return new Struct()
+                    .withValue("teacherId", teacher.getId())
+                    .withValue("classroomId", classroom.getId());
+            });
+            Long teacherId = given.valueOf("teacherId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
-            String body = toJson(aClassroomKickTeacherDto().withTeacherId(teacher.getId()));
+            String body = toJson(aClassroomKickTeacherDto().withTeacherId(teacherId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/kick-teacher", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/kick-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -672,13 +816,16 @@ public class ClassroomIntegrationTest {
         @Test
         void kickTeacher_TeacherNotFound_NotFoundStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Long classroomId = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                return classroom.getId();
+            });
 
             // When
             String body = toJson(aClassroomKickTeacherDto().withTeacherId(0L));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/kick-teacher", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/kick-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -690,14 +837,22 @@ public class ClassroomIntegrationTest {
         @Test
         void kickTeacher_TeacherNotEnrolled_BadRequestStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Teacher teacher = createAndSaveTeacher();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Teacher teacher = entityHelper.generateTeacher();
+                Classroom classroom = entityHelper.generateClassroom();
+
+                return new Struct()
+                    .withValue("teacherId", teacher.getId())
+                    .withValue("classroomId", classroom.getId());
+            });
+            Long teacherId = given.valueOf("teacherId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
-            String body = toJson(aClassroomKickTeacherDto().withTeacherId(teacher.getId()));
+            String body = toJson(aClassroomKickTeacherDto().withTeacherId(teacherId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/kick-teacher", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/kick-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -714,17 +869,26 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptStudent() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Student student = createAndSaveStudent();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
 
-            student.applyClassroom(classroom);
-            studentRepository.save(student);
+                Student student = entityHelper.generateStudent(it -> {
+                    it.applyClassroom(classroom);
+                    return it;
+                });
+
+                return new Struct()
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("studentId", student.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long studentId = given.valueOf("studentId");
 
             // When
-            String body = toJson(aClassroomAcceptStudentDto().withStudentId(student.getId()));
+            String body = toJson(aClassroomAcceptStudentDto().withStudentId(studentId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/accept-student", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/accept-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -758,13 +922,16 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptStudent_StudentNotFound_NotFoundStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Long classroomId = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                return classroom.getId();
+            });
 
             // When
             String body = toJson(aClassroomAcceptStudentDto().withStudentId(0L));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/accept-student", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/accept-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -776,14 +943,22 @@ public class ClassroomIntegrationTest {
         @Test
         void acceptStudent_StudentNotApplied_BadRequestStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Student student = createAndSaveStudent();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                Student student = entityHelper.generateStudent();
+
+                return new Struct()
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("studentId", student.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long studentId = given.valueOf("studentId");
 
             // When
-            String body = toJson(aClassroomAcceptStudentDto().withStudentId(student.getId()));
+            String body = toJson(aClassroomAcceptStudentDto().withStudentId(studentId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/accept-student", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/accept-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -800,18 +975,25 @@ public class ClassroomIntegrationTest {
         @Test
         void kickStudent() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Student student = createAndSaveStudent();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Student student = entityHelper.generateStudent();
+                Classroom classroom = entityHelper.generateClassroom(it -> {
+                    it.addStudent(student);
+                    return it;
+                });
 
-            student.applyClassroom(classroom);
-            classroom.acceptStudent(student);
-            classroomRepository.save(classroom);
+                return new Struct()
+                    .withValue("studentId", student.getId())
+                    .withValue("classroomId", classroom.getId());
+            });
+            Long studentId = given.valueOf("studentId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
-            String body = toJson(aClassroomKickStudentDto().withStudentId(student.getId()));
+            String body = toJson(aClassroomKickStudentDto().withStudentId(studentId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/kick-student", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/kick-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -845,13 +1027,16 @@ public class ClassroomIntegrationTest {
         @Test
         void kickStudent_StudentNotFound_NotFoundStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Long classroomId = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                return classroom.getId();
+            });
 
             // When
             String body = toJson(aClassroomKickStudentDto().withStudentId(0L));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/kick-student", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/kick-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -863,14 +1048,22 @@ public class ClassroomIntegrationTest {
         @Test
         void kickStudent_StudentNotEnrolled_BadRequestStatus() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
-            Student student = createAndSaveStudent();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Student student = entityHelper.generateStudent();
+                Classroom classroom = entityHelper.generateClassroom();
+
+                return new Struct()
+                    .withValue("studentId", student.getId())
+                    .withValue("classroomId", classroom.getId());
+            });
+            Long studentId = given.valueOf("studentId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
-            String body = toJson(aClassroomKickStudentDto().withStudentId(student.getId()));
+            String body = toJson(aClassroomKickStudentDto().withStudentId(studentId));
 
             ResultActions actions = mockMvc
-                .perform(post("/academy/classrooms/{id}/kick-student", classroom.getId())
+                .perform(post("/academy/classrooms/{id}/kick-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -887,122 +1080,6 @@ public class ClassroomIntegrationTest {
 
     private <T> T fromJson(String responseBody, Class<T> clazz) throws JsonProcessingException {
         return objectMapper.readValue(responseBody, clazz);
-    }
-
-    private void withTransaction(Consumer<TransactionStatus> callback) {
-        transactionTemplate.executeWithoutResult(callback);
-    }
-
-    private Academy createAndSaveAcademy() {
-        return academyRepository.save(
-            Academy.builder()
-                .name("Test academy")
-                .phone("01012345678")
-                .address("Seoul")
-                .build());
-    }
-
-    private Classroom createAndSaveClassroom() {
-        Classroom classroom = Classroom.builder()
-            .name("test name")
-            .build();
-
-        Academy academy = createAndSaveAcademy();
-        classroom.setAcademy(academy);
-
-        return classroomRepository.save(classroom);
-    }
-
-    private Classroom createAndSaveClassroomWithName(String name) {
-        Classroom classroom = Classroom.builder()
-            .name(name)
-            .build();
-
-        Academy academy = createAndSaveAcademy();
-        classroom.setAcademy(academy);
-
-        return classroomRepository.save(classroom);
-    }
-
-    private Classroom createAndSaveClassroomWithAcademy(Academy academy) {
-        Classroom classroom = Classroom.builder()
-            .name("test name")
-            .build();
-
-        classroom.setAcademy(academy);
-
-        return classroomRepository.save(classroom);
-    }
-
-    private Student createAndSaveStudent() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-        return student;
-    }
-
-    private Teacher createAndSaveTeacher() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Teacher teacher = teacherRepository.save(
-            new Teacher()
-        );
-        teacher.setAccount(account);
-        return teacher;
-    }
-
-    private void addTeacher(Long classroomId, Long teacherId) {
-        withTransaction(status -> {
-            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
-            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
-
-            classroom.addTeacher(teacher);
-        });
-    }
-
-    private void addApplyingTeacher(Long classroomId, Long teacherId) {
-        withTransaction(status -> {
-            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
-            Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
-
-            teacher.applyClassroom(classroom);
-        });
-    }
-
-    private void addStudent(Long classroomId, Long studentId) {
-        withTransaction(status -> {
-            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
-            Student student = studentRepository.findById(studentId).orElseThrow();
-
-            student.applyClassroom(classroom);
-            classroom.acceptStudent(student);
-        });
-    }
-
-    private void addApplyingStudent(Long classroomId, Long studentId) {
-        withTransaction(status -> {
-            Classroom classroom = classroomRepository.findById(classroomId).orElseThrow();
-            Student student = studentRepository.findById(studentId).orElseThrow();
-
-            student.applyClassroom(classroom);
-        });
     }
 
 }

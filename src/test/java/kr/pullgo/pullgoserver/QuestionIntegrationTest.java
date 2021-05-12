@@ -1,7 +1,6 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
-import static kr.pullgo.pullgoserver.helper.ExamHelper.anExam;
 import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestionUpdateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -26,19 +25,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.dto.QuestionDto.Update;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
+import kr.pullgo.pullgoserver.helper.Struct;
+import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
-import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,13 +77,13 @@ public class QuestionIntegrationTest {
     private QuestionRepository questionRepository;
 
     @Autowired
-    private ClassroomRepository classroomRepository;
-
-    @Autowired
-    private ExamRepository examRepository;
-
-    @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionHelper trxHelper;
+
+    @Autowired
+    private EntityHelper entityHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -104,33 +101,33 @@ public class QuestionIntegrationTest {
         @Test
         void getQuestion() throws Exception {
             // Given
-            Question question = Question.builder()
-                .answer(new Answer(1, 2, 3))
-                .pictureUrl("Url")
-                .content("Contents")
-                .build();
-            Exam exam = anExam()
-                .withId(null)
-                .withClassroom(null)
-                .withCreator(null);
-
-            exam.addQuestion(question);
-            examRepository.save(exam);
+            Struct given = trxHelper.doInTransaction(() -> {
+                Question question = entityHelper.generateQuestion(it ->
+                    it.withContent("Contents")
+                        .withPictureUrl("Url")
+                        .withAnswer(new Answer(1, 2, 3))
+                );
+                return new Struct()
+                    .withValue("questionId", question.getId())
+                    .withValue("examId", question.getExam().getId());
+            });
+            Long questionId = given.valueOf("questionId");
+            Long examId = given.valueOf("examId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(get("/exam/questions/{id}", question.getId())).andDo(print());
+                .perform(get("/exam/questions/{id}", questionId)).andDo(print());
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(question.getId()))
+                .andExpect(jsonPath("$.id").value(questionId))
                 .andExpect(jsonPath("$.answer.[0]").value(1))
                 .andExpect(jsonPath("$.answer.[1]").value(2))
                 .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.pictureUrl").value("Url"))
                 .andExpect(jsonPath("$.content").value("Contents"))
-                .andExpect(jsonPath("$.examId").value(exam.getId()));
+                .andExpect(jsonPath("$.examId").value(examId));
 
             // Document
             actions.andDo(document("question-retrieve-example",
@@ -161,8 +158,15 @@ public class QuestionIntegrationTest {
         @Test
         void listQuestions() throws Exception {
             // Given
-            Question questionA = createAndSaveQuestion();
-            Question questionB = createAndSaveQuestion();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Question questionA = entityHelper.generateQuestion();
+                Question questionB = entityHelper.generateQuestion();
+                return new Struct()
+                    .withValue("questionAId", questionA.getId())
+                    .withValue("questionBId", questionB.getId());
+            });
+            Long questionAId = given.valueOf("questionAId");
+            Long questionBId = given.valueOf("questionBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/questions"));
@@ -172,8 +176,8 @@ public class QuestionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    questionA.getId().intValue(),
-                    questionB.getId().intValue()
+                    questionAId.intValue(),
+                    questionBId.intValue()
                 )));
 
             // Document
@@ -188,9 +192,16 @@ public class QuestionIntegrationTest {
         @Test
         void listQuestionsWithPaging() throws Exception {
             // Given
-            createAndSaveQuestion();
-            Question questionA = createAndSaveQuestion();
-            Question questionB = createAndSaveQuestion();
+            Struct given = trxHelper.doInTransaction(() -> {
+                entityHelper.generateQuestion();
+                Question questionA = entityHelper.generateQuestion();
+                Question questionB = entityHelper.generateQuestion();
+                return new Struct()
+                    .withValue("questionAId", questionA.getId())
+                    .withValue("questionBId", questionB.getId());
+            });
+            Long questionAId = given.valueOf("questionAId");
+            Long questionBId = given.valueOf("questionBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/questions")
@@ -203,31 +214,39 @@ public class QuestionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(contains(
-                    questionB.getId().intValue(),
-                    questionA.getId().intValue()
+                    questionBId.intValue(),
+                    questionAId.intValue()
                 )));
         }
 
         @Test
         void searchQuestionsByExamId() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
 
-            Question questionA = createAndSaveQuestionWithExam(exam);
-            Question questionB = createAndSaveQuestionWithExam(exam);
-            createAndSaveQuestion();
+                Question questionA = entityHelper.generateQuestion(it -> it.withExam(exam));
+                Question questionB = entityHelper.generateQuestion(it -> it.withExam(exam));
+                return new Struct()
+                    .withValue("examId", exam.getId())
+                    .withValue("questionAId", questionA.getId())
+                    .withValue("questionBId", questionB.getId());
+            });
+            Long examId = given.valueOf("examId");
+            Long questionAId = given.valueOf("questionAId");
+            Long questionBId = given.valueOf("questionBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/questions")
-                .param("examId", exam.getId().toString()));
+                .param("examId", examId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    questionA.getId().intValue(),
-                    questionB.getId().intValue()
+                    questionAId.intValue(),
+                    questionBId.intValue()
                 )));
 
             // Document
@@ -242,14 +261,17 @@ public class QuestionIntegrationTest {
     @Test
     void postQuestion() throws Exception {
         // Given
-        Exam exam = createAndSaveExam();
+        Long examId = trxHelper.doInTransaction(() -> {
+            Exam exam = entityHelper.generateExam();
+            return exam.getId();
+        });
 
         // When
         QuestionDto.Create dto = QuestionDto.Create.builder()
             .answer(Set.of(1, 2, 3))
             .pictureUrl("Url")
             .content("Contents")
-            .examId(exam.getId())
+            .examId(examId)
             .build();
         String body = toJson(dto);
 
@@ -266,7 +288,7 @@ public class QuestionIntegrationTest {
             .andExpect(jsonPath("$.answer.[2]").value(3))
             .andExpect(jsonPath("$.pictureUrl").value("Url"))
             .andExpect(jsonPath("$.content").value("Contents"))
-            .andExpect(jsonPath("$.examId").value(exam.getId()));
+            .andExpect(jsonPath("$.examId").value(examId));
 
         // Document
         actions.andDo(document("question-create-example",
@@ -284,18 +306,18 @@ public class QuestionIntegrationTest {
         @Test
         void patchQuestion() throws Exception {
             // Given
-            Question question = Question.builder()
-                .answer(new Answer(4, 5, 6))
-                .pictureUrl("Before url")
-                .content("Before contents")
-                .build();
-            Exam exam = anExam()
-                .withId(null)
-                .withClassroom(null)
-                .withCreator(null);
-
-            exam.addQuestion(question);
-            examRepository.save(exam);
+            Struct given = trxHelper.doInTransaction(() -> {
+                Question question = entityHelper.generateQuestion(it ->
+                    it.withAnswer(new Answer(4, 5, 6))
+                        .withContent("Before contents")
+                        .withPictureUrl("Before url")
+                );
+                return new Struct()
+                    .withValue("questionId", question.getId())
+                    .withValue("examId", question.getExam().getId());
+            });
+            Long questionId = given.valueOf("questionId");
+            Long examId = given.valueOf("examId");
 
             // When
             Update dto = Update.builder()
@@ -306,7 +328,7 @@ public class QuestionIntegrationTest {
             String body = toJson(dto);
 
             ResultActions actions = mockMvc
-                .perform(patch("/exam/questions/{id}", question.getId())
+                .perform(patch("/exam/questions/{id}", questionId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -319,7 +341,7 @@ public class QuestionIntegrationTest {
                 .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.pictureUrl").value("Url"))
                 .andExpect(jsonPath("$.content").value("Contents"))
-                .andExpect(jsonPath("$.examId").value(exam.getId()));
+                .andExpect(jsonPath("$.examId").value(examId));
 
             // Document
             actions.andDo(document("question-update-example",
@@ -352,18 +374,21 @@ public class QuestionIntegrationTest {
         @Test
         void deleteQuestion() throws Exception {
             // Given
-            Question question = createAndSaveQuestion();
+            Long questionId = trxHelper.doInTransaction(() -> {
+                Question question = entityHelper.generateQuestion();
+                return question.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/exam/questions/{id}", question.getId()));
+                .perform(delete("/exam/questions/{id}", questionId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            assertThat(questionRepository.findById(question.getId())).isEmpty();
+            assertThat(questionRepository.findById(questionId)).isEmpty();
 
             // Document
             actions.andDo(document("question-delete-example"));
@@ -383,51 +408,6 @@ public class QuestionIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
-    }
-
-    private Duration stringToDuration(String duration) {
-        return Duration.parse(duration);
-    }
-
-    private LocalDateTime stringToLocalDateTime(String date) {
-        return LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
-    }
-
-    private Exam createAndSaveExam() {
-        return examRepository.save(Exam.builder()
-            .name("test name")
-            .beginDateTime(stringToLocalDateTime("2021-03-02T00:00:00"))
-            .endDateTime(stringToLocalDateTime("2021-03-04T12:00:00"))
-            .timeLimit(stringToDuration("PT1H"))
-            .passScore(70)
-            .build());
-    }
-
-    private Question createAndSaveQuestion() {
-        Question question = Question.builder()
-            .answer(new Answer(4, 5, 6))
-            .pictureUrl("Before url")
-            .content("Before contents")
-            .build();
-        Exam exam = anExam()
-            .withId(null)
-            .withClassroom(null)
-            .withCreator(null);
-        exam.addQuestion(question);
-        examRepository.save(exam);
-
-        return question;
-    }
-
-    private Question createAndSaveQuestionWithExam(Exam exam) {
-        Question question = Question.builder()
-            .answer(new Answer(4, 5, 6))
-            .pictureUrl("Before url")
-            .content("Before contents")
-            .build();
-        exam.addQuestion(question);
-
-        return questionRepository.save(question);
     }
 
 }
