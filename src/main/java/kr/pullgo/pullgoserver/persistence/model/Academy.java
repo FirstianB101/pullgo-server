@@ -99,7 +99,7 @@ public class Academy extends TimeEntity {
         student.removeAppliedAcademy(this);
     }
 
-    private void addStudent(Student student) {
+    public void addStudent(Student student) {
         students.add(student);
         student.getAcademies().add(this);
     }
