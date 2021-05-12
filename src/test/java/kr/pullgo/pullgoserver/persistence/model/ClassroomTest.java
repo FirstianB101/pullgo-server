@@ -1,17 +1,20 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static kr.pullgo.pullgoserver.helper.LessonHelper.aLesson;
+import static kr.pullgo.pullgoserver.helper.ScheduleHelper.aSchedule;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ScheduleRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 @DataJpaTest
+@Import(EntityHelper.class)
 class ClassroomTest {
 
     @Autowired
@@ -23,11 +26,17 @@ class ClassroomTest {
     @Autowired
     private ScheduleRepository scheduleRepository;
 
+    @Autowired
+    private EntityHelper entityHelper;
+
     @Test
     void removeLesson() {
         // Given
-        Classroom classroom = createAndSaveClassroom();
-        Lesson lesson = createAndSaveLesson();
+        Classroom classroom = entityHelper.generateClassroom();
+        Lesson lesson = aLesson()
+            .withId(null)
+            .withClassroom(null)
+            .withSchedule(aSchedule().withId(null));
 
         classroom.addLesson(lesson);
         classroomRepository.flush();
@@ -42,11 +51,12 @@ class ClassroomTest {
     @Test
     void removeClassroom_LessenAdded_LessonAndScheduleDeleted() {
         // Given
-        Classroom classroom = createAndSaveClassroom();
-        Lesson lesson = createAndSaveLesson();
-        Schedule schedule = createAndSaveSchedule();
+        Classroom classroom = entityHelper.generateClassroom();
+        Lesson lesson = aLesson()
+            .withId(null)
+            .withClassroom(null)
+            .withSchedule(aSchedule().withId(null));
 
-        lesson.setSchedule(schedule);
         classroom.addLesson(lesson);
         classroomRepository.flush();
 
@@ -58,29 +68,4 @@ class ClassroomTest {
         assertThat(scheduleRepository.findAll()).isEmpty();
     }
 
-    private Classroom createAndSaveClassroom() {
-        return classroomRepository.save(
-            Classroom.builder()
-                .name("Test")
-                .build()
-        );
-    }
-
-    private Lesson createAndSaveLesson() {
-        return lessonRepository.save(
-            Lesson.builder()
-                .name("Test")
-                .build()
-        );
-    }
-
-    private Schedule createAndSaveSchedule() {
-        return scheduleRepository.save(
-            Schedule.builder()
-                .date(LocalDate.of(2021, 2, 15))
-                .beginTime(LocalTime.of(16, 0))
-                .endTime(LocalTime.of(17, 0))
-                .build()
-        );
-    }
 }

@@ -1,13 +1,6 @@
 package kr.pullgo.pullgoserver;
 
-import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademy;
-import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccount;
 import static kr.pullgo.pullgoserver.helper.AttenderAnswerHelper.anAttenderAnswerUpdateDto;
-import static kr.pullgo.pullgoserver.helper.AttenderStateHelper.anAttenderState;
-import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroom;
-import static kr.pullgo.pullgoserver.helper.ExamHelper.anExam;
-import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudent;
-import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -25,29 +18,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto.Update;
-import kr.pullgo.pullgoserver.persistence.model.Academy;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
+import kr.pullgo.pullgoserver.helper.Struct;
+import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
-import kr.pullgo.pullgoserver.persistence.model.Classroom;
-import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
-import kr.pullgo.pullgoserver.persistence.model.Student;
-import kr.pullgo.pullgoserver.persistence.model.Teacher;
-import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderAnswerRepository;
-import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
-import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
-import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
-import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -74,31 +56,13 @@ public class AttenderAnswerIntegrationTest {
     private AttenderAnswerRepository attenderAnswerRepository;
 
     @Autowired
-    private AttenderStateRepository attenderStateRepository;
-
-    @Autowired
-    private AcademyRepository academyRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private TeacherRepository teacherRepository;
-
-    @Autowired
-    private ClassroomRepository classroomRepository;
-
-    @Autowired
-    private ExamRepository examRepository;
-
-    @Autowired
-    private QuestionRepository questionRepository;
-
-    @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionHelper trxHelper;
+
+    @Autowired
+    private EntityHelper entityHelper;
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -111,31 +75,33 @@ public class AttenderAnswerIntegrationTest {
         @Test
         void getAttenderAnswer() throws Exception {
             // Given
-            AttenderAnswer attenderAnswer = AttenderAnswer.builder()
-                .answer(new Answer(1, 2, 3))
-                .build();
-            AttenderState attenderState = anAttenderState().withId(null);
-            Question question = createAndSaveQuestion();
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderAnswer attenderAnswer = entityHelper.generateAttenderAnswer(it ->
+                    it.withAnswer(new Answer(1, 2, 3))
+                );
 
-            attenderAnswer.setQuestion(question);
-            attenderState.setExam(createAndSaveExam());
-            attenderState.setAttender(createAndSaveStudent());
-            attenderState.addAnswer(attenderAnswer);
-            attenderStateRepository.save(attenderState);
+                return new Struct()
+                    .withValue("attenderAnswerId", attenderAnswer.getId())
+                    .withValue("attenderStateId", attenderAnswer.getAttenderState().getId())
+                    .withValue("questionId", attenderAnswer.getQuestion().getId());
+            });
+            Long attenderAnswerId = given.valueOf("attenderAnswerId");
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long questionId = given.valueOf("questionId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(get("/exam/attender-state/answers/{id}", attenderAnswer.getId()));
+                .perform(get("/exam/attender-state/answers/{id}", attenderAnswerId));
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(attenderAnswer.getId()))
+                .andExpect(jsonPath("$.id").value(attenderAnswerId))
                 .andExpect(jsonPath("$.answer.[0]").value(1))
                 .andExpect(jsonPath("$.answer.[1]").value(2))
                 .andExpect(jsonPath("$.answer.[2]").value(3))
-                .andExpect(jsonPath("$.questionId").value(question.getId()))
-                .andExpect(jsonPath("$.attenderStateId").value(attenderState.getId()));
+                .andExpect(jsonPath("$.questionId").value(questionId))
+                .andExpect(jsonPath("$.attenderStateId").value(attenderStateId));
         }
 
         @Test
@@ -156,8 +122,16 @@ public class AttenderAnswerIntegrationTest {
         @Test
         void listAttenderAnswers() throws Exception {
             // Given
-            AttenderAnswer attenderAnswerA = createAndSaveAttenderAnswer();
-            AttenderAnswer attenderAnswerB = createAndSaveAttenderAnswer();
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderAnswer attenderAnswerA = entityHelper.generateAttenderAnswer();
+                AttenderAnswer attenderAnswerB = entityHelper.generateAttenderAnswer();
+
+                return new Struct()
+                    .withValue("attenderAnswerAId", attenderAnswerA.getId())
+                    .withValue("attenderAnswerBId", attenderAnswerB.getId());
+            });
+            Long attenderAnswerAId = given.valueOf("attenderAnswerAId");
+            Long attenderAnswerBId = given.valueOf("attenderAnswerBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/attender-state/answers"));
@@ -167,17 +141,25 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    attenderAnswerA.getId().intValue(),
-                    attenderAnswerB.getId().intValue()
+                    attenderAnswerAId.intValue(),
+                    attenderAnswerBId.intValue()
                 )));
         }
 
         @Test
         void listAttenderAnswersWithPaging() throws Exception {
             // Given
-            createAndSaveAttenderAnswer();
-            AttenderAnswer attenderAnswerA = createAndSaveAttenderAnswer();
-            AttenderAnswer attenderAnswerB = createAndSaveAttenderAnswer();
+            Struct given = trxHelper.doInTransaction(() -> {
+                entityHelper.generateAttenderAnswer();
+                AttenderAnswer attenderAnswerA = entityHelper.generateAttenderAnswer();
+                AttenderAnswer attenderAnswerB = entityHelper.generateAttenderAnswer();
+
+                return new Struct()
+                    .withValue("attenderAnswerAId", attenderAnswerA.getId())
+                    .withValue("attenderAnswerBId", attenderAnswerB.getId());
+            });
+            Long attenderAnswerAId = given.valueOf("attenderAnswerAId");
+            Long attenderAnswerBId = given.valueOf("attenderAnswerBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/attender-state/answers")
@@ -190,32 +172,44 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(contains(
-                    attenderAnswerB.getId().intValue(),
-                    attenderAnswerA.getId().intValue()
+                    attenderAnswerBId.intValue(),
+                    attenderAnswerAId.intValue()
                 )));
         }
 
         @Test
         void searchAttenderAnswersByAttenderStatesId() throws Exception {
             // Given
-            AttenderState attenderState = createAndSaveAttenderState();
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState();
 
-            AttenderAnswer attenderAnswerA = createAndSaveAttenderAnswerWithAttenderState(
-                attenderState);
-            AttenderAnswer attenderAnswerB = createAndSaveAttenderAnswerWithAttenderState(
-                attenderState);
+                AttenderAnswer attenderAnswerA = entityHelper.generateAttenderAnswer(it ->
+                    it.withAttenderState(attenderState)
+                );
+                AttenderAnswer attenderAnswerB = entityHelper.generateAttenderAnswer(it ->
+                    it.withAttenderState(attenderState)
+                );
+
+                return new Struct()
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("attenderAnswerAId", attenderAnswerA.getId())
+                    .withValue("attenderAnswerBId", attenderAnswerB.getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long attenderAnswerAId = given.valueOf("attenderAnswerAId");
+            Long attenderAnswerBId = given.valueOf("attenderAnswerBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/attender-state/answers")
-                .param("attenderStateId", attenderState.getId().toString()));
+                .param("attenderStateId", attenderStateId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    attenderAnswerA.getId().intValue(),
-                    attenderAnswerB.getId().intValue()
+                    attenderAnswerAId.intValue(),
+                    attenderAnswerBId.intValue()
                 )));
         }
 
@@ -224,13 +218,21 @@ public class AttenderAnswerIntegrationTest {
     @Test
     void postAttenderAnswer() throws Exception {
         // Given
-        AttenderState attenderState = createAndSaveAttenderState();
-        Question question = createAndSaveQuestion();
+        Struct given = trxHelper.doInTransaction(() -> {
+            AttenderState attenderState = entityHelper.generateAttenderState();
+            Question question = entityHelper.generateQuestion();
+
+            return new Struct()
+                .withValue("attenderStateId", attenderState.getId())
+                .withValue("questionId", question.getId());
+        });
+        Long attenderStateId = given.valueOf("attenderStateId");
+        Long questionId = given.valueOf("questionId");
 
         // When
         AttenderAnswerDto.Create dto = AttenderAnswerDto.Create.builder()
-            .attenderStateId(attenderState.getId())
-            .questionId(question.getId())
+            .attenderStateId(attenderStateId)
+            .questionId(questionId)
             .answer(Set.of(1, 2, 3))
             .build();
         String body = toJson(dto);
@@ -246,8 +248,8 @@ public class AttenderAnswerIntegrationTest {
             .andExpect(jsonPath("$.answer.[0]").value(1))
             .andExpect(jsonPath("$.answer.[1]").value(2))
             .andExpect(jsonPath("$.answer.[2]").value(3))
-            .andExpect(jsonPath("$.attenderStateId").value(attenderState.getId()))
-            .andExpect(jsonPath("$.questionId").value(question.getId()));
+            .andExpect(jsonPath("$.attenderStateId").value(attenderStateId))
+            .andExpect(jsonPath("$.questionId").value(questionId));
     }
 
     @Nested
@@ -256,16 +258,19 @@ public class AttenderAnswerIntegrationTest {
         @Test
         void patchAttenderAnswer() throws Exception {
             // Given
-            AttenderAnswer attenderAnswer = AttenderAnswer.builder()
-                .answer(new Answer(4, 5, 6))
-                .build();
-            AttenderState attenderState = createAndSaveAttenderState();
-            Question question = createAndSaveQuestion();
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderAnswer attenderAnswer = entityHelper.generateAttenderAnswer(it ->
+                    it.withAnswer(new Answer(4, 5))
+                );
 
-            attenderAnswer.setQuestion(question);
-            attenderState.addAnswer(attenderAnswer);
-
-            attenderAnswerRepository.save(attenderAnswer);
+                return new Struct()
+                    .withValue("attenderAnswerId", attenderAnswer.getId())
+                    .withValue("attenderStateId", attenderAnswer.getAttenderState().getId())
+                    .withValue("questionId", attenderAnswer.getQuestion().getId());
+            });
+            Long attenderAnswerId = given.valueOf("attenderAnswerId");
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long questionId = given.valueOf("questionId");
 
             // When
             AttenderAnswerDto.Update dto = Update.builder()
@@ -274,7 +279,7 @@ public class AttenderAnswerIntegrationTest {
             String body = toJson(dto);
 
             ResultActions actions = mockMvc
-                .perform(patch("/exam/attender-state/answers/{id}", attenderAnswer.getId())
+                .perform(patch("/exam/attender-state/answers/{id}", attenderAnswerId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -285,8 +290,8 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(jsonPath("$.answer.[0]").value(1))
                 .andExpect(jsonPath("$.answer.[1]").value(2))
                 .andExpect(jsonPath("$.answer.[2]").value(3))
-                .andExpect(jsonPath("$.attenderStateId").value(attenderState.getId()))
-                .andExpect(jsonPath("$.questionId").value(question.getId()));
+                .andExpect(jsonPath("$.attenderStateId").value(attenderStateId))
+                .andExpect(jsonPath("$.questionId").value(questionId));
 
         }
 
@@ -312,18 +317,21 @@ public class AttenderAnswerIntegrationTest {
         @Test
         void deleteAttenderAnswer() throws Exception {
             // Given
-            AttenderAnswer attenderAnswer = createAndSaveAttenderAnswer();
+            Long attenderAnswerId = trxHelper.doInTransaction(() -> {
+                AttenderAnswer attenderAnswer = entityHelper.generateAttenderAnswer();
+                return attenderAnswer.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/exam/attender-state/answers/{id}", attenderAnswer.getId()));
+                .perform(delete("/exam/attender-state/answers/{id}", attenderAnswerId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            assertThat(attenderAnswerRepository.findById(attenderAnswer.getId())).isEmpty();
+            assertThat(attenderAnswerRepository.findById(attenderAnswerId)).isEmpty();
         }
 
         @Test
@@ -340,84 +348,6 @@ public class AttenderAnswerIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
-    }
-
-    private AttenderState createAndSaveAttenderState() {
-        return attenderStateRepository
-            .save(AttenderState.builder().examStartTime(LocalDateTime.now()).build());
-    }
-
-    private AttenderAnswer createAndSaveAttenderAnswer() {
-        AttenderAnswer attenderAnswer = AttenderAnswer.builder()
-            .answer(new Answer(4, 5, 6))
-            .build();
-
-        AttenderState attenderState = createAndSaveAttenderState();
-        attenderState.addAnswer(attenderAnswer);
-
-        Question question = createAndSaveQuestion();
-        attenderAnswer.setQuestion(question);
-
-        return attenderAnswerRepository.save(attenderAnswer);
-    }
-
-    private AttenderAnswer createAndSaveAttenderAnswerWithAttenderState(
-        AttenderState attenderState) {
-        AttenderAnswer attenderAnswer = AttenderAnswer.builder()
-            .answer(new Answer(4, 5, 6))
-            .build();
-        attenderState.addAnswer(attenderAnswer);
-
-        Question question = createAndSaveQuestion();
-        attenderAnswer.setQuestion(question);
-
-        return attenderAnswerRepository.save(attenderAnswer);
-    }
-
-    private Question createAndSaveQuestion() {
-        return questionRepository.save(Question.builder()
-            .answer(new Answer(4, 5, 6))
-            .pictureUrl("Before url")
-            .content("Before contents")
-            .build());
-    }
-
-    private Student createAndSaveStudent() {
-        return studentRepository.save(aStudent()
-            .withId(null)
-            .withAccount(anAccount().withId(null)));
-    }
-
-    private Teacher createAndSaveTeacher() {
-        return teacherRepository.save(aTeacher()
-            .withId(null)
-            .withAccount(anAccount().withId(null)));
-    }
-
-    private Academy createAndSaveAcademy() {
-        Teacher owner = createAndSaveTeacher();
-        Academy academy = anAcademy().withId(null)
-            .withTeachers(Set.of(owner))
-            .withOwner(owner);
-
-        return academyRepository.save(academy);
-    }
-
-    private Classroom createAndSaveClassroom() {
-        Classroom classroom = aClassroom().withId(null);
-
-        Academy academy = createAndSaveAcademy();
-        classroom.setAcademy(academy);
-
-        return classroomRepository.save(classroom);
-    }
-
-    private Exam createAndSaveExam() {
-        Exam exam = anExam()
-            .withId(null)
-            .withClassroom(createAndSaveClassroom())
-            .withCreator(createAndSaveTeacher());
-        return examRepository.save(exam);
     }
 
 }

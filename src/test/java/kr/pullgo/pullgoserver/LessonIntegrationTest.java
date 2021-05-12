@@ -1,9 +1,7 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
-import static kr.pullgo.pullgoserver.helper.ClassroomHelper.aClassroom;
 import static kr.pullgo.pullgoserver.helper.LessonHelper.aLessonUpdateDto;
-import static kr.pullgo.pullgoserver.helper.ScheduleHelper.aSchedule;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -28,25 +26,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.LessonDto;
 import kr.pullgo.pullgoserver.dto.LessonDto.Update;
 import kr.pullgo.pullgoserver.dto.ScheduleDto;
-import kr.pullgo.pullgoserver.persistence.model.Academy;
-import kr.pullgo.pullgoserver.persistence.model.Account;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
+import kr.pullgo.pullgoserver.helper.Struct;
+import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
-import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
-import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
-import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -89,22 +82,13 @@ public class LessonIntegrationTest {
     private LessonRepository lessonRepository;
 
     @Autowired
-    private AcademyRepository academyRepository;
-
-    @Autowired
-    private ClassroomRepository classroomRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private TeacherRepository teacherRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionHelper trxHelper;
+
+    @Autowired
+    private EntityHelper entityHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -122,31 +106,34 @@ public class LessonIntegrationTest {
         @Test
         void getLesson() throws Exception {
             // Given
-            Lesson lesson = Lesson.builder()
-                .name("test name")
-                .build();
-            Schedule schedule = Schedule.builder()
-                .date(stringToLocalDate("1111-11-11"))
-                .beginTime(stringToLocalTime("22:22:22"))
-                .endTime(stringToLocalTime("00:00:00"))
-                .build();
-            Classroom classroom = aClassroom().withId(null).withAcademy(null);
+            Struct given = trxHelper.doInTransaction(() -> {
+                Schedule schedule = entityHelper.generateSchedule(it ->
+                    it.withDate(LocalDate.of(1111, 11, 11))
+                        .withBeginTime(LocalTime.of(22, 22, 22))
+                        .withEndTime(LocalTime.of(0, 0, 0))
+                );
+                Lesson lesson = entityHelper.generateLesson(it ->
+                    it.withName("test name")
+                        .withSchedule(schedule)
+                );
 
-            lesson.setSchedule(schedule);
-            classroom.addLesson(lesson);
-
-            classroomRepository.save(classroom);
+                return new Struct()
+                    .withValue("lessonId", lesson.getId())
+                    .withValue("classroomId", lesson.getClassroom().getId());
+            });
+            Long lessonId = given.valueOf("lessonId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(get("/academy/classroom/lessons/{id}", lesson.getId()));
+                .perform(get("/academy/classroom/lessons/{id}", lessonId));
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(lesson.getId()))
+                .andExpect(jsonPath("$.id").value(lessonId))
                 .andExpect(jsonPath("$.name").value("test name"))
-                .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
+                .andExpect(jsonPath("$.classroomId").value(classroomId))
                 .andExpect(jsonPath("$.schedule.id").doesNotExist())
                 .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
                 .andExpect(jsonPath("$.schedule.beginTime").value("22:22:22"))
@@ -182,8 +169,16 @@ public class LessonIntegrationTest {
         @Test
         void listLessons() throws Exception {
             // Given
-            Lesson lessonA = createAndSaveLesson();
-            Lesson lessonB = createAndSaveLesson();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Lesson lessonA = entityHelper.generateLesson();
+                Lesson lessonB = entityHelper.generateLesson();
+
+                return new Struct()
+                    .withValue("lessonAId", lessonA.getId())
+                    .withValue("lessonBId", lessonB.getId());
+            });
+            Long lessonAId = given.valueOf("lessonAId");
+            Long lessonBId = given.valueOf("lessonBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons"));
@@ -193,8 +188,8 @@ public class LessonIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    lessonA.getId().intValue(),
-                    lessonB.getId().intValue()
+                    lessonAId.intValue(),
+                    lessonBId.intValue()
                 )));
 
             // Document
@@ -209,9 +204,17 @@ public class LessonIntegrationTest {
         @Test
         void listLessonsWithPaging() throws Exception {
             // Given
-            createAndSaveLesson();
-            Lesson lessonA = createAndSaveLesson();
-            Lesson lessonB = createAndSaveLesson();
+            Struct given = trxHelper.doInTransaction(() -> {
+                entityHelper.generateLesson();
+                Lesson lessonA = entityHelper.generateLesson();
+                Lesson lessonB = entityHelper.generateLesson();
+
+                return new Struct()
+                    .withValue("lessonAId", lessonA.getId())
+                    .withValue("lessonBId", lessonB.getId());
+            });
+            Long lessonAId = given.valueOf("lessonAId");
+            Long lessonBId = given.valueOf("lessonBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
@@ -224,31 +227,41 @@ public class LessonIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(contains(
-                    lessonB.getId().intValue(),
-                    lessonA.getId().intValue()
+                    lessonBId.intValue(),
+                    lessonAId.intValue()
                 )));
         }
 
         @Test
         void searchLessonsByClassroomId() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
 
-            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
-            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
-            createAndSaveLesson();
+                Lesson lessonA = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                Lesson lessonB = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                entityHelper.generateLesson();
+
+                return new Struct()
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("lessonAId", lessonA.getId())
+                    .withValue("lessonBId", lessonB.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long lessonAId = given.valueOf("lessonAId");
+            Long lessonBId = given.valueOf("lessonBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
-                .param("classroomId", classroom.getId().toString()));
+                .param("classroomId", classroomId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    lessonA.getId().intValue(),
-                    lessonB.getId().intValue()
+                    lessonAId.intValue(),
+                    lessonBId.intValue()
                 )));
 
             // Document
@@ -270,94 +283,135 @@ public class LessonIntegrationTest {
         @Test
         void searchLessonsByAcademyId() throws Exception {
             // Given
-            Academy academy = createAndSaveAcademy();
-            Classroom classroom = createAndSaveClassroomWithAcademy(academy);
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
 
-            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
-            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
-            createAndSaveLesson();
+                Lesson lessonA = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                Lesson lessonB = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                entityHelper.generateLesson();
+
+                return new Struct()
+                    .withValue("academyId", classroom.getAcademy().getId())
+                    .withValue("lessonAId", lessonA.getId())
+                    .withValue("lessonBId", lessonB.getId());
+            });
+            Long academyId = given.valueOf("academyId");
+            Long lessonAId = given.valueOf("lessonAId");
+            Long lessonBId = given.valueOf("lessonBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
-                .param("academyId", academy.getId().toString()));
+                .param("academyId", academyId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    lessonA.getId().intValue(),
-                    lessonB.getId().intValue()
+                    lessonAId.intValue(),
+                    lessonBId.intValue()
                 )));
         }
 
         @Test
         void searchLessonsByStudentId() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                Student student = entityHelper.generateStudent(it -> {
+                    classroom.addStudent(it);
+                    return it;
+                });
 
-            Student student = createAndSaveStudent();
-            student.applyClassroom(classroom);
-            classroom.acceptStudent(student);
+                Lesson lessonA = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                Lesson lessonB = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                entityHelper.generateLesson();
 
-            classroomRepository.save(classroom);
-
-            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
-            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
-            createAndSaveLesson();
+                return new Struct()
+                    .withValue("studentId", student.getId())
+                    .withValue("lessonAId", lessonA.getId())
+                    .withValue("lessonBId", lessonB.getId());
+            });
+            Long studentId = given.valueOf("studentId");
+            Long lessonAId = given.valueOf("lessonAId");
+            Long lessonBId = given.valueOf("lessonBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
-                .param("studentId", student.getId().toString()));
+                .param("studentId", studentId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    lessonA.getId().intValue(),
-                    lessonB.getId().intValue()
+                    lessonAId.intValue(),
+                    lessonBId.intValue()
                 )));
         }
 
         @Test
         void searchLessonsByTeacherId() throws Exception {
             // Given
-            Classroom classroom = createAndSaveClassroom();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                Teacher teacher = entityHelper.generateTeacher(it -> {
+                    classroom.addTeacher(it);
+                    return it;
+                });
 
-            Teacher teacher = createAndSaveTeacher();
-            teacher.applyClassroom(classroom);
-            classroom.acceptTeacher(teacher);
+                Lesson lessonA = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                Lesson lessonB = entityHelper.generateLesson(it -> it.withClassroom(classroom));
+                entityHelper.generateLesson();
 
-            classroomRepository.save(classroom);
-
-            Lesson lessonA = createAndSaveLessonWithClassroom(classroom);
-            Lesson lessonB = createAndSaveLessonWithClassroom(classroom);
-            createAndSaveLesson();
+                return new Struct()
+                    .withValue("teacherId", teacher.getId())
+                    .withValue("lessonAId", lessonA.getId())
+                    .withValue("lessonBId", lessonB.getId());
+            });
+            Long teacherId = given.valueOf("teacherId");
+            Long lessonAId = given.valueOf("lessonAId");
+            Long lessonBId = given.valueOf("lessonBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
-                .param("teacherId", teacher.getId().toString()));
+                .param("teacherId", teacherId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    lessonA.getId().intValue(),
-                    lessonB.getId().intValue()
+                    lessonAId.intValue(),
+                    lessonBId.intValue()
                 )));
         }
 
         @Test
         void searchLessonsByDateRange() throws Exception {
             // Given
-            Lesson lessonA = createAndSaveLessonWithScheduleDate(
-                LocalDate.of(2021, 4, 1));
-            Lesson lessonB = createAndSaveLessonWithScheduleDate(
-                LocalDate.of(2021, 4, 15));
-            createAndSaveLessonWithScheduleDate(
-                LocalDate.of(2021, 5, 1));
+            Struct given = trxHelper.doInTransaction(() -> {
+                Schedule scheduleA = entityHelper.generateSchedule(it ->
+                    it.withDate(LocalDate.of(2021, 4, 1))
+                );
+                Lesson lessonA = entityHelper.generateLesson(it -> it.withSchedule(scheduleA));
+
+                Schedule scheduleB = entityHelper.generateSchedule(it ->
+                    it.withDate(LocalDate.of(2021, 4, 15))
+                );
+                Lesson lessonB = entityHelper.generateLesson(it -> it.withSchedule(scheduleB));
+
+                Schedule scheduleC = entityHelper.generateSchedule(it ->
+                    it.withDate(LocalDate.of(2021, 5, 1))
+                );
+                entityHelper.generateLesson(it -> it.withSchedule(scheduleC));
+
+                return new Struct()
+                    .withValue("lessonAId", lessonA.getId())
+                    .withValue("lessonBId", lessonB.getId());
+            });
+            Long lessonAId = given.valueOf("lessonAId");
+            Long lessonBId = given.valueOf("lessonBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/academy/classroom/lessons")
@@ -369,8 +423,8 @@ public class LessonIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    lessonA.getId().intValue(),
-                    lessonB.getId().intValue()
+                    lessonAId.intValue(),
+                    lessonBId.intValue()
                 )));
         }
 
@@ -379,16 +433,19 @@ public class LessonIntegrationTest {
     @Test
     void postLesson() throws Exception {
         // Given
-        Classroom classroom = createAndSaveClassroom();
+        Long classroomId = trxHelper.doInTransaction(() -> {
+            Classroom classroom = entityHelper.generateClassroom();
+            return classroom.getId();
+        });
 
         // When
         LessonDto.Create dto = LessonDto.Create.builder()
             .name("test name")
-            .classroomId(classroom.getId())
+            .classroomId(classroomId)
             .schedule(ScheduleDto.Create.builder()
-                .date(stringToLocalDate("1111-11-11"))
-                .beginTime(stringToLocalTime("22:22:22"))
-                .endTime(stringToLocalTime("00:00:00"))
+                .date(LocalDate.of(1111, 11, 11))
+                .beginTime(LocalTime.of(22, 22, 22))
+                .endTime(LocalTime.of(0, 0, 0))
                 .build())
             .build();
         String body = toJson(dto);
@@ -401,7 +458,7 @@ public class LessonIntegrationTest {
         actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
+            .andExpect(jsonPath("$.classroomId").value(classroomId))
             .andExpect(jsonPath("$.name").value("test name"))
             .andExpect(jsonPath("$.schedule.id").doesNotExist())
             .andExpect(jsonPath("$.schedule.date").value("1111-11-11"))
@@ -425,44 +482,45 @@ public class LessonIntegrationTest {
         @Test
         void patchLesson() throws Exception {
             // Given
-            Lesson lesson = Lesson.builder()
-                .name("before name")
-                .build();
-
-            Schedule schedule = Schedule.builder()
-                .date(stringToLocalDate("1111-11-11"))
-                .beginTime(stringToLocalTime("22:22:22"))
-                .endTime(stringToLocalTime("00:00:00"))
-                .build();
-            Classroom classroom = aClassroom().withId(null).withAcademy(null);
-
-            lesson.setSchedule(schedule);
-            classroom.addLesson(lesson);
-
-            classroomRepository.save(classroom);
+            Struct given = trxHelper.doInTransaction(() -> {
+                Schedule schedule = entityHelper.generateSchedule(it ->
+                    it.withDate(LocalDate.of(1111, 11, 11))
+                        .withBeginTime(LocalTime.of(22, 22, 22))
+                        .withEndTime(LocalTime.of(0, 0, 0))
+                );
+                Lesson lesson = entityHelper.generateLesson(it ->
+                    it.withName("before name")
+                        .withSchedule(schedule)
+                );
+                return new Struct()
+                    .withValue("lessonId", lesson.getId())
+                    .withValue("classroomId", lesson.getClassroom().getId());
+            });
+            Long lessonId = given.valueOf("lessonId");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
             LessonDto.Update dto = Update.builder()
                 .name("test name")
                 .schedule(ScheduleDto.Update.builder()
-                    .date(stringToLocalDate("2021-03-02"))
-                    .beginTime(stringToLocalTime("08:00:00"))
-                    .endTime(stringToLocalTime("21:59:59"))
+                    .date(LocalDate.of(2021, 3, 2))
+                    .beginTime(LocalTime.of(8, 0, 0))
+                    .endTime(LocalTime.of(21, 59, 59))
                     .build())
                 .build();
             String body = toJson(dto);
 
             ResultActions actions = mockMvc
-                .perform(patch("/academy/classroom/lessons/{id}", lesson.getId())
+                .perform(patch("/academy/classroom/lessons/{id}", lessonId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(lesson.getId()))
+                .andExpect(jsonPath("$.id").value(lessonId))
                 .andExpect(jsonPath("$.name").value("test name"))
-                .andExpect(jsonPath("$.classroomId").value(classroom.getId()))
+                .andExpect(jsonPath("$.classroomId").value(classroomId))
                 .andExpect(jsonPath("$.schedule.id").doesNotExist())
                 .andExpect(jsonPath("$.schedule.date").value("2021-03-02"))
                 .andExpect(jsonPath("$.schedule.beginTime").value("08:00:00"))
@@ -500,18 +558,21 @@ public class LessonIntegrationTest {
         @Test
         void deleteLesson() throws Exception {
             // Given
-            Lesson lesson = createAndSaveLesson();
+            Long lessonId = trxHelper.doInTransaction(() -> {
+                Lesson lesson = entityHelper.generateLesson();
+                return lesson.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/academy/classroom/lessons/{id}", lesson.getId()));
+                .perform(delete("/academy/classroom/lessons/{id}", lessonId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            assertThat(lessonRepository.findById(lesson.getId())).isEmpty();
+            assertThat(lessonRepository.findById(lessonId)).isEmpty();
 
             // Document
             actions.andDo(document("lesson-delete-example"));
@@ -531,120 +592,6 @@ public class LessonIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
-    }
-
-    private LocalDate stringToLocalDate(String date) {
-        return LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
-    }
-
-    private LocalTime stringToLocalTime(String date) {
-        return LocalTime.parse(date);
-    }
-
-    private Classroom createAndSaveClassroom() {
-        return classroomRepository.save(Classroom.builder()
-            .name("test classroom")
-            .build());
-    }
-
-    private Classroom createAndSaveClassroomWithAcademy(Academy academy) {
-        Classroom classroom = Classroom.builder()
-            .name("test name")
-            .build();
-
-        classroom.setAcademy(academy);
-
-        return classroomRepository.save(classroom);
-    }
-
-    private Academy createAndSaveAcademy() {
-        Teacher owner = createAndSaveTeacher();
-        Academy academy = Academy.builder()
-            .name("Test academy")
-            .phone("01012345678")
-            .address("Seoul")
-            .build();
-        academy.addTeacher(owner);
-        academy.setOwner(owner);
-        return academyRepository.save(academy);
-    }
-
-    private Lesson createAndSaveLesson() {
-        Lesson lesson = Lesson.builder()
-            .name("test lesson")
-            .build();
-
-        Schedule schedule = aSchedule().withId(null);
-        Classroom classroom = aClassroom().withId(null).withAcademy(null);
-        lesson.setSchedule(schedule);
-        classroom.addLesson(lesson);
-
-        classroomRepository.save(classroom);
-        return lesson;
-    }
-
-    private Lesson createAndSaveLessonWithClassroom(Classroom classroom) {
-        Lesson lesson = Lesson.builder()
-            .name("test lesson")
-            .build();
-
-        Schedule schedule = aSchedule().withId(null);
-        lesson.setSchedule(schedule);
-        classroom.addLesson(lesson);
-
-        return lessonRepository.save(lesson);
-    }
-
-    private Lesson createAndSaveLessonWithScheduleDate(LocalDate date) {
-        Lesson lesson = Lesson.builder()
-            .name("test lesson")
-            .build();
-
-        Schedule schedule = Schedule.builder()
-            .date(date)
-            .beginTime(LocalTime.of(12, 0))
-            .endTime(LocalTime.of(13, 0))
-            .build();
-        Classroom classroom = aClassroom().withId(null).withAcademy(null);
-        lesson.setSchedule(schedule);
-        classroom.addLesson(lesson);
-
-        classroomRepository.save(classroom);
-        return lesson;
-    }
-
-    private Student createAndSaveStudent() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-        return student;
-    }
-
-    private Teacher createAndSaveTeacher() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Teacher teacher = teacherRepository.save(
-            new Teacher()
-        );
-        teacher.setAccount(account);
-        return teacher;
     }
 
 }

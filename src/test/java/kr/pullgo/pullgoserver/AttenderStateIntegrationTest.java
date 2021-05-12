@@ -20,19 +20,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto.Update;
-import kr.pullgo.pullgoserver.persistence.model.Account;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
+import kr.pullgo.pullgoserver.helper.Struct;
+import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
-import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -59,16 +57,13 @@ public class AttenderStateIntegrationTest {
     private AttenderStateRepository attenderStateRepository;
 
     @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private ExamRepository examRepository;
-
-    @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private TransactionHelper trxHelper;
+
+    @Autowired
+    private EntityHelper entityHelper;
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -81,27 +76,28 @@ public class AttenderStateIntegrationTest {
         @Test
         void getAttenderState() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
-            Student attender = createAndSaveStudent();
-            AttenderState attenderState = AttenderState.builder()
-                .examStartTime(LocalDateTime.now()).build();
-            attenderState.setExam(exam);
-            attenderState.setAttender(attender);
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState();
 
-            examRepository.save(exam);
-            studentRepository.save(attender);
-            attenderStateRepository.save(attenderState);
+                return new Struct()
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("attenderId", attenderState.getAttender().getId())
+                    .withValue("examId", attenderState.getExam().getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long attenderId = given.valueOf("attenderId");
+            Long examId = given.valueOf("examId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(get("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(get("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(attenderState.getId()))
-                .andExpect(jsonPath("$.attenderId").value(attender.getId()))
-                .andExpect(jsonPath("$.examId").value(exam.getId()))
+                .andExpect(jsonPath("$.id").value(attenderStateId))
+                .andExpect(jsonPath("$.attenderId").value(attenderId))
+                .andExpect(jsonPath("$.examId").value(examId))
                 .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
                 .andExpect(jsonPath("$.score").value(nullValue()));
         }
@@ -124,8 +120,16 @@ public class AttenderStateIntegrationTest {
         @Test
         void listAttenderStates() throws Exception {
             // Given
-            AttenderState attenderStateA = createAndSaveAttenderState();
-            AttenderState attenderStateB = createAndSaveAttenderState();
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderState attenderStateA = entityHelper.generateAttenderState();
+                AttenderState attenderStateB = entityHelper.generateAttenderState();
+
+                return new Struct()
+                    .withValue("attenderStateAId", attenderStateA.getId())
+                    .withValue("attenderStateBId", attenderStateB.getId());
+            });
+            Long attenderStateAId = given.valueOf("attenderStateAId");
+            Long attenderStateBId = given.valueOf("attenderStateBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/attender-states"));
@@ -135,17 +139,25 @@ public class AttenderStateIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    attenderStateA.getId().intValue(),
-                    attenderStateB.getId().intValue()
+                    attenderStateAId.intValue(),
+                    attenderStateBId.intValue()
                 )));
         }
 
         @Test
         void listAttenderStatesWithPaging() throws Exception {
             // Given
-            createAndSaveAttenderState();
-            AttenderState attenderStateA = createAndSaveAttenderState();
-            AttenderState attenderStateB = createAndSaveAttenderState();
+            Struct given = trxHelper.doInTransaction(() -> {
+                entityHelper.generateAttenderState();
+                AttenderState attenderStateA = entityHelper.generateAttenderState();
+                AttenderState attenderStateB = entityHelper.generateAttenderState();
+
+                return new Struct()
+                    .withValue("attenderStateAId", attenderStateA.getId())
+                    .withValue("attenderStateBId", attenderStateB.getId());
+            });
+            Long attenderStateAId = given.valueOf("attenderStateAId");
+            Long attenderStateBId = given.valueOf("attenderStateBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/attender-states")
@@ -158,54 +170,82 @@ public class AttenderStateIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(contains(
-                    attenderStateB.getId().intValue(),
-                    attenderStateA.getId().intValue()
+                    attenderStateBId.intValue(),
+                    attenderStateAId.intValue()
                 )));
         }
 
         @Test
         void searchAttenderStatesByStudentId() throws Exception {
             // Given
-            Student student = createAndSaveStudent();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Student student = entityHelper.generateStudent();
 
-            AttenderState attenderStateA = createAndSaveAttenderStateWithAttender(student);
-            AttenderState attenderStateB = createAndSaveAttenderStateWithAttender(student);
-            createAndSaveAttenderState();
+                AttenderState attenderStateA = entityHelper.generateAttenderState(it ->
+                    it.withAttender(student)
+                );
+                AttenderState attenderStateB = entityHelper.generateAttenderState(it ->
+                    it.withAttender(student)
+                );
+                entityHelper.generateAttenderState();
+
+                return new Struct()
+                    .withValue("studentId", student.getId())
+                    .withValue("attenderStateAId", attenderStateA.getId())
+                    .withValue("attenderStateBId", attenderStateB.getId());
+            });
+            Long studentId = given.valueOf("studentId");
+            Long attenderStateAId = given.valueOf("attenderStateAId");
+            Long attenderStateBId = given.valueOf("attenderStateBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/attender-states")
-                .param("studentId", student.getId().toString()));
+                .param("studentId", studentId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    attenderStateA.getId().intValue(),
-                    attenderStateB.getId().intValue()
+                    attenderStateAId.intValue(),
+                    attenderStateBId.intValue()
                 )));
         }
 
         @Test
         void searchAttenderStatesByExamId() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
 
-            AttenderState attenderStateA = createAndSaveAttenderStateWithExam(exam);
-            AttenderState attenderStateB = createAndSaveAttenderStateWithExam(exam);
-            createAndSaveAttenderState();
+                AttenderState attenderStateA = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                );
+                AttenderState attenderStateB = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                );
+                entityHelper.generateAttenderState();
+
+                return new Struct()
+                    .withValue("examId", exam.getId())
+                    .withValue("attenderStateAId", attenderStateA.getId())
+                    .withValue("attenderStateBId", attenderStateB.getId());
+            });
+            Long examId = given.valueOf("examId");
+            Long attenderStateAId = given.valueOf("attenderStateAId");
+            Long attenderStateBId = given.valueOf("attenderStateBId");
 
             // When
             ResultActions actions = mockMvc.perform(get("/exam/attender-states")
-                .param("examId", exam.getId().toString()));
+                .param("examId", examId.toString()));
 
             // Then
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(hasSize(2)))
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
-                    attenderStateA.getId().intValue(),
-                    attenderStateB.getId().intValue()
+                    attenderStateAId.intValue(),
+                    attenderStateBId.intValue()
                 )));
         }
 
@@ -214,13 +254,21 @@ public class AttenderStateIntegrationTest {
     @Test
     void postAttenderState() throws Exception {
         // Given
-        Exam exam = createAndSaveExam();
-        Student attender = createAndSaveStudent();
+        Struct given = trxHelper.doInTransaction(() -> {
+            Student attenderId = entityHelper.generateStudent();
+            Exam exam = entityHelper.generateExam();
+
+            return new Struct()
+                .withValue("examId", exam.getId())
+                .withValue("attenderId", attenderId.getId());
+        });
+        Long attenderId = given.valueOf("attenderId");
+        Long examId = given.valueOf("examId");
 
         // When
         AttenderStateDto.Create dto = AttenderStateDto.Create.builder()
-            .attenderId(attender.getId())
-            .examId(exam.getId())
+            .attenderId(attenderId)
+            .examId(examId)
             .build();
         String body = toJson(dto);
 
@@ -232,8 +280,8 @@ public class AttenderStateIntegrationTest {
         actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.attenderId").value(attender.getId()))
-            .andExpect(jsonPath("$.examId").value(exam.getId()))
+            .andExpect(jsonPath("$.attenderId").value(attenderId))
+            .andExpect(jsonPath("$.examId").value(examId))
             .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
             .andExpect(jsonPath("$.score").value(nullValue()));
     }
@@ -244,16 +292,17 @@ public class AttenderStateIntegrationTest {
         @Test
         void patchAttenderState() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
-            Student attender = createAndSaveStudent();
-            AttenderState attenderState = AttenderState.builder()
-                .examStartTime(LocalDateTime.now()).build();
-            attenderState.setExam(exam);
-            attenderState.setAttender(attender);
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState();
 
-            examRepository.save(exam);
-            studentRepository.save(attender);
-            attenderStateRepository.save(attenderState);
+                return new Struct()
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("attenderId", attenderState.getAttender().getId())
+                    .withValue("examId", attenderState.getExam().getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long attenderId = given.valueOf("attenderId");
+            Long examId = given.valueOf("examId");
 
             // When
             Update dto = Update.builder()
@@ -263,7 +312,7 @@ public class AttenderStateIntegrationTest {
             String body = toJson(dto);
 
             ResultActions actions = mockMvc
-                .perform(patch("/exam/attender-states/{id}", attenderState.getId())
+                .perform(patch("/exam/attender-states/{id}", attenderStateId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body));
 
@@ -271,8 +320,8 @@ public class AttenderStateIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.attenderId").value(attender.getId()))
-                .andExpect(jsonPath("$.examId").value(exam.getId()))
+                .andExpect(jsonPath("$.attenderId").value(attenderId))
+                .andExpect(jsonPath("$.examId").value(examId))
                 .andExpect(jsonPath("$.progress").value(AttendingProgress.COMPLETE.toString()))
                 .andExpect(jsonPath("$.score").value(85));
         }
@@ -299,30 +348,36 @@ public class AttenderStateIntegrationTest {
         @Test
         void submitAttenderState() throws Exception {
             // Given
-            Exam exam = createAndSaveExam();
-            Student attender = createAndSaveStudent();
-            AttenderState attenderState = AttenderState.builder()
-                .examStartTime(stringToLocalDateTime("2021-01-12T00:00:00")).build();
-            attenderState.setExam(exam);
-            attenderState.setAttender(attender);
-            exam.setTimeLimit(stringToDuration("PT1H"));
-            exam.setBeginDateTime(stringToLocalDateTime("2021-01-11T00:00:00"));
-            exam.setEndDateTime(stringToLocalDateTime("2021-01-13T00:00:00"));
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withTimeLimit(Duration.ofHours(1))
+                        .withBeginDateTime(LocalDateTime.of(2021, 1, 11, 0, 0))
+                        .withEndDateTime(LocalDateTime.of(2021, 1, 13, 0, 0))
+                );
 
-            examRepository.save(exam);
-            studentRepository.save(attender);
-            attenderStateRepository.save(attenderState);
+                AttenderState attenderState = entityHelper.generateAttenderState(it ->
+                    it.withExamStartTime(LocalDateTime.of(2021, 1, 12, 0, 0))
+                        .withExam(exam)
+                );
+
+                return new Struct()
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("attenderId", attenderState.getAttender().getId())
+                    .withValue("examId", attenderState.getExam().getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(post("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            AttenderState resultAttenderState = findAttenderStateById(attenderState);
+            AttenderState resultAttenderState = attenderStateRepository.findById(attenderStateId)
+                .orElseThrow();
 
             assertThat(resultAttenderState.getProgress()).isEqualTo(AttendingProgress.COMPLETE);
         }
@@ -340,13 +395,16 @@ public class AttenderStateIntegrationTest {
         @Test
         void submitAttenderState_BadAttendingProgress_BadRequestStatus() throws Exception {
             // Given
-            AttenderState attenderState = createAndSaveAttenderState();
-            attenderState.setProgress(AttendingProgress.COMPLETE);
-            attenderStateRepository.save(attenderState);
+            Long attenderStateId = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState(it ->
+                    it.withProgress(AttendingProgress.COMPLETE)
+                );
+                return attenderState.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(post("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
@@ -356,18 +414,23 @@ public class AttenderStateIntegrationTest {
         @Test
         void submitAttenderState_AfterTimeLimit_BadRequestStatus() throws Exception {
             // Given
-            AttenderState attenderState = createAndSaveAttenderState();
-            Exam exam = attenderState.getExam();
-            exam.setTimeLimit(stringToDuration("PT1H"));
-            exam.setBeginDateTime(stringToLocalDateTime("2021-01-09T00:00:00"));
-            exam.setEndDateTime(stringToLocalDateTime("2021-01-10T00:00:00"));
+            Long attenderStateId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withTimeLimit(Duration.ofHours(1))
+                        .withBeginDateTime(LocalDateTime.of(2021, 1, 9, 0, 0))
+                        .withEndDateTime(LocalDateTime.of(2021, 1, 10, 0, 0))
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                        .withProgress(AttendingProgress.COMPLETE)
+                );
 
-            examRepository.save(exam);
-            attenderStateRepository.save(attenderState);
+                return attenderState.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(post("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
@@ -377,16 +440,20 @@ public class AttenderStateIntegrationTest {
         @Test
         void submitAttenderState_AlreadyFinishedExam_BadRequestStatus() throws Exception {
             // Given
-            AttenderState attenderState = createAndSaveAttenderState();
-            Exam exam = attenderState.getExam();
-            exam.setFinished(true);
+            Long attenderStateId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withFinished(true)
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                );
 
-            examRepository.save(exam);
-            attenderStateRepository.save(attenderState);
+                return attenderState.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(post("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
@@ -396,16 +463,20 @@ public class AttenderStateIntegrationTest {
         @Test
         void submitAttenderState_AlreadyCancelled_BadRequestStatus() throws Exception {
             // Given
-            AttenderState attenderState = createAndSaveAttenderState();
-            Exam exam = attenderState.getExam();
-            exam.setCancelled(true);
+            Long attenderStateId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withCancelled(true)
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                );
 
-            examRepository.save(exam);
-            attenderStateRepository.save(attenderState);
+                return attenderState.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(post("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
@@ -415,17 +486,21 @@ public class AttenderStateIntegrationTest {
         @Test
         void submitAttenderState_AfterTimeRange_BadRequestStatus() throws Exception {
             // Given
-            AttenderState attenderState = createAndSaveAttenderState();
-            Exam exam = attenderState.getExam();
-            exam.setBeginDateTime(stringToLocalDateTime("2021-01-09T00:00:00"));
-            exam.setEndDateTime(stringToLocalDateTime("2021-01-10T00:00:00"));
+            Long attenderStateId = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withBeginDateTime(LocalDateTime.of(2021, 1, 9, 0, 0))
+                        .withEndDateTime(LocalDateTime.of(2021, 1, 10, 0, 0))
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                );
 
-            examRepository.save(exam);
-            attenderStateRepository.save(attenderState);
+                return attenderState.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(post("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
@@ -439,18 +514,21 @@ public class AttenderStateIntegrationTest {
         @Test
         void deleteAttenderState() throws Exception {
             // Given
-            AttenderState attenderState = createAndSaveAttenderState();
+            Long attenderStateId = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState();
+                return attenderState.getId();
+            });
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/exam/attender-states/{id}", attenderState.getId()));
+                .perform(delete("/exam/attender-states/{id}", attenderStateId));
 
             // Then
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
 
-            assertThat(attenderStateRepository.findById(attenderState.getId())).isEmpty();
+            assertThat(attenderStateRepository.findById(attenderStateId)).isEmpty();
         }
 
         @Test
@@ -466,86 +544,6 @@ public class AttenderStateIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
-    }
-
-    private AttenderState findAttenderStateById(AttenderState attenderState) {
-        return attenderStateRepository
-            .findById(attenderState.getId()).orElseThrow();
-    }
-
-    private Duration stringToDuration(String duration) {
-        return Duration.parse(duration);
-    }
-
-    private LocalDateTime stringToLocalDateTime(String date) {
-        return LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
-    }
-
-    private Exam createAndSaveExam() {
-        return examRepository.save(Exam.builder()
-            .name("test exam")
-            .timeLimit(stringToDuration("PT1H"))
-            .beginDateTime(stringToLocalDateTime("2021-01-11T00:00:00"))
-            .endDateTime(stringToLocalDateTime("2021-01-13T00:00:00"))
-            .build());
-    }
-
-    private Student createAndSaveStudent() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-        return student;
-    }
-
-
-    private AttenderState createAndSaveAttenderState() {
-        Exam exam = createAndSaveExam();
-        Student attender = createAndSaveStudent();
-        AttenderState attenderState = createAttenderState(exam, attender);
-
-        examRepository.save(exam);
-        studentRepository.save(attender);
-        attenderStateRepository.save(attenderState);
-        return attenderState;
-    }
-
-    private AttenderState createAttenderState(Exam exam, Student attender) {
-        AttenderState attenderState = AttenderState.builder()
-            .examStartTime(stringToLocalDateTime("2021-01-12T00:00:00"))
-            .build();
-        attenderState.setExam(exam);
-        attenderState.setAttender(attender);
-        return attenderState;
-    }
-
-    private AttenderState createAndSaveAttenderStateWithAttender(Student attender) {
-        Exam exam = createAndSaveExam();
-        AttenderState attenderState = createAttenderState(exam, attender);
-
-        examRepository.save(exam);
-        attenderStateRepository.save(attenderState);
-        return attenderState;
-    }
-
-    private AttenderState createAndSaveAttenderStateWithExam(Exam exam) {
-        Student attender = createAndSaveStudent();
-        AttenderState attenderState = createAttenderState(exam, attender);
-
-        studentRepository.save(attender);
-        attenderStateRepository.save(attenderState);
-        return attenderState;
     }
 
 }

@@ -2,42 +2,38 @@ package kr.pullgo.pullgoserver.persistence.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
+import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
-import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 
 @DataJpaTest
+@Import(EntityHelper.class)
 class AttenderStateTest {
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
 
     @Autowired
     private AttenderStateRepository attenderStateRepository;
 
     @Autowired
-    private ExamRepository examRepository;
+    private EntityHelper entityHelper;
 
     @Test
     void createAttenderState() {
         // Given
-        Student student = createAndSaveStudent();
-        Exam exam = createAndSaveExam();
+        Student student = entityHelper.generateStudent();
+        Exam exam = entityHelper.generateExam();
 
         // When
-        AttenderState attenderState = attenderStateRepository
-            .save(AttenderState.builder().examStartTime(LocalDateTime.now()).build());
+        AttenderState attenderState = AttenderState.builder()
+            .examStartTime(LocalDateTime.now())
+            .build();
         attenderState.setAttender(student);
         attenderState.setExam(exam);
+
+        attenderStateRepository.save(attenderState);
 
         // Then
         assertThat(attenderState.getAttender().getId())
@@ -51,33 +47,4 @@ class AttenderStateTest {
             .containsOnly(attenderState);
     }
 
-    private Student createAndSaveStudent() {
-        Account account = accountRepository.save(
-            Account.builder()
-                .username("JottsungE")
-                .fullName("Kim eun seong")
-                .password("mincho")
-                .build()
-        );
-        Student student = studentRepository.save(
-            Student.builder()
-                .parentPhone("01000000000")
-                .schoolName("asdf")
-                .schoolYear(1)
-                .build()
-        );
-        student.setAccount(account);
-        return student;
-    }
-
-    private Exam createAndSaveExam() {
-        return examRepository.save(
-            Exam.builder()
-                .name("Test")
-                .beginDateTime(LocalDateTime.of(2021, 1, 28, 0, 0))
-                .endDateTime(LocalDateTime.of(2021, 1, 29, 0, 0))
-                .timeLimit(Duration.ZERO)
-                .build()
-        );
-    }
 }
