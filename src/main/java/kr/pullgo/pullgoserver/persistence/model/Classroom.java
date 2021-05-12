@@ -89,7 +89,7 @@ public class Classroom extends TimeEntity {
         student.removeAppliedClassroom(this);
     }
 
-    private void addStudent(Student student) {
+    public void addStudent(Student student) {
         students.add(student);
         student.getClassrooms().add(this);
     }
