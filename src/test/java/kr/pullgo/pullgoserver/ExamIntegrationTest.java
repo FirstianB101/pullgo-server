@@ -289,7 +289,7 @@ public class ExamIntegrationTest {
 
             // When
             ResultActions actions = mockMvc.perform(get("/exams")
-                .param("creatorId", classroom.getId().toString()));
+                .param("creatorId", creator.getId().toString()));
 
             // Then
             actions

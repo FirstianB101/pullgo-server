@@ -18,7 +18,7 @@ public class ExamSpecs {
 
     public static Specification<Exam> isCreatedBy(Long creatorId) {
         return (root, query, builder) -> {
-            Join<Exam, Teacher> teacher = root.join("classroom");
+            Join<Exam, Teacher> teacher = root.join("creator");
             return builder.equal(teacher.get("id"), creatorId);
         };
     }
