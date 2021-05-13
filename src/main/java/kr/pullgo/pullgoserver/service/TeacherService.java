@@ -13,12 +13,10 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
-import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
+import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TeacherService extends
@@ -28,17 +26,20 @@ public class TeacherService extends
     private final TeacherRepository teacherRepository;
     private final AcademyRepository academyRepository;
     private final ClassroomRepository classroomRepository;
+    private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public TeacherService(TeacherDtoMapper dtoMapper,
         TeacherRepository teacherRepository,
         AcademyRepository academyRepository,
-        ClassroomRepository classroomRepository) {
+        ClassroomRepository classroomRepository,
+        ServiceErrorHelper errorHelper) {
         super(Teacher.class, dtoMapper, teacherRepository);
         this.dtoMapper = dtoMapper;
         this.teacherRepository = teacherRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
+        this.errorHelper = errorHelper;
     }
 
     @Override
@@ -67,7 +68,7 @@ public class TeacherService extends
     @Override
     int removeOnDB(Long id) {
         Teacher teacher = teacherRepository.findById(id)
-            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
 
         teacher.getAppliedAcademies().clear();
         teacher.getAppliedClassrooms().clear();
@@ -89,15 +90,15 @@ public class TeacherService extends
     public void applyAcademy(Long teacherId, TeacherDto.ApplyAcademy dto) {
 
         Teacher teacher = teacherRepository.findById(teacherId)
-            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
 
         Academy academy = academyRepository.findById(dto.getAcademyId())
-            .orElseThrow(ResponseStatusExceptions::academyNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Academy id was not found"));
 
         try {
             teacher.applyAcademy(academy);
         } catch (TeacherAlreadyEnrolledException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already enrolled teacher");
+            throw errorHelper.badRequest("Already enrolled teacher");
         }
     }
 
@@ -105,16 +106,15 @@ public class TeacherService extends
     public void removeAppliedAcademy(Long teacherId, TeacherDto.RemoveAppliedAcademy dto) {
 
         Teacher teacher = teacherRepository.findById(teacherId)
-            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
 
         Academy academy = academyRepository.findById(dto.getAcademyId())
-            .orElseThrow(ResponseStatusExceptions::academyNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Academy id was not found"));
 
         try {
             teacher.removeAppliedAcademy(academy);
         } catch (AcademyNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Teacher did not apply academy");
+            throw errorHelper.badRequest("Teacher did not apply academy");
         }
     }
 
@@ -122,15 +122,15 @@ public class TeacherService extends
     public void applyClassroom(Long teacherId, TeacherDto.ApplyClassroom dto) {
 
         Teacher teacher = teacherRepository.findById(teacherId)
-            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
 
         Classroom classroom = classroomRepository.findById(dto.getClassroomId())
-            .orElseThrow(ResponseStatusExceptions::classroomNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
 
         try {
             teacher.applyClassroom(classroom);
         } catch (TeacherAlreadyEnrolledException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Already enrolled teacher");
+            throw errorHelper.badRequest("Already enrolled teacher");
         }
     }
 
@@ -138,16 +138,15 @@ public class TeacherService extends
     public void removeAppliedClassroom(Long teacherId, TeacherDto.RemoveAppliedClassroom dto) {
 
         Teacher teacher = teacherRepository.findById(teacherId)
-            .orElseThrow(ResponseStatusExceptions::teacherNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
 
         Classroom classroom = classroomRepository.findById(dto.getClassroomId())
-            .orElseThrow(ResponseStatusExceptions::classroomNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
 
         try {
             teacher.removeAppliedClassroom(classroom);
         } catch (ClassroomNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Teacher did not apply classroom");
+            throw errorHelper.badRequest("Teacher did not apply classroom");
         }
     }
 }

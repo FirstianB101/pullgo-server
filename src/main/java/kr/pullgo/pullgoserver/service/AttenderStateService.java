@@ -10,12 +10,10 @@ import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
-import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
+import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AttenderStateService extends
@@ -25,16 +23,19 @@ public class AttenderStateService extends
     private final AttenderStateRepository attenderStateRepository;
     private final StudentRepository studentRepository;
     private final ExamRepository examRepository;
+    private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public AttenderStateService(AttenderStateDtoMapper dtoMapper,
         AttenderStateRepository attenderStateRepository,
         StudentRepository studentRepository,
-        ExamRepository examRepository) {
+        ExamRepository examRepository,
+        ServiceErrorHelper errorHelper) {
         super(AttenderState.class, dtoMapper, attenderStateRepository);
         this.attenderStateRepository = attenderStateRepository;
         this.studentRepository = studentRepository;
         this.examRepository = examRepository;
+        this.errorHelper = errorHelper;
     }
 
     @Override
@@ -43,9 +44,9 @@ public class AttenderStateService extends
             .build();
 
         Student dtoAttender = studentRepository.findById(dto.getAttenderId())
-            .orElseThrow(ResponseStatusExceptions::studentNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
         Exam dtoExam = examRepository.findById(dto.getExamId())
-            .orElseThrow(ResponseStatusExceptions::examNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Exam id was not found"));
 
         attenderState.setAttender(dtoAttender);
         attenderState.setExam(dtoExam);
@@ -72,26 +73,24 @@ public class AttenderStateService extends
     @Transactional
     public void submit(Long id) {
         AttenderState attenderState = attenderStateRepository.findById(id)
-            .orElseThrow(ResponseStatusExceptions::attenderStateNotFound);
+            .orElseThrow(() -> errorHelper.notFound("AttenderState id was not found"));
         Exam exam = attenderState.getExam();
         AttendingProgress presentAttendingProgress = attenderState.getProgress();
 
         if (presentAttendingProgress != AttendingProgress.ONGOING) {
-            String reason = "attender state already " + presentAttendingProgress.toString();
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST, reason);
+            throw errorHelper.badRequest("Attender state already " + presentAttendingProgress);
         }
         if (attenderState.isAfterTimeLimit(attenderState.getExamStartTime())) {
-            throw ResponseStatusExceptions.attenderStateSubmittedAfterTimeLimit();
+            throw errorHelper.badRequest("Attender state submitted after timeout");
         }
         if (exam.isFinished()) {
-            throw ResponseStatusExceptions.attenderStateSubmittedAlreadyFinishedExam();
+            throw errorHelper.badRequest("Attender state already finished exam");
         }
         if (exam.isCancelled()) {
-            throw ResponseStatusExceptions.attenderStateSubmittedAlreadyCancelledExam();
+            throw errorHelper.badRequest("Attender state already cancelled exam");
         }
         if (attenderState.isOutOfTimeRange(attenderState.getExamStartTime())) {
-            throw ResponseStatusExceptions.attenderStateSubmittedAfterTimeRange();
+            throw errorHelper.badRequest("Attender state submitted after time range");
         }
         attenderState.setProgress(AttendingProgress.COMPLETE);
     }
