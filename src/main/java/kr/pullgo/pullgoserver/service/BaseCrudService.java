@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import kr.pullgo.pullgoserver.dto.mapper.DtoMapper;
 import kr.pullgo.pullgoserver.persistence.repository.BaseRepository;
-import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.util.Streamable;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -154,6 +154,7 @@ public abstract class BaseCrudService<E, ID, CREATE_DTO, UPDATE_DTO, RESULT_DTO>
     abstract int removeOnDB(ID id);
 
     private ResponseStatusException notFoundResponseStatusException() {
-        return ResponseStatusExceptions.notFound(entityClass);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND,
+            entityClass.getName() + " id was not found");
     }
 }

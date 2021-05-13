@@ -8,7 +8,7 @@ import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
-import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
+import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,22 +19,25 @@ public class LessonService extends
     private final LessonDtoMapper dtoMapper;
     private final LessonRepository lessonRepository;
     private final ClassroomRepository classroomRepository;
+    private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public LessonService(LessonDtoMapper dtoMapper,
         LessonRepository lessonRepository,
-        ClassroomRepository classroomRepository) {
+        ClassroomRepository classroomRepository,
+        ServiceErrorHelper errorHelper) {
         super(Lesson.class, dtoMapper, lessonRepository);
         this.dtoMapper = dtoMapper;
         this.lessonRepository = lessonRepository;
         this.classroomRepository = classroomRepository;
+        this.errorHelper = errorHelper;
     }
 
     @Override
     Lesson createOnDB(LessonDto.Create dto) {
         Lesson lesson = dtoMapper.asEntity(dto);
         Classroom classroom = classroomRepository.findById(dto.getClassroomId())
-            .orElseThrow(ResponseStatusExceptions::classroomNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
         classroom.addLesson(lesson);
         return lessonRepository.save(lesson);
     }

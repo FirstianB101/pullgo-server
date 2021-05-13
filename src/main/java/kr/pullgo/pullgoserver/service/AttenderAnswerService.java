@@ -9,7 +9,7 @@ import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderAnswerRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
-import kr.pullgo.pullgoserver.util.ResponseStatusExceptions;
+import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,26 +22,29 @@ public class AttenderAnswerService extends
     private final AttenderAnswerRepository attenderAnswerRepository;
     private final QuestionRepository questionRepository;
     private final AttenderStateRepository attenderStateRepository;
+    private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public AttenderAnswerService(AttenderAnswerDtoMapper dtoMapper,
         AttenderAnswerRepository attenderAnswerRepository,
         QuestionRepository questionRepository,
-        AttenderStateRepository attenderStateRepository) {
+        AttenderStateRepository attenderStateRepository,
+        ServiceErrorHelper errorHelper) {
         super(AttenderAnswer.class, dtoMapper, attenderAnswerRepository);
         this.dtoMapper = dtoMapper;
         this.attenderAnswerRepository = attenderAnswerRepository;
         this.questionRepository = questionRepository;
         this.attenderStateRepository = attenderStateRepository;
+        this.errorHelper = errorHelper;
     }
 
     @Override
     AttenderAnswer createOnDB(AttenderAnswerDto.Create dto) {
         AttenderAnswer attenderAnswer = dtoMapper.asEntity(dto);
         AttenderState attenderState = attenderStateRepository.findById(dto.getAttenderStateId())
-            .orElseThrow(ResponseStatusExceptions::attenderStateNotFound);
+            .orElseThrow(() -> errorHelper.notFound("AttenderState id was not found"));
         Question question = questionRepository.findById(dto.getQuestionId())
-            .orElseThrow(ResponseStatusExceptions::questionNotFound);
+            .orElseThrow(() -> errorHelper.notFound("Question id was not found"));
         attenderState.addAnswer(attenderAnswer);
         attenderAnswer.setQuestion(question);
         return attenderAnswerRepository.save(attenderAnswer);

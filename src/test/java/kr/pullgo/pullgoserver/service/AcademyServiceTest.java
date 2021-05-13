@@ -25,6 +25,7 @@ import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ class AcademyServiceTest {
     @BeforeEach
     void setUp() {
         academyService = new AcademyService(new AcademyDtoMapper(), academyRepository,
-            teacherRepository, studentRepository);
+            teacherRepository, studentRepository, new ServiceErrorHelper());
     }
 
     @Nested
