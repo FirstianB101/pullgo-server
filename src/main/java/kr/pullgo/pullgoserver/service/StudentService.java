@@ -13,6 +13,7 @@ import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
+import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class StudentService extends
     private final StudentRepository studentRepository;
     private final AcademyRepository academyRepository;
     private final ClassroomRepository classroomRepository;
+    private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
 
     @Autowired
@@ -33,12 +35,14 @@ public class StudentService extends
         StudentRepository studentRepository,
         AcademyRepository academyRepository,
         ClassroomRepository classroomRepository,
+        RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
         super(Student.class, dtoMapper, studentRepository);
         this.dtoMapper = dtoMapper;
         this.studentRepository = studentRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
+        this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
     }
 
@@ -76,8 +80,7 @@ public class StudentService extends
 
     @Override
     int removeOnDB(Long id) {
-        Student student = studentRepository.findById(id)
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
+        Student student = repoHelper.findStudentOrThrow(id);
 
         student.getAppliedAcademies().clear();
         student.getAppliedClassrooms().clear();
@@ -97,12 +100,8 @@ public class StudentService extends
 
     @Transactional
     public void applyAcademy(Long studentId, StudentDto.ApplyAcademy dto) {
-
-        Student student = studentRepository.findById(studentId)
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
-
-        Academy academy = academyRepository.findById(dto.getAcademyId())
-            .orElseThrow(() -> errorHelper.notFound("Academy id was not found"));
+        Student student = repoHelper.findStudentOrThrow(studentId);
+        Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
 
         try {
             student.applyAcademy(academy);
@@ -113,12 +112,8 @@ public class StudentService extends
 
     @Transactional
     public void removeAppliedAcademy(Long studentId, StudentDto.RemoveAppliedAcademy dto) {
-
-        Student student = studentRepository.findById(studentId)
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
-
-        Academy academy = academyRepository.findById(dto.getAcademyId())
-            .orElseThrow(() -> errorHelper.notFound("Academy id was not found"));
+        Student student = repoHelper.findStudentOrThrow(studentId);
+        Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
 
         try {
             student.removeAppliedAcademy(academy);
@@ -129,12 +124,8 @@ public class StudentService extends
 
     @Transactional
     public void applyClassroom(Long studentId, StudentDto.ApplyClassroom dto) {
-
-        Student student = studentRepository.findById(studentId)
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
-
-        Classroom classroom = classroomRepository.findById(dto.getClassroomId())
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
+        Student student = repoHelper.findStudentOrThrow(studentId);
+        Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
 
         try {
             student.applyClassroom(classroom);
@@ -145,12 +136,8 @@ public class StudentService extends
 
     @Transactional
     public void removeAppliedClassroom(Long studentId, StudentDto.RemoveAppliedClassroom dto) {
-
-        Student student = studentRepository.findById(studentId)
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
-
-        Classroom classroom = classroomRepository.findById(dto.getClassroomId())
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
+        Student student = repoHelper.findStudentOrThrow(studentId);
+        Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
 
         try {
             student.removeAppliedClassroom(classroom);

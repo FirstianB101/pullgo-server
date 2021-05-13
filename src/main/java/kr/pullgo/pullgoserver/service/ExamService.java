@@ -8,6 +8,7 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class ExamService extends
     private final ExamRepository examRepository;
     private final ClassroomRepository classroomRepository;
     private final TeacherRepository teacherRepository;
+    private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
 
     @Autowired
@@ -28,24 +30,27 @@ public class ExamService extends
         ExamRepository examRepository,
         ClassroomRepository classroomRepository,
         TeacherRepository teacherRepository,
+        RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
         super(Exam.class, dtoMapper, examRepository);
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
         this.classroomRepository = classroomRepository;
         this.teacherRepository = teacherRepository;
+        this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
     }
 
     @Override
     Exam createOnDB(ExamDto.Create dto) {
         Exam exam = dtoMapper.asEntity(dto);
-        Teacher creator = teacherRepository.findById(dto.getCreatorId())
-            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
-        Classroom classroom = classroomRepository.findById(dto.getClassroomId())
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
-        classroom.addExam(exam);
+
+        Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
         exam.setCreator(creator);
+
+        Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
+        classroom.addExam(exam);
+
         return examRepository.save(exam);
     }
 
@@ -89,8 +94,7 @@ public class ExamService extends
     }
 
     private Exam getOnGoingExam(Long id) {
-        Exam exam = examRepository.findById(id)
-            .orElseThrow(() -> errorHelper.notFound("Exam id was not found"));
+        Exam exam = repoHelper.findExamOrThrow(id);
         if (exam.isFinished()) {
             throw errorHelper.badRequest("Exam already finished");
         }

@@ -10,6 +10,7 @@ import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
+import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class AttenderStateService extends
     private final AttenderStateRepository attenderStateRepository;
     private final StudentRepository studentRepository;
     private final ExamRepository examRepository;
+    private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
 
     @Autowired
@@ -30,11 +32,13 @@ public class AttenderStateService extends
         AttenderStateRepository attenderStateRepository,
         StudentRepository studentRepository,
         ExamRepository examRepository,
+        RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
         super(AttenderState.class, dtoMapper, attenderStateRepository);
         this.attenderStateRepository = attenderStateRepository;
         this.studentRepository = studentRepository;
         this.examRepository = examRepository;
+        this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
     }
 
@@ -43,12 +47,10 @@ public class AttenderStateService extends
         AttenderState attenderState = AttenderState.builder().examStartTime(LocalDateTime.now())
             .build();
 
-        Student dtoAttender = studentRepository.findById(dto.getAttenderId())
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
-        Exam dtoExam = examRepository.findById(dto.getExamId())
-            .orElseThrow(() -> errorHelper.notFound("Exam id was not found"));
-
+        Student dtoAttender = repoHelper.findStudentOrThrow(dto.getAttenderId());
         attenderState.setAttender(dtoAttender);
+
+        Exam dtoExam = repoHelper.findExamOrThrow(dto.getExamId());
         attenderState.setExam(dtoExam);
 
         return attenderStateRepository.save(attenderState);
@@ -72,8 +74,7 @@ public class AttenderStateService extends
 
     @Transactional
     public void submit(Long id) {
-        AttenderState attenderState = attenderStateRepository.findById(id)
-            .orElseThrow(() -> errorHelper.notFound("AttenderState id was not found"));
+        AttenderState attenderState = repoHelper.findAttenderStateOrThrow(id);
         Exam exam = attenderState.getExam();
         AttendingProgress presentAttendingProgress = attenderState.getProgress();
 

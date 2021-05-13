@@ -25,6 +25,7 @@ import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,12 +51,15 @@ class AcademyServiceTest {
     @Mock
     private AccountRepository accountRepository;
 
+    @Mock
+    private RepositoryHelper repoHelper;
+
     private AcademyService academyService;
 
     @BeforeEach
     void setUp() {
         academyService = new AcademyService(new AcademyDtoMapper(), academyRepository,
-            teacherRepository, studentRepository, new ServiceErrorHelper());
+            teacherRepository, studentRepository, repoHelper, new ServiceErrorHelper());
     }
 
     @Nested
@@ -73,8 +78,8 @@ class AcademyServiceTest {
             given(academyRepository.save(any()))
                 .will(i -> ((Academy) i.getArgument(0)).withId(0L));
 
-            given(teacherRepository.findById(0L))
-                .willReturn(Optional.of(aTeacher().withId(0L)));
+            given(repoHelper.findTeacherOrThrow(0L))
+                .willReturn(aTeacher().withId(0L));
 
             // When
             AcademyDto.Result result = academyService.create(dto);
@@ -88,8 +93,8 @@ class AcademyServiceTest {
         @Test
         void createAcademy_InvalidOwnerId_ExceptionThrown() {
             // Given
-            given(teacherRepository.findById(0L))
-                .willReturn(Optional.empty());
+            given(repoHelper.findTeacherOrThrow(0L))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
             // When
             AcademyDto.Create dto = anAcademyCreateDto().withOwnerId(0L);
@@ -127,8 +132,8 @@ class AcademyServiceTest {
             given(academyRepository.save(any()))
                 .will(i -> i.getArgument(0));
 
-            given(teacherRepository.findById(2L))
-                .willReturn(Optional.of(newOwner));
+            given(repoHelper.findTeacherOrThrow(2L))
+                .willReturn(newOwner);
 
             // When
             AcademyDto.Update dto = AcademyDto.Update.builder()
@@ -179,8 +184,8 @@ class AcademyServiceTest {
             given(academyRepository.findById(0L))
                 .willReturn(Optional.of(entity));
 
-            given(teacherRepository.findById(2L))
-                .willReturn(Optional.empty());
+            given(repoHelper.findTeacherOrThrow(2L))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
             // When
             AcademyDto.Update dto = anAcademyUpdateDto().withOwnerId(2L);
@@ -197,8 +202,8 @@ class AcademyServiceTest {
         @Test
         void deleteAcademy() {
             // Given
-            given(academyRepository.findById(1L))
-                .willReturn(Optional.of(anAcademy().withId(1L)));
+            given(repoHelper.findAcademyOrThrow(1L))
+                .willReturn(anAcademy().withId(1L));
 
             given(academyRepository.removeById(1L))
                 .willReturn(1);
@@ -213,8 +218,8 @@ class AcademyServiceTest {
         @Test
         void deleteAcademy_InvalidAcademyId_ExceptionThrown() {
             // Given
-            given(academyRepository.findById(1L))
-                .willReturn(Optional.of(anAcademy().withId(1L)));
+            given(repoHelper.findAcademyOrThrow(1L))
+                .willReturn(anAcademy().withId(1L));
 
             given(academyRepository.removeById(1L))
                 .willReturn(0);
@@ -283,11 +288,11 @@ class AcademyServiceTest {
 
             teacher.applyAcademy(academy);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(teacherRepository.findById(0L))
-                .willReturn(Optional.of(teacher));
+            given(repoHelper.findTeacherOrThrow(0L))
+                .willReturn(teacher);
 
             // When
             AcademyDto.AcceptTeacher dto = anAcademyAcceptTeacherDto().withTeacherId(0L);
@@ -307,11 +312,11 @@ class AcademyServiceTest {
             Academy academy = anAcademy().withId(0L);
             Teacher teacher = aTeacher().withId(0L);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(teacherRepository.findById(0L))
-                .willReturn(Optional.of(teacher));
+            given(repoHelper.findTeacherOrThrow(0L))
+                .willReturn(teacher);
 
             // When
             AcademyDto.AcceptTeacher dto = anAcademyAcceptTeacherDto().withTeacherId(0L);
@@ -335,11 +340,11 @@ class AcademyServiceTest {
             teacher.applyAcademy(academy);
             academy.acceptTeacher(teacher);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(teacherRepository.findById(0L))
-                .willReturn(Optional.of(teacher));
+            given(repoHelper.findTeacherOrThrow(0L))
+                .willReturn(teacher);
 
             // When
             AcademyDto.KickTeacher dto = anAcademyKickTeacherDto().withTeacherId(0L);
@@ -356,11 +361,11 @@ class AcademyServiceTest {
             Academy academy = anAcademy().withId(0L);
             Teacher teacher = aTeacher().withId(0L);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(teacherRepository.findById(0L))
-                .willReturn(Optional.of(teacher));
+            given(repoHelper.findTeacherOrThrow(0L))
+                .willReturn(teacher);
 
             // When
             AcademyDto.KickTeacher dto = anAcademyKickTeacherDto().withTeacherId(0L);
@@ -383,11 +388,11 @@ class AcademyServiceTest {
 
             student.applyAcademy(academy);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(studentRepository.findById(0L))
-                .willReturn(Optional.of(student));
+            given(repoHelper.findStudentOrThrow(0L))
+                .willReturn(student);
 
             // When
             AcademyDto.AcceptStudent dto = anAcademyAcceptStudentDto().withStudentId(0L);
@@ -407,11 +412,11 @@ class AcademyServiceTest {
             Academy academy = anAcademy().withId(0L);
             Student student = aStudent().withId(0L);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(studentRepository.findById(0L))
-                .willReturn(Optional.of(student));
+            given(repoHelper.findStudentOrThrow(0L))
+                .willReturn(student);
 
             // When
             AcademyDto.AcceptStudent dto = anAcademyAcceptStudentDto().withStudentId(0L);
@@ -435,11 +440,11 @@ class AcademyServiceTest {
             student.applyAcademy(academy);
             academy.acceptStudent(student);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(studentRepository.findById(0L))
-                .willReturn(Optional.of(student));
+            given(repoHelper.findStudentOrThrow(0L))
+                .willReturn(student);
 
             // When
             AcademyDto.KickStudent dto = anAcademyKickStudentDto().withStudentId(0L);
@@ -456,11 +461,11 @@ class AcademyServiceTest {
             Academy academy = anAcademy().withId(0L);
             Student student = aStudent().withId(0L);
 
-            given(academyRepository.findById(0L))
-                .willReturn(Optional.of(academy));
+            given(repoHelper.findAcademyOrThrow(0L))
+                .willReturn(academy);
 
-            given(studentRepository.findById(0L))
-                .willReturn(Optional.of(student));
+            given(repoHelper.findStudentOrThrow(0L))
+                .willReturn(student);
 
             // When
             AcademyDto.KickStudent dto = anAcademyKickStudentDto().withStudentId(0L);

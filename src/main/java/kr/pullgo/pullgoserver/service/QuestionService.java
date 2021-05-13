@@ -7,6 +7,7 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
+import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class QuestionService extends
     private final QuestionDtoMapper dtoMapper;
     private final QuestionRepository questionRepository;
     private final ExamRepository examRepository;
+    private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
 
     @Autowired
@@ -25,20 +27,23 @@ public class QuestionService extends
         QuestionDtoMapper dtoMapper,
         QuestionRepository questionRepository,
         ExamRepository examRepository,
+        RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
         super(Question.class, dtoMapper, questionRepository);
         this.dtoMapper = dtoMapper;
         this.questionRepository = questionRepository;
         this.examRepository = examRepository;
+        this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
     }
 
     @Override
     Question createOnDB(QuestionDto.Create dto) {
         Question question = dtoMapper.asEntity(dto);
-        Exam exam = examRepository.findById(dto.getExamId())
-            .orElseThrow(() -> errorHelper.notFound("Exam id was not found"));
+
+        Exam exam = repoHelper.findExamOrThrow(dto.getExamId());
         exam.addQuestion(question);
+
         return questionRepository.save(question);
     }
 

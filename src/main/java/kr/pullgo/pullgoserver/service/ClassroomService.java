@@ -12,6 +12,7 @@ import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class ClassroomService extends
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
     private final AcademyRepository academyRepository;
+    private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
 
     @Autowired
@@ -35,6 +37,7 @@ public class ClassroomService extends
         TeacherRepository teacherRepository,
         StudentRepository studentRepository,
         AcademyRepository academyRepository,
+        RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
         super(Classroom.class, dtoMapper, classroomRepository);
         this.dtoMapper = dtoMapper;
@@ -42,6 +45,7 @@ public class ClassroomService extends
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
         this.academyRepository = academyRepository;
+        this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
     }
 
@@ -49,12 +53,10 @@ public class ClassroomService extends
     Classroom createOnDB(ClassroomDto.Create dto) {
         Classroom classroom = dtoMapper.asEntity(dto);
 
-        Academy academy = academyRepository.findById(dto.getAcademyId())
-            .orElseThrow(() -> errorHelper.notFound("Academy id was not found"));
+        Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
         academy.addClassroom(classroom);
 
-        Teacher creator = teacherRepository.findById(dto.getCreatorId())
-            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
+        Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
         classroom.addTeacher(creator);
 
         return classroomRepository.save(classroom);
@@ -70,8 +72,7 @@ public class ClassroomService extends
 
     @Override
     int removeOnDB(Long id) {
-        Classroom classroom = classroomRepository.findById(id)
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
+        Classroom classroom = repoHelper.findClassroomOrThrow(id);
 
         classroom.getStudents().clear();
         classroom.getTeachers().clear();
@@ -91,11 +92,8 @@ public class ClassroomService extends
 
     @Transactional
     public void acceptTeacher(Long classroomId, ClassroomDto.AcceptTeacher dto) {
-        Classroom classroom = classroomRepository.findById(classroomId)
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
-
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
-            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
+        Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        Teacher teacher = repoHelper.findTeacherOrThrow(dto.getTeacherId());
 
         try {
             classroom.acceptTeacher(teacher);
@@ -106,11 +104,8 @@ public class ClassroomService extends
 
     @Transactional
     public void kickTeacher(Long classroomId, ClassroomDto.KickTeacher dto) {
-        Classroom classroom = classroomRepository.findById(classroomId)
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
-
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
-            .orElseThrow(() -> errorHelper.notFound("Teacher id was not found"));
+        Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        Teacher teacher = repoHelper.findTeacherOrThrow(dto.getTeacherId());
 
         try {
             classroom.removeTeacher(teacher);
@@ -121,11 +116,8 @@ public class ClassroomService extends
 
     @Transactional
     public void acceptStudent(Long classroomId, ClassroomDto.AcceptStudent dto) {
-        Classroom classroom = classroomRepository.findById(classroomId)
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
-
-        Student student = studentRepository.findById(dto.getStudentId())
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
+        Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        Student student = repoHelper.findStudentOrThrow(dto.getStudentId());
 
         try {
             classroom.acceptStudent(student);
@@ -136,11 +128,8 @@ public class ClassroomService extends
 
     @Transactional
     public void kickStudent(Long classroomId, ClassroomDto.KickStudent dto) {
-        Classroom classroom = classroomRepository.findById(classroomId)
-            .orElseThrow(() -> errorHelper.notFound("Classroom id was not found"));
-
-        Student student = studentRepository.findById(dto.getStudentId())
-            .orElseThrow(() -> errorHelper.notFound("Student id was not found"));
+        Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        Student student = repoHelper.findStudentOrThrow(dto.getStudentId());
 
         try {
             classroom.removeStudent(student);
