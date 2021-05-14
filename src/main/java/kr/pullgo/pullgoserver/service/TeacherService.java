@@ -1,14 +1,12 @@
 package kr.pullgo.pullgoserver.service;
 
 import java.util.List;
-import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyEnrolledException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
-import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
@@ -27,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TeacherService {
 
     private final TeacherDtoMapper dtoMapper;
+    private final AccountService accountService;
     private final TeacherRepository teacherRepository;
     private final AcademyRepository academyRepository;
     private final ClassroomRepository classroomRepository;
@@ -35,12 +34,14 @@ public class TeacherService {
 
     @Autowired
     public TeacherService(TeacherDtoMapper dtoMapper,
+        AccountService accountService,
         TeacherRepository teacherRepository,
         AcademyRepository academyRepository,
         ClassroomRepository classroomRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
         this.dtoMapper = dtoMapper;
+        this.accountService = accountService;
         this.teacherRepository = teacherRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
@@ -68,19 +69,11 @@ public class TeacherService {
     @Transactional
     public TeacherDto.Result update(Long id, TeacherDto.Update dto) {
         Teacher entity = repoHelper.findTeacherOrThrow(id);
-        AccountDto.Update dtoAccount = dto.getAccount();
-        Account entityAccount = entity.getAccount();
-        if (dtoAccount != null) {
-            if (dtoAccount.getPassword() != null) {
-                entityAccount.setPassword(dtoAccount.getPassword());
-            }
-            if (dtoAccount.getFullName() != null) {
-                entityAccount.setFullName(dtoAccount.getFullName());
-            }
-            if (dtoAccount.getPhone() != null) {
-                entityAccount.setPhone(dtoAccount.getPhone());
-            }
+
+        if (dto.getAccount() != null) {
+            accountService.update(entity.getAccount(), dto.getAccount());
         }
+
         return dtoMapper.asResultDto(teacherRepository.save(entity));
     }
 

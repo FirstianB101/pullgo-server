@@ -1,14 +1,12 @@
 package kr.pullgo.pullgoserver.service;
 
 import java.util.List;
-import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.StudentDto;
 import kr.pullgo.pullgoserver.dto.mapper.StudentDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentAlreadyEnrolledException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
-import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
@@ -27,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentService {
 
     private final StudentDtoMapper dtoMapper;
+    private final AccountService accountService;
     private final StudentRepository studentRepository;
     private final AcademyRepository academyRepository;
     private final ClassroomRepository classroomRepository;
@@ -35,12 +34,14 @@ public class StudentService {
 
     @Autowired
     public StudentService(StudentDtoMapper dtoMapper,
+        AccountService accountService,
         StudentRepository studentRepository,
         AcademyRepository academyRepository,
         ClassroomRepository classroomRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
         this.dtoMapper = dtoMapper;
+        this.accountService = accountService;
         this.studentRepository = studentRepository;
         this.academyRepository = academyRepository;
         this.classroomRepository = classroomRepository;
@@ -68,19 +69,7 @@ public class StudentService {
     @Transactional
     public StudentDto.Result update(Long id, StudentDto.Update dto) {
         Student entity = repoHelper.findStudentOrThrow(id);
-        AccountDto.Update dtoAccount = dto.getAccount();
-        Account entityAccount = entity.getAccount();
-        if (dtoAccount != null) {
-            if (dtoAccount.getPassword() != null) {
-                entityAccount.setPassword(dtoAccount.getPassword());
-            }
-            if (dtoAccount.getFullName() != null) {
-                entityAccount.setFullName(dtoAccount.getFullName());
-            }
-            if (dtoAccount.getPhone() != null) {
-                entityAccount.setPhone(dtoAccount.getPhone());
-            }
-        }
+
         if (dto.getParentPhone() != null) {
             entity.setParentPhone(dto.getParentPhone());
         }
@@ -90,6 +79,10 @@ public class StudentService {
         if (dto.getSchoolYear() != null) {
             entity.setSchoolYear(dto.getSchoolYear());
         }
+        if (dto.getAccount() != null) {
+            accountService.update(entity.getAccount(), dto.getAccount());
+        }
+
         return dtoMapper.asResultDto(studentRepository.save(entity));
     }
 
