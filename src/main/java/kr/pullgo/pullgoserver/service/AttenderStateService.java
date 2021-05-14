@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.dto.mapper.AttenderStateDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
@@ -8,42 +9,36 @@ import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
-import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
-import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class AttenderStateService extends
-    BaseCrudService<AttenderState, Long, AttenderStateDto.Create,
-        AttenderStateDto.Update, AttenderStateDto.Result> {
+public class AttenderStateService {
 
+    private final AttenderStateDtoMapper dtoMapper;
     private final AttenderStateRepository attenderStateRepository;
-    private final StudentRepository studentRepository;
-    private final ExamRepository examRepository;
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public AttenderStateService(AttenderStateDtoMapper dtoMapper,
         AttenderStateRepository attenderStateRepository,
-        StudentRepository studentRepository,
-        ExamRepository examRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
-        super(AttenderState.class, dtoMapper, attenderStateRepository);
+        this.dtoMapper = dtoMapper;
         this.attenderStateRepository = attenderStateRepository;
-        this.studentRepository = studentRepository;
-        this.examRepository = examRepository;
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
     }
 
-    @Override
-    AttenderState createOnDB(AttenderStateDto.Create dto) {
+    @Transactional
+    public AttenderStateDto.Result create(AttenderStateDto.Create dto) {
         AttenderState attenderState = AttenderState.builder().examStartTime(LocalDateTime.now())
             .build();
 
@@ -53,23 +48,38 @@ public class AttenderStateService extends
         Exam dtoExam = repoHelper.findExamOrThrow(dto.getExamId());
         attenderState.setExam(dtoExam);
 
-        return attenderStateRepository.save(attenderState);
+        return dtoMapper.asResultDto(attenderStateRepository.save(attenderState));
     }
 
-    @Override
-    AttenderState updateOnDB(AttenderState entity, AttenderStateDto.Update dto) {
+    @Transactional(readOnly = true)
+    public AttenderStateDto.Result read(Long id) {
+        AttenderState entity = repoHelper.findAttenderStateOrThrow(id);
+        return dtoMapper.asResultDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttenderStateDto.Result> search(Specification<AttenderState> spec,
+        Pageable pageable) {
+        Page<AttenderState> entities = attenderStateRepository.findAll(spec, pageable);
+        return dtoMapper.asResultDto(entities);
+    }
+
+    @Transactional
+    public AttenderStateDto.Result update(Long id, AttenderStateDto.Update dto) {
+        AttenderState entity = repoHelper.findAttenderStateOrThrow(id);
         if (dto.getProgress() != null) {
             entity.setProgress(dto.getProgress());
         }
         if (dto.getScore() != null) {
             entity.setScore(dto.getScore());
         }
-        return attenderStateRepository.save(entity);
+        return dtoMapper.asResultDto(attenderStateRepository.save(entity));
     }
 
-    @Override
-    int removeOnDB(Long id) {
-        return attenderStateRepository.removeById(id);
+    @Transactional
+    public void delete(Long id) {
+        AttenderState entity = repoHelper.findAttenderStateOrThrow(id);
+        attenderStateRepository.delete(entity);
     }
 
     @Transactional

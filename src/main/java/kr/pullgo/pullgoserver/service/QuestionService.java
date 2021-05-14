@@ -1,54 +1,62 @@
 package kr.pullgo.pullgoserver.service;
 
+import java.util.List;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.dto.mapper.QuestionDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
-import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
-import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class QuestionService extends
-    BaseCrudService<Question, Long, QuestionDto.Create, QuestionDto.Update, QuestionDto.Result> {
+public class QuestionService {
 
     private final QuestionDtoMapper dtoMapper;
     private final QuestionRepository questionRepository;
-    private final ExamRepository examRepository;
     private final RepositoryHelper repoHelper;
-    private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public QuestionService(
         QuestionDtoMapper dtoMapper,
         QuestionRepository questionRepository,
-        ExamRepository examRepository,
-        RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper) {
-        super(Question.class, dtoMapper, questionRepository);
+        RepositoryHelper repoHelper) {
         this.dtoMapper = dtoMapper;
         this.questionRepository = questionRepository;
-        this.examRepository = examRepository;
         this.repoHelper = repoHelper;
-        this.errorHelper = errorHelper;
     }
 
-    @Override
-    Question createOnDB(QuestionDto.Create dto) {
+    @Transactional
+    public QuestionDto.Result create(QuestionDto.Create dto) {
         Question question = dtoMapper.asEntity(dto);
 
         Exam exam = repoHelper.findExamOrThrow(dto.getExamId());
         exam.addQuestion(question);
 
-        return questionRepository.save(question);
+        return dtoMapper.asResultDto(questionRepository.save(question));
     }
 
-    @Override
-    Question updateOnDB(Question entity, QuestionDto.Update dto) {
+    @Transactional(readOnly = true)
+    public QuestionDto.Result read(Long id) {
+        Question entity = repoHelper.findQuestionOrThrow(id);
+        return dtoMapper.asResultDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuestionDto.Result> search(Specification<Question> spec, Pageable pageable) {
+        Page<Question> entities = questionRepository.findAll(spec, pageable);
+        return dtoMapper.asResultDto(entities);
+    }
+
+    @Transactional
+    public QuestionDto.Result update(Long id, QuestionDto.Update dto) {
+        Question entity = repoHelper.findQuestionOrThrow(id);
         if (dto.getContent() != null) {
             entity.setContent(dto.getContent());
         }
@@ -58,11 +66,12 @@ public class QuestionService extends
         if (dto.getAnswer() != null) {
             entity.setAnswer(new Answer(dto.getAnswer()));
         }
-        return questionRepository.save(entity);
+        return dtoMapper.asResultDto(questionRepository.save(entity));
     }
 
-    @Override
-    int removeOnDB(Long id) {
-        return questionRepository.removeById(id);
+    @Transactional
+    public void delete(Long id) {
+        Question entity = repoHelper.findQuestionOrThrow(id);
+        questionRepository.delete(entity);
     }
 }
