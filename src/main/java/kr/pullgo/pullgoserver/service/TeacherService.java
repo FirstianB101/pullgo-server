@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.service;
 
+import java.util.List;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
@@ -16,12 +17,14 @@ import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class TeacherService extends
-    BaseCrudService<Teacher, Long, TeacherDto.Create, TeacherDto.Update, TeacherDto.Result> {
+public class TeacherService {
 
     private final TeacherDtoMapper dtoMapper;
     private final TeacherRepository teacherRepository;
@@ -37,7 +40,6 @@ public class TeacherService extends
         ClassroomRepository classroomRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
-        super(Teacher.class, dtoMapper, teacherRepository);
         this.dtoMapper = dtoMapper;
         this.teacherRepository = teacherRepository;
         this.academyRepository = academyRepository;
@@ -46,13 +48,26 @@ public class TeacherService extends
         this.errorHelper = errorHelper;
     }
 
-    @Override
-    Teacher createOnDB(TeacherDto.Create dto) {
-        return teacherRepository.save(dtoMapper.asEntity(dto));
+    @Transactional
+    public TeacherDto.Result create(TeacherDto.Create dto) {
+        return dtoMapper.asResultDto(teacherRepository.save(dtoMapper.asEntity(dto)));
     }
 
-    @Override
-    Teacher updateOnDB(Teacher entity, TeacherDto.Update dto) {
+    @Transactional(readOnly = true)
+    public TeacherDto.Result read(Long id) {
+        Teacher entity = repoHelper.findTeacherOrThrow(id);
+        return dtoMapper.asResultDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeacherDto.Result> search(Specification<Teacher> spec, Pageable pageable) {
+        Page<Teacher> entities = teacherRepository.findAll(spec, pageable);
+        return dtoMapper.asResultDto(entities);
+    }
+
+    @Transactional
+    public TeacherDto.Result update(Long id, TeacherDto.Update dto) {
+        Teacher entity = repoHelper.findTeacherOrThrow(id);
         AccountDto.Update dtoAccount = dto.getAccount();
         Account entityAccount = entity.getAccount();
         if (dtoAccount != null) {
@@ -66,11 +81,11 @@ public class TeacherService extends
                 entityAccount.setPhone(dtoAccount.getPhone());
             }
         }
-        return teacherRepository.save(entity);
+        return dtoMapper.asResultDto(teacherRepository.save(entity));
     }
 
-    @Override
-    int removeOnDB(Long id) {
+    @Transactional
+    public void delete(Long id) {
         Teacher teacher = repoHelper.findTeacherOrThrow(id);
 
         teacher.getAppliedAcademies().clear();
@@ -86,7 +101,7 @@ public class TeacherService extends
             classroomRepository.save(classroom);
         }
 
-        return teacherRepository.removeById(id);
+        teacherRepository.delete(teacher);
     }
 
     @Transactional

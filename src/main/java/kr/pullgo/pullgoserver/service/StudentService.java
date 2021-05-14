@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.service;
 
+import java.util.List;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.StudentDto;
 import kr.pullgo.pullgoserver.dto.mapper.StudentDtoMapper;
@@ -16,12 +17,14 @@ import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class StudentService extends
-    BaseCrudService<Student, Long, StudentDto.Create, StudentDto.Update, StudentDto.Result> {
+public class StudentService {
 
     private final StudentDtoMapper dtoMapper;
     private final StudentRepository studentRepository;
@@ -37,7 +40,6 @@ public class StudentService extends
         ClassroomRepository classroomRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
-        super(Student.class, dtoMapper, studentRepository);
         this.dtoMapper = dtoMapper;
         this.studentRepository = studentRepository;
         this.academyRepository = academyRepository;
@@ -46,13 +48,26 @@ public class StudentService extends
         this.errorHelper = errorHelper;
     }
 
-    @Override
-    Student createOnDB(StudentDto.Create dto) {
-        return studentRepository.save(dtoMapper.asEntity(dto));
+    @Transactional
+    public StudentDto.Result create(StudentDto.Create dto) {
+        return dtoMapper.asResultDto(studentRepository.save(dtoMapper.asEntity(dto)));
     }
 
-    @Override
-    Student updateOnDB(Student entity, StudentDto.Update dto) {
+    @Transactional(readOnly = true)
+    public StudentDto.Result read(Long id) {
+        Student entity = repoHelper.findStudentOrThrow(id);
+        return dtoMapper.asResultDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentDto.Result> search(Specification<Student> spec, Pageable pageable) {
+        Page<Student> entities = studentRepository.findAll(spec, pageable);
+        return dtoMapper.asResultDto(entities);
+    }
+
+    @Transactional
+    public StudentDto.Result update(Long id, StudentDto.Update dto) {
+        Student entity = repoHelper.findStudentOrThrow(id);
         AccountDto.Update dtoAccount = dto.getAccount();
         Account entityAccount = entity.getAccount();
         if (dtoAccount != null) {
@@ -75,11 +90,11 @@ public class StudentService extends
         if (dto.getSchoolYear() != null) {
             entity.setSchoolYear(dto.getSchoolYear());
         }
-        return studentRepository.save(entity);
+        return dtoMapper.asResultDto(studentRepository.save(entity));
     }
 
-    @Override
-    int removeOnDB(Long id) {
+    @Transactional
+    public void delete(Long id) {
         Student student = repoHelper.findStudentOrThrow(id);
 
         student.getAppliedAcademies().clear();
@@ -95,7 +110,7 @@ public class StudentService extends
             classroomRepository.save(classroom);
         }
 
-        return studentRepository.removeById(id);
+        studentRepository.delete(student);
     }
 
     @Transactional

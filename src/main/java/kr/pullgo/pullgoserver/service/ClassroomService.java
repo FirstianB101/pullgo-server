@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.service;
 
+import java.util.List;
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
 import kr.pullgo.pullgoserver.dto.mapper.ClassroomDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
@@ -8,26 +9,25 @@ import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
-import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ClassroomService extends
-    BaseCrudService<Classroom, Long, ClassroomDto.Create,
-        ClassroomDto.Update, ClassroomDto.Result> {
+public class ClassroomService {
 
     private final ClassroomDtoMapper dtoMapper;
     private final ClassroomRepository classroomRepository;
     private final TeacherRepository teacherRepository;
     private final StudentRepository studentRepository;
-    private final AcademyRepository academyRepository;
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
 
@@ -36,21 +36,18 @@ public class ClassroomService extends
         ClassroomRepository classroomRepository,
         TeacherRepository teacherRepository,
         StudentRepository studentRepository,
-        AcademyRepository academyRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
-        super(Classroom.class, dtoMapper, classroomRepository);
         this.dtoMapper = dtoMapper;
         this.classroomRepository = classroomRepository;
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
-        this.academyRepository = academyRepository;
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
     }
 
-    @Override
-    Classroom createOnDB(ClassroomDto.Create dto) {
+    @Transactional
+    public ClassroomDto.Result create(ClassroomDto.Create dto) {
         Classroom classroom = dtoMapper.asEntity(dto);
 
         Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
@@ -59,19 +56,32 @@ public class ClassroomService extends
         Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
         classroom.addTeacher(creator);
 
-        return classroomRepository.save(classroom);
+        return dtoMapper.asResultDto(classroomRepository.save(classroom));
     }
 
-    @Override
-    Classroom updateOnDB(Classroom entity, ClassroomDto.Update dto) {
+    @Transactional(readOnly = true)
+    public ClassroomDto.Result read(Long id) {
+        Classroom entity = repoHelper.findClassroomOrThrow(id);
+        return dtoMapper.asResultDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassroomDto.Result> search(Specification<Classroom> spec, Pageable pageable) {
+        Page<Classroom> entities = classroomRepository.findAll(spec, pageable);
+        return dtoMapper.asResultDto(entities);
+    }
+
+    @Transactional
+    public ClassroomDto.Result update(Long id, ClassroomDto.Update dto) {
+        Classroom entity = repoHelper.findClassroomOrThrow(id);
         if (dto.getName() != null) {
             entity.setName(dto.getName());
         }
-        return classroomRepository.save(entity);
+        return dtoMapper.asResultDto(classroomRepository.save(entity));
     }
 
-    @Override
-    int removeOnDB(Long id) {
+    @Transactional
+    public void delete(Long id) {
         Classroom classroom = repoHelper.findClassroomOrThrow(id);
 
         classroom.getStudents().clear();
@@ -87,7 +97,7 @@ public class ClassroomService extends
             teacherRepository.save(teacher);
         }
 
-        return classroomRepository.removeById(id);
+        classroomRepository.delete(classroom);
     }
 
     @Transactional

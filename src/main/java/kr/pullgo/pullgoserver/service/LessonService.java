@@ -1,54 +1,62 @@
 package kr.pullgo.pullgoserver.service;
 
+import java.util.List;
 import kr.pullgo.pullgoserver.dto.LessonDto;
 import kr.pullgo.pullgoserver.dto.ScheduleDto;
 import kr.pullgo.pullgoserver.dto.mapper.LessonDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Lesson;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
-import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.LessonRepository;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
-import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class LessonService extends
-    BaseCrudService<Lesson, Long, LessonDto.Create, LessonDto.Update, LessonDto.Result> {
+public class LessonService {
 
     private final LessonDtoMapper dtoMapper;
     private final LessonRepository lessonRepository;
-    private final ClassroomRepository classroomRepository;
     private final RepositoryHelper repoHelper;
-    private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public LessonService(LessonDtoMapper dtoMapper,
         LessonRepository lessonRepository,
-        ClassroomRepository classroomRepository,
-        RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper) {
-        super(Lesson.class, dtoMapper, lessonRepository);
+        RepositoryHelper repoHelper) {
         this.dtoMapper = dtoMapper;
         this.lessonRepository = lessonRepository;
-        this.classroomRepository = classroomRepository;
         this.repoHelper = repoHelper;
-        this.errorHelper = errorHelper;
     }
 
-    @Override
-    Lesson createOnDB(LessonDto.Create dto) {
+    @Transactional
+    public LessonDto.Result create(LessonDto.Create dto) {
         Lesson lesson = dtoMapper.asEntity(dto);
 
         Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
         classroom.addLesson(lesson);
 
-        return lessonRepository.save(lesson);
+        return dtoMapper.asResultDto(lessonRepository.save(lesson));
     }
 
-    @Override
-    Lesson updateOnDB(Lesson entity, LessonDto.Update dto) {
+    @Transactional(readOnly = true)
+    public LessonDto.Result read(Long id) {
+        Lesson entity = repoHelper.findLessonOrThrow(id);
+        return dtoMapper.asResultDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LessonDto.Result> search(Specification<Lesson> spec, Pageable pageable) {
+        Page<Lesson> entities = lessonRepository.findAll(spec, pageable);
+        return dtoMapper.asResultDto(entities);
+    }
+
+    @Transactional
+    public LessonDto.Result update(Long id, LessonDto.Update dto) {
+        Lesson entity = repoHelper.findLessonOrThrow(id);
         ScheduleDto.Update dtoSchedule = dto.getSchedule();
         Schedule entitySchedule = entity.getSchedule();
         if (dto.getName() != null) {
@@ -65,11 +73,12 @@ public class LessonService extends
                 entitySchedule.setEndTime(dtoSchedule.getEndTime());
             }
         }
-        return lessonRepository.save(entity);
+        return dtoMapper.asResultDto(lessonRepository.save(entity));
     }
 
-    @Override
-    int removeOnDB(Long id) {
-        return lessonRepository.removeById(id);
+    @Transactional
+    public void delete(Long id) {
+        Lesson entity = repoHelper.findLessonOrThrow(id);
+        lessonRepository.delete(entity);
     }
 }

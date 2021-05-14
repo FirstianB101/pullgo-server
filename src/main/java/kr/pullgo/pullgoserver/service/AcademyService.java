@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.service;
 
+import java.util.List;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.mapper.AcademyDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
@@ -13,12 +14,14 @@ import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class AcademyService extends
-    BaseCrudService<Academy, Long, AcademyDto.Create, AcademyDto.Update, AcademyDto.Result> {
+public class AcademyService {
 
     private final AcademyDtoMapper dtoMapper;
     private final AcademyRepository academyRepository;
@@ -34,7 +37,6 @@ public class AcademyService extends
         StudentRepository studentRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper) {
-        super(Academy.class, dtoMapper, academyRepository);
         this.dtoMapper = dtoMapper;
         this.academyRepository = academyRepository;
         this.teacherRepository = teacherRepository;
@@ -43,19 +45,32 @@ public class AcademyService extends
         this.errorHelper = errorHelper;
     }
 
-    @Override
-    Academy createOnDB(AcademyDto.Create dto) {
+    @Transactional
+    public AcademyDto.Result create(AcademyDto.Create dto) {
         Academy academy = dtoMapper.asEntity(dto);
 
         Teacher owner = repoHelper.findTeacherOrThrow(dto.getOwnerId());
         academy.addTeacher(owner);
         academy.setOwner(owner);
 
-        return academyRepository.save(academy);
+        return dtoMapper.asResultDto(academyRepository.save(academy));
     }
 
-    @Override
-    Academy updateOnDB(Academy entity, AcademyDto.Update dto) {
+    @Transactional(readOnly = true)
+    public AcademyDto.Result read(Long id) {
+        Academy entity = repoHelper.findAcademyOrThrow(id);
+        return dtoMapper.asResultDto(entity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AcademyDto.Result> search(Specification<Academy> spec, Pageable pageable) {
+        Page<Academy> entities = academyRepository.findAll(spec, pageable);
+        return dtoMapper.asResultDto(entities);
+    }
+
+    @Transactional
+    public AcademyDto.Result update(Long id, AcademyDto.Update dto) {
+        Academy entity = repoHelper.findAcademyOrThrow(id);
         if (dto.getName() != null) {
             entity.setName(dto.getName());
         }
@@ -74,11 +89,11 @@ public class AcademyService extends
                 throw errorHelper.badRequest("Not enrolled teacher couldn't be an owner");
             }
         }
-        return academyRepository.save(entity);
+        return dtoMapper.asResultDto(academyRepository.save(entity));
     }
 
-    @Override
-    int removeOnDB(Long id) {
+    @Transactional
+    public void delete(Long id) {
         Academy academy = repoHelper.findAcademyOrThrow(id);
 
         academy.getStudents().clear();
@@ -94,7 +109,7 @@ public class AcademyService extends
             teacherRepository.save(teacher);
         }
 
-        return academyRepository.removeById(id);
+        academyRepository.delete(academy);
     }
 
     @Transactional
