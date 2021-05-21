@@ -2,6 +2,8 @@
 
 소규모 학원들을 위한 수업 관리와 시험 응시 플랫폼 'pullgo'의 백엔드 서버 프로젝트입니다.
 
+![pullgo 중간 시연](https://user-images.githubusercontent.com/19205735/119125146-6ba2d580-ba6c-11eb-9683-6886b9cd833f.gif)
+
 ## Project pullgo
 
 프로젝트 'pullgo'는 자체적인 홈페이지를 갖지 않는 소규모 학원들을 위한 플랫폼 서비스입니다.
