@@ -20,3 +20,8 @@ spring:
 logging:
   level:
     org.hibernate.type.descriptor.sql.BasicBinder: trace
+auth:
+  jwt:
+    key:
+      secret-string: Z1VrWHAyczV2OHkvQj9FKEgrTWJRZVNoVm1ZcTN0Nnc=
+    expiration-interval: 604800   # a week
