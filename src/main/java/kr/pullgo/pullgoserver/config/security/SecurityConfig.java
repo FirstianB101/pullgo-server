@@ -1,4 +1,4 @@
-package kr.pullgo.pullgoserver.config;
+package kr.pullgo.pullgoserver.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
