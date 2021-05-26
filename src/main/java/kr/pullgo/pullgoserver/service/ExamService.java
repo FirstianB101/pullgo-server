@@ -7,12 +7,14 @@ import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
+import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,23 +25,27 @@ public class ExamService {
     private final ExamRepository examRepository;
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
+    private final ExamAuthorizer examAuthorizer;
 
     @Autowired
     public ExamService(ExamDtoMapper dtoMapper,
         ExamRepository examRepository,
         RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper) {
+        ServiceErrorHelper errorHelper,
+        ExamAuthorizer examAuthorizer) {
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
+        this.examAuthorizer = examAuthorizer;
     }
 
     @Transactional
-    public ExamDto.Result create(ExamDto.Create dto) {
+    public ExamDto.Result create(ExamDto.Create dto, Authentication authentication) {
         Exam exam = dtoMapper.asEntity(dto);
 
         Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
+        examAuthorizer.requireByOneself(authentication, creator);
         exam.setCreator(creator);
 
         Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
@@ -61,8 +67,10 @@ public class ExamService {
     }
 
     @Transactional
-    public ExamDto.Result update(Long id, ExamDto.Update dto) {
+    public ExamDto.Result update(Long id, ExamDto.Update dto, Authentication authentication) {
         Exam entity = repoHelper.findExamOrThrow(id);
+        examAuthorizer.requireCreator(authentication, entity);
+
         if (dto.getName() != null) {
             entity.setName(dto.getName());
         }
@@ -82,21 +90,25 @@ public class ExamService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Authentication authentication) {
         Exam entity = repoHelper.findExamOrThrow(id);
+        examAuthorizer.requireCreator(authentication, entity);
+
         examRepository.delete(entity);
     }
 
     @Transactional
-    public void cancelExam(Long id) {
+    public void cancelExam(Long id, Authentication authentication) {
         Exam exam = getOnGoingExam(id);
+        examAuthorizer.requireCreator(authentication, exam);
 
         exam.setCancelled(true);
     }
 
     @Transactional
-    public void finishExam(Long id) {
+    public void finishExam(Long id, Authentication authentication) {
         Exam exam = getOnGoingExam(id);
+        examAuthorizer.requireCreator(authentication, exam);
 
         exam.setFinished(true);
     }

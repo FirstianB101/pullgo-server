@@ -19,4 +19,7 @@ public class ServiceErrorHelper {
         return new ResponseStatusException(HttpStatus.UNAUTHORIZED, reason);
     }
 
+    public ResponseStatusException forbidden(String reason) {
+        return new ResponseStatusException(HttpStatus.FORBIDDEN, reason);
+    }
 }

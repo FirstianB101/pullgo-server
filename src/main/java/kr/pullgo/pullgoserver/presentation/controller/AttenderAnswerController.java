@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,8 +34,9 @@ public class AttenderAnswerController {
 
     @PostMapping("/exam/attender-state/answers")
     @ResponseStatus(HttpStatus.CREATED)
-    public AttenderAnswerDto.Result post(@Valid @RequestBody AttenderAnswerDto.Create dto) {
-        return attenderAnswerService.create(dto);
+    public AttenderAnswerDto.Result post(@Valid @RequestBody AttenderAnswerDto.Create dto,
+        Authentication authentication) {
+        return attenderAnswerService.create(dto, authentication);
     }
 
     @GetMapping("/exam/attender-state/answers")
@@ -57,14 +59,14 @@ public class AttenderAnswerController {
 
     @DeleteMapping("/exam/attender-state/answers/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        attenderAnswerService.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        attenderAnswerService.delete(id, authentication);
     }
 
     @PatchMapping("/exam/attender-state/answers/{id}")
     public AttenderAnswerDto.Result patch(@PathVariable Long id,
-        @Valid @RequestBody AttenderAnswerDto.Update dto) {
-        return attenderAnswerService.update(id, dto);
+        @Valid @RequestBody AttenderAnswerDto.Update dto, Authentication authentication) {
+        return attenderAnswerService.update(id, dto, authentication);
     }
 
 }

@@ -12,12 +12,14 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.service.authorizer.ClassroomAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class ClassroomService {
     private final StudentRepository studentRepository;
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
+    private final ClassroomAuthorizer classroomAuthorizer;
 
     @Autowired
     public ClassroomService(ClassroomDtoMapper dtoMapper,
@@ -37,23 +40,27 @@ public class ClassroomService {
         TeacherRepository teacherRepository,
         StudentRepository studentRepository,
         RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper) {
+        ServiceErrorHelper errorHelper,
+        ClassroomAuthorizer classroomAuthorizer) {
         this.dtoMapper = dtoMapper;
         this.classroomRepository = classroomRepository;
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
+        this.classroomAuthorizer = classroomAuthorizer;
     }
 
     @Transactional
-    public ClassroomDto.Result create(ClassroomDto.Create dto) {
+    public ClassroomDto.Result create(ClassroomDto.Create dto, Authentication authentication) {
         Classroom classroom = dtoMapper.asEntity(dto);
 
         Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
+        classroomAuthorizer.requireMemberTeacher(authentication, classroom);
         academy.addClassroom(classroom);
 
         Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
+        classroomAuthorizer.requireByOneself(authentication, creator);
         classroom.addTeacher(creator);
 
         return dtoMapper.asResultDto(classroomRepository.save(classroom));
@@ -72,8 +79,11 @@ public class ClassroomService {
     }
 
     @Transactional
-    public ClassroomDto.Result update(Long id, ClassroomDto.Update dto) {
+    public ClassroomDto.Result update(Long id, ClassroomDto.Update dto,
+        Authentication authentication) {
         Classroom entity = repoHelper.findClassroomOrThrow(id);
+        classroomAuthorizer.requireMemberTeacher(authentication, entity);
+
         if (dto.getName() != null) {
             entity.setName(dto.getName());
         }
@@ -81,8 +91,9 @@ public class ClassroomService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Authentication authentication) {
         Classroom classroom = repoHelper.findClassroomOrThrow(id);
+        classroomAuthorizer.requireMemberTeacher(authentication, classroom);
 
         classroom.getStudents().clear();
         classroom.getTeachers().clear();
@@ -101,8 +112,11 @@ public class ClassroomService {
     }
 
     @Transactional
-    public void acceptTeacher(Long classroomId, ClassroomDto.AcceptTeacher dto) {
+    public void acceptTeacher(Long classroomId, ClassroomDto.AcceptTeacher dto,
+        Authentication authentication) {
         Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        classroomAuthorizer.requireMemberTeacher(authentication, classroom);
+
         Teacher teacher = repoHelper.findTeacherOrThrow(dto.getTeacherId());
 
         try {
@@ -113,8 +127,11 @@ public class ClassroomService {
     }
 
     @Transactional
-    public void kickTeacher(Long classroomId, ClassroomDto.KickTeacher dto) {
+    public void kickTeacher(Long classroomId, ClassroomDto.KickTeacher dto,
+        Authentication authentication) {
         Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        classroomAuthorizer.requireMemberTeacher(authentication, classroom);
+
         Teacher teacher = repoHelper.findTeacherOrThrow(dto.getTeacherId());
 
         try {
@@ -125,8 +142,11 @@ public class ClassroomService {
     }
 
     @Transactional
-    public void acceptStudent(Long classroomId, ClassroomDto.AcceptStudent dto) {
+    public void acceptStudent(Long classroomId, ClassroomDto.AcceptStudent dto,
+        Authentication authentication) {
         Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        classroomAuthorizer.requireMemberTeacher(authentication, classroom);
+
         Student student = repoHelper.findStudentOrThrow(dto.getStudentId());
 
         try {
@@ -137,8 +157,11 @@ public class ClassroomService {
     }
 
     @Transactional
-    public void kickStudent(Long classroomId, ClassroomDto.KickStudent dto) {
+    public void kickStudent(Long classroomId, ClassroomDto.KickStudent dto,
+        Authentication authentication) {
         Classroom classroom = repoHelper.findClassroomOrThrow(classroomId);
+        classroomAuthorizer.requireMemberTeacher(authentication, classroom);
+
         Student student = repoHelper.findStudentOrThrow(dto.getStudentId());
 
         try {

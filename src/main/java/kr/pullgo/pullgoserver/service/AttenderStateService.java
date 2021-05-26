@@ -9,12 +9,14 @@ import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
+import kr.pullgo.pullgoserver.service.authorizer.AttenderStateAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,24 +27,31 @@ public class AttenderStateService {
     private final AttenderStateRepository attenderStateRepository;
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
+    private final AttenderStateAuthorizer attenderStateAuthorizer;
 
     @Autowired
     public AttenderStateService(AttenderStateDtoMapper dtoMapper,
         AttenderStateRepository attenderStateRepository,
         RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper) {
+        ServiceErrorHelper errorHelper,
+        AttenderStateAuthorizer attenderStateAuthorizer) {
         this.dtoMapper = dtoMapper;
         this.attenderStateRepository = attenderStateRepository;
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
+        this.attenderStateAuthorizer = attenderStateAuthorizer;
     }
 
     @Transactional
-    public AttenderStateDto.Result create(AttenderStateDto.Create dto) {
-        AttenderState attenderState = AttenderState.builder().examStartTime(LocalDateTime.now())
+    public AttenderStateDto.Result create(AttenderStateDto.Create dto,
+        Authentication authentication) {
+        AttenderState attenderState = AttenderState.builder()
+            .examStartTime(LocalDateTime.now())
             .build();
 
         Student dtoAttender = repoHelper.findStudentOrThrow(dto.getAttenderId());
+        attenderStateAuthorizer.requireByOneself(authentication, dtoAttender);
+
         attenderState.setAttender(dtoAttender);
 
         Exam dtoExam = repoHelper.findExamOrThrow(dto.getExamId());
@@ -65,8 +74,11 @@ public class AttenderStateService {
     }
 
     @Transactional
-    public AttenderStateDto.Result update(Long id, AttenderStateDto.Update dto) {
+    public AttenderStateDto.Result update(Long id, AttenderStateDto.Update dto,
+        Authentication authentication) {
         AttenderState entity = repoHelper.findAttenderStateOrThrow(id);
+        attenderStateAuthorizer.requireOwningAttender(authentication, entity);
+
         if (dto.getProgress() != null) {
             entity.setProgress(dto.getProgress());
         }
@@ -77,14 +89,18 @@ public class AttenderStateService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Authentication authentication) {
         AttenderState entity = repoHelper.findAttenderStateOrThrow(id);
+        attenderStateAuthorizer.requireOwningAttender(authentication, entity);
+
         attenderStateRepository.delete(entity);
     }
 
     @Transactional
-    public void submit(Long id) {
+    public void submit(Long id, Authentication authentication) {
         AttenderState attenderState = repoHelper.findAttenderStateOrThrow(id);
+        attenderStateAuthorizer.requireOwningAttender(authentication, attenderState);
+
         Exam exam = attenderState.getExam();
         AttendingProgress presentAttendingProgress = attenderState.getProgress();
 

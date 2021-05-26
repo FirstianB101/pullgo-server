@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,8 +33,9 @@ public class QuestionController {
 
     @PostMapping("/exam/questions")
     @ResponseStatus(HttpStatus.CREATED)
-    public QuestionDto.Result post(@Valid @RequestBody QuestionDto.Create dto) {
-        return questionService.create(dto);
+    public QuestionDto.Result post(@Valid @RequestBody QuestionDto.Create dto,
+        Authentication authentication) {
+        return questionService.create(dto, authentication);
     }
 
     @GetMapping("/exam/questions")
@@ -56,14 +58,14 @@ public class QuestionController {
 
     @DeleteMapping("/exam/questions/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        questionService.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        questionService.delete(id, authentication);
     }
 
     @PatchMapping("/exam/questions/{id}")
     public QuestionDto.Result patch(@PathVariable Long id,
-        @Valid @RequestBody QuestionDto.Update dto) {
-        return questionService.update(id, dto);
+        @Valid @RequestBody QuestionDto.Update dto, Authentication authentication) {
+        return questionService.update(id, dto, authentication);
     }
 
 }
