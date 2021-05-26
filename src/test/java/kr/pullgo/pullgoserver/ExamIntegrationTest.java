@@ -13,6 +13,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.requestF
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -49,6 +50,7 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -102,6 +104,7 @@ public class ExamIntegrationTest {
         H2DbCleaner.clean(dataSource);
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
             .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
     }
@@ -361,6 +364,7 @@ public class ExamIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ADMIN")
     void postExam() throws Exception {
         // Given
         Struct given = trxHelper.doInTransaction(() -> {
@@ -421,6 +425,7 @@ public class ExamIntegrationTest {
     class PatchExam {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchExam() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
@@ -470,6 +475,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchExam_ExamNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(anExamUpdateDto());
@@ -489,6 +495,7 @@ public class ExamIntegrationTest {
     class DeleteExam {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteExam() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
@@ -512,6 +519,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteExam_ExamNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/exams/{id}", 0));
@@ -527,6 +535,7 @@ public class ExamIntegrationTest {
     class CancelExam {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void cancelExam() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
@@ -555,6 +564,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void cancelExam_ExamNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(post("/exams/{id}/cancel", 0));
@@ -565,6 +575,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void cancelExam_ExamAlreadyFinished_BadRequestStatus() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
@@ -581,6 +592,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void cancelExam_ExamAlreadyCancelled_BadRequestStatus() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
@@ -601,6 +613,7 @@ public class ExamIntegrationTest {
     class FinishExam {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void finishExam() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
@@ -629,6 +642,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void finishExam_ExamNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(post("/exams/{id}/finish", 0));
@@ -639,6 +653,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void finishExam_ExamAlreadyCancelled_BadRequestStatus() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {
@@ -655,6 +670,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void finishExam_ExamAlreadyFinished_BadRequestStatus() throws Exception {
             // Given
             Long examId = trxHelper.doInTransaction(() -> {

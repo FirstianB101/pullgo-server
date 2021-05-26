@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -35,18 +36,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
 public class AttenderAnswerIntegrationTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
@@ -65,8 +65,12 @@ public class AttenderAnswerIntegrationTest {
     private EntityHelper entityHelper;
 
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext) throws SQLException {
         H2DbCleaner.clean(dataSource);
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
+            .build();
     }
 
     @Nested
@@ -216,6 +220,7 @@ public class AttenderAnswerIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ADMIN")
     void postAttenderAnswer() throws Exception {
         // Given
         Struct given = trxHelper.doInTransaction(() -> {
@@ -256,6 +261,7 @@ public class AttenderAnswerIntegrationTest {
     class PatchAttenderAnswer {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchAttenderAnswer() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -296,6 +302,7 @@ public class AttenderAnswerIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchAttenderAnswer_AttenderAnswerNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(anAttenderAnswerUpdateDto());
@@ -315,6 +322,7 @@ public class AttenderAnswerIntegrationTest {
     class DeleteAttenderAnswer {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteAttenderAnswer() throws Exception {
             // Given
             Long attenderAnswerId = trxHelper.doInTransaction(() -> {
@@ -335,6 +343,7 @@ public class AttenderAnswerIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteAttenderAnswer_AttenderAnswerNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/exam/attender-state/answers/{id}", 0));

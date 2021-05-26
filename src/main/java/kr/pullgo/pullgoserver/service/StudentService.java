@@ -12,12 +12,14 @@ import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
+import kr.pullgo.pullgoserver.service.authorizer.StudentAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ public class StudentService {
     private final ClassroomRepository classroomRepository;
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
+    private final StudentAuthorizer studentAuthorizer;
 
     @Autowired
     public StudentService(StudentDtoMapper dtoMapper,
@@ -39,7 +42,8 @@ public class StudentService {
         AcademyRepository academyRepository,
         ClassroomRepository classroomRepository,
         RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper) {
+        ServiceErrorHelper errorHelper,
+        StudentAuthorizer studentAuthorizer) {
         this.dtoMapper = dtoMapper;
         this.accountService = accountService;
         this.studentRepository = studentRepository;
@@ -47,6 +51,7 @@ public class StudentService {
         this.classroomRepository = classroomRepository;
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
+        this.studentAuthorizer = studentAuthorizer;
     }
 
     @Transactional
@@ -71,8 +76,10 @@ public class StudentService {
     }
 
     @Transactional
-    public StudentDto.Result update(Long id, StudentDto.Update dto) {
+    public StudentDto.Result update(Long id, StudentDto.Update dto, Authentication authentication) {
         Student entity = repoHelper.findStudentOrThrow(id);
+
+        studentAuthorizer.requireByOneself(authentication, entity);
 
         if (dto.getParentPhone() != null) {
             entity.setParentPhone(dto.getParentPhone());
@@ -91,8 +98,9 @@ public class StudentService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Authentication authentication) {
         Student student = repoHelper.findStudentOrThrow(id);
+        studentAuthorizer.requireByOneself(authentication, student);
 
         student.getAppliedAcademies().clear();
         student.getAppliedClassrooms().clear();
@@ -111,8 +119,12 @@ public class StudentService {
     }
 
     @Transactional
-    public void applyAcademy(Long studentId, StudentDto.ApplyAcademy dto) {
+    public void applyAcademy(Long studentId, StudentDto.ApplyAcademy dto,
+        Authentication authentication) {
         Student student = repoHelper.findStudentOrThrow(studentId);
+
+        studentAuthorizer.requireByOneself(authentication, student);
+
         Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
 
         try {
@@ -123,9 +135,12 @@ public class StudentService {
     }
 
     @Transactional
-    public void removeAppliedAcademy(Long studentId, StudentDto.RemoveAppliedAcademy dto) {
+    public void removeAppliedAcademy(Long studentId, StudentDto.RemoveAppliedAcademy dto,
+        Authentication authentication) {
         Student student = repoHelper.findStudentOrThrow(studentId);
         Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
+
+        studentAuthorizer.requireByOneselfOrMemberTeacher(authentication, student, academy);
 
         try {
             student.removeAppliedAcademy(academy);
@@ -135,8 +150,12 @@ public class StudentService {
     }
 
     @Transactional
-    public void applyClassroom(Long studentId, StudentDto.ApplyClassroom dto) {
+    public void applyClassroom(Long studentId, StudentDto.ApplyClassroom dto,
+        Authentication authentication) {
         Student student = repoHelper.findStudentOrThrow(studentId);
+
+        studentAuthorizer.requireByOneself(authentication, student);
+
         Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
 
         try {
@@ -147,9 +166,12 @@ public class StudentService {
     }
 
     @Transactional
-    public void removeAppliedClassroom(Long studentId, StudentDto.RemoveAppliedClassroom dto) {
+    public void removeAppliedClassroom(Long studentId, StudentDto.RemoveAppliedClassroom dto,
+        Authentication authentication) {
         Student student = repoHelper.findStudentOrThrow(studentId);
         Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
+
+        studentAuthorizer.requireByOneselfOrMemberTeacher(authentication, student, classroom);
 
         try {
             student.removeAppliedClassroom(classroom);

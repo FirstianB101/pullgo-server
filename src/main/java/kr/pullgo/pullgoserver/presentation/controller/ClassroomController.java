@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -70,48 +71,49 @@ public class ClassroomController {
 
     @PostMapping("/academy/classrooms")
     @ResponseStatus(HttpStatus.CREATED)
-    public ClassroomDto.Result post(@Valid @RequestBody ClassroomDto.Create dto) {
-        return classroomService.create(dto);
+    public ClassroomDto.Result post(@Valid @RequestBody ClassroomDto.Create dto,
+        Authentication authentication) {
+        return classroomService.create(dto, authentication);
     }
 
     @PatchMapping("/academy/classrooms/{id}")
     public ClassroomDto.Result patch(@PathVariable Long id,
-        @Valid @RequestBody ClassroomDto.Update dto) {
-        return classroomService.update(id, dto);
+        @Valid @RequestBody ClassroomDto.Update dto, Authentication authentication) {
+        return classroomService.update(id, dto, authentication);
     }
 
     @DeleteMapping("/academy/classrooms/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        classroomService.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        classroomService.delete(id, authentication);
     }
 
     @PostMapping("/academy/classrooms/{id}/accept-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void acceptTeacher(@PathVariable Long id,
-        @Valid @RequestBody ClassroomDto.AcceptTeacher dto) {
-        classroomService.acceptTeacher(id, dto);
+        @Valid @RequestBody ClassroomDto.AcceptTeacher dto, Authentication authentication) {
+        classroomService.acceptTeacher(id, dto, authentication);
     }
 
     @PostMapping("/academy/classrooms/{id}/kick-teacher")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void kickTeacher(@PathVariable Long id,
-        @Valid @RequestBody ClassroomDto.KickTeacher dto) {
-        classroomService.kickTeacher(id, dto);
+        @Valid @RequestBody ClassroomDto.KickTeacher dto, Authentication authentication) {
+        classroomService.kickTeacher(id, dto, authentication);
     }
 
 
     @PostMapping("/academy/classrooms/{id}/accept-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void acceptStudent(@PathVariable Long id,
-        @Valid @RequestBody ClassroomDto.AcceptStudent dto) {
-        classroomService.acceptStudent(id, dto);
+        @Valid @RequestBody ClassroomDto.AcceptStudent dto, Authentication authentication) {
+        classroomService.acceptStudent(id, dto, authentication);
     }
 
     @PostMapping("/academy/classrooms/{id}/kick-student")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void kickStudent(@PathVariable Long id,
-        @Valid @RequestBody ClassroomDto.KickStudent dto) {
-        classroomService.kickStudent(id, dto);
+        @Valid @RequestBody ClassroomDto.KickStudent dto, Authentication authentication) {
+        classroomService.kickStudent(id, dto, authentication);
     }
 }

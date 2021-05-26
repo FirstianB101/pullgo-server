@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,8 +34,9 @@ public class AttenderStateController {
 
     @PostMapping("/exam/attender-states")
     @ResponseStatus(HttpStatus.CREATED)
-    public AttenderStateDto.Result post(@Valid @RequestBody AttenderStateDto.Create dto) {
-        return attenderStateService.create(dto);
+    public AttenderStateDto.Result post(@Valid @RequestBody AttenderStateDto.Create dto,
+        Authentication authentication) {
+        return attenderStateService.create(dto, authentication);
     }
 
     @GetMapping("/exam/attender-states")
@@ -61,19 +63,19 @@ public class AttenderStateController {
 
     @DeleteMapping("/exam/attender-states/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        attenderStateService.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        attenderStateService.delete(id, authentication);
     }
 
     @PatchMapping("/exam/attender-states/{id}")
     public AttenderStateDto.Result patch(@PathVariable Long id,
-        @Valid @RequestBody AttenderStateDto.Update dto) {
-        return attenderStateService.update(id, dto);
+        @Valid @RequestBody AttenderStateDto.Update dto, Authentication authentication) {
+        return attenderStateService.update(id, dto, authentication);
     }
 
     @PostMapping("/exam/attender-states/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void submit(@PathVariable Long id) {
-        attenderStateService.submit(id);
+    public void submit(@PathVariable Long id, Authentication authentication) {
+        attenderStateService.submit(id, authentication);
     }
 }

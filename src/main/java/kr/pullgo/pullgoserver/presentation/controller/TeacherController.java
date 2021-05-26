@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -68,41 +69,41 @@ public class TeacherController {
 
     @DeleteMapping("/teachers/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        teacherService.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        teacherService.delete(id, authentication);
     }
 
     @PatchMapping("/teachers/{id}")
     public TeacherDto.Result patch(@PathVariable Long id,
-        @Valid @RequestBody TeacherDto.Update dto) {
-        return teacherService.update(id, dto);
+        @Valid @RequestBody TeacherDto.Update dto, Authentication authentication) {
+        return teacherService.update(id, dto, authentication);
     }
 
     @PostMapping("/teachers/{id}/apply-academy")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void applyAcademy(@PathVariable Long id,
-        @Valid @RequestBody TeacherDto.ApplyAcademy dto) {
-        teacherService.applyAcademy(id, dto);
+        @Valid @RequestBody TeacherDto.ApplyAcademy dto, Authentication authentication) {
+        teacherService.applyAcademy(id, dto, authentication);
     }
 
     @PostMapping("/teachers/{id}/remove-applied-academy")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAppliedAcademy(@PathVariable Long id,
-        @Valid @RequestBody TeacherDto.RemoveAppliedAcademy dto) {
-        teacherService.removeAppliedAcademy(id, dto);
+        @Valid @RequestBody TeacherDto.RemoveAppliedAcademy dto, Authentication authentication) {
+        teacherService.removeAppliedAcademy(id, dto, authentication);
     }
 
     @PostMapping("/teachers/{id}/apply-classroom")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void applyClassroom(@PathVariable Long id,
-        @Valid @RequestBody TeacherDto.ApplyClassroom dto) {
-        teacherService.applyClassroom(id, dto);
+        @Valid @RequestBody TeacherDto.ApplyClassroom dto, Authentication authentication) {
+        teacherService.applyClassroom(id, dto, authentication);
     }
 
     @PostMapping("/teachers/{id}/remove-applied-classroom")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAppliedClassroom(@PathVariable Long id,
-        @Valid @RequestBody TeacherDto.RemoveAppliedClassroom dto) {
-        teacherService.removeAppliedClassroom(id, dto);
+        @Valid @RequestBody TeacherDto.RemoveAppliedClassroom dto, Authentication authentication) {
+        teacherService.removeAppliedClassroom(id, dto, authentication);
     }
 }
