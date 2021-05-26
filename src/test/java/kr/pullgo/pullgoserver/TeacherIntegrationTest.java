@@ -17,6 +17,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.requestF
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -39,6 +40,7 @@ import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
+import kr.pullgo.pullgoserver.persistence.model.UserRole;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +53,10 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -70,6 +75,8 @@ public class TeacherIntegrationTest {
         fieldWithPath("account.fullName").description("실명");
     private static final FieldDescriptor DOC_FIELD_ACCOUNT_PHONE =
         fieldWithPath("account.phone").description("전화번호");
+    private static final FieldDescriptor DOC_FIELD_ACCOUNT_ROLE =
+        fieldWithPath("account.role").description("시스템 역할 (`USER`, `ADMIN`)");
 
     private MockMvc mockMvc;
 
@@ -94,6 +101,7 @@ public class TeacherIntegrationTest {
         H2DbCleaner.clean(dataSource);
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
             .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
     }
@@ -109,6 +117,7 @@ public class TeacherIntegrationTest {
                     it.withUsername("pte1024")
                         .withFullName("박태언")
                         .withPhone("01012345678")
+                        .withRole(UserRole.USER)
                 );
                 Teacher teacher = entityHelper.generateTeacher(it ->
                     it.withAccount(account)
@@ -135,7 +144,8 @@ public class TeacherIntegrationTest {
                     DOC_FIELD_ID,
                     DOC_FIELD_ACCOUNT_USERNAME,
                     DOC_FIELD_ACCOUNT_FULL_NAME,
-                    DOC_FIELD_ACCOUNT_PHONE
+                    DOC_FIELD_ACCOUNT_PHONE,
+                    DOC_FIELD_ACCOUNT_ROLE
                 )));
         }
 
@@ -396,7 +406,8 @@ public class TeacherIntegrationTest {
     }
 
     @Test
-    void postTeacher() throws Exception {
+    @WithMockUser(authorities = "ADMIN")
+    void postTeacher(@Autowired PasswordEncoder passwordEncoder) throws Exception {
         // When
         TeacherDto.Create dto = TeacherDto.Create.builder()
             .account(AccountDto.Create.builder()
@@ -413,14 +424,24 @@ public class TeacherIntegrationTest {
             .content(body));
 
         // Then
-        actions
+        MvcResult mvcResult = actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.account.id").doesNotExist())
             .andExpect(jsonPath("$.account.username").value("pte1024"))
             .andExpect(jsonPath("$.account.password").doesNotExist())
             .andExpect(jsonPath("$.account.fullName").value("박태언"))
-            .andExpect(jsonPath("$.account.phone").value("01012345678"));
+            .andExpect(jsonPath("$.account.phone").value("01012345678"))
+            .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        TeacherDto.Result resultDto = fromJson(responseBody, TeacherDto.Result.class);
+
+        String encodedPassword = trxHelper.doInTransaction(() -> {
+            Teacher teacher = teacherRepository.findById(resultDto.getId()).orElseThrow();
+            return teacher.getAccount().getPassword();
+        });
+        assertThat(passwordEncoder.matches("this!sPassw0rd", encodedPassword)).isTrue();
 
         // Document
         actions.andDo(document("teacher-create-example",
@@ -436,7 +457,8 @@ public class TeacherIntegrationTest {
     class PatchTeacher {
 
         @Test
-        void patchTeacher() throws Exception {
+        @WithMockUser(authorities = "ADMIN")
+        void patchTeacher(@Autowired PasswordEncoder passwordEncoder) throws Exception {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
                 Account account = entityHelper.generateAccount(it ->
@@ -466,14 +488,24 @@ public class TeacherIntegrationTest {
                 .content(body));
 
             // Then
-            actions
+            MvcResult mvcResult = actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(teacherId))
                 .andExpect(jsonPath("$.account.id").doesNotExist())
                 .andExpect(jsonPath("$.account.username").value("pte1024"))
                 .andExpect(jsonPath("$.account.password").doesNotExist())
                 .andExpect(jsonPath("$.account.fullName").value("박태언"))
-                .andExpect(jsonPath("$.account.phone").value("01012345678"));
+                .andExpect(jsonPath("$.account.phone").value("01012345678"))
+                .andReturn();
+
+            String responseBody = mvcResult.getResponse().getContentAsString();
+            TeacherDto.Result resultDto = fromJson(responseBody, TeacherDto.Result.class);
+
+            String encodedPassword = trxHelper.doInTransaction(() -> {
+                Teacher teacher = teacherRepository.findById(resultDto.getId()).orElseThrow();
+                return teacher.getAccount().getPassword();
+            });
+            assertThat(passwordEncoder.matches("newPassw0rd", encodedPassword)).isTrue();
 
             // Document
             actions.andDo(document("teacher-update-example",
@@ -485,6 +517,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchTeacher_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aTeacherUpdateDto());
@@ -504,6 +537,7 @@ public class TeacherIntegrationTest {
     class DeleteTeacher {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteTeacher() throws Exception {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
@@ -537,6 +571,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteTeacher_TeacherNotFound_NotFound_Status() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/teachers/{id}", 0L));
@@ -552,6 +587,7 @@ public class TeacherIntegrationTest {
     class ApplyAcademy {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -585,6 +621,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aTeacherApplyAcademyDto());
@@ -600,6 +637,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
@@ -621,6 +659,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy_TeacherAlreadyEnrolled_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -655,6 +694,7 @@ public class TeacherIntegrationTest {
     class RemoveAppliedAcademy {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -691,6 +731,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aTeacherRemoveAppliedAcademyDto());
@@ -706,6 +747,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
@@ -727,6 +769,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy_TeacherNotApplied_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -758,6 +801,7 @@ public class TeacherIntegrationTest {
     class ApplyClassroom {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -791,6 +835,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aTeacherApplyClassroomDto());
@@ -806,6 +851,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
@@ -827,6 +873,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom_TeacherAlreadyEnrolled_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -861,6 +908,7 @@ public class TeacherIntegrationTest {
     class RemoveAppliedClassroom {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -898,6 +946,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aTeacherRemoveAppliedClassroomDto());
@@ -913,6 +962,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
             // Given
             Long teacherId = trxHelper.doInTransaction(() -> {
@@ -934,6 +984,7 @@ public class TeacherIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom_TeacherNotApplied_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -964,6 +1015,10 @@ public class TeacherIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
+    }
+
+    private <T> T fromJson(String responseBody, Class<T> clazz) throws JsonProcessingException {
+        return objectMapper.readValue(responseBody, clazz);
     }
 
 }

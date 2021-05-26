@@ -17,6 +17,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.requestF
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -39,6 +40,7 @@ import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Student;
+import kr.pullgo.pullgoserver.persistence.model.UserRole;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +53,10 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -76,6 +81,8 @@ public class StudentIntegrationTest {
         fieldWithPath("account.fullName").description("실명");
     private static final FieldDescriptor DOC_FIELD_ACCOUNT_PHONE =
         fieldWithPath("account.phone").description("전화번호");
+    private static final FieldDescriptor DOC_FIELD_ACCOUNT_ROLE =
+        fieldWithPath("account.role").description("시스템 역할 (`USER`, `ADMIN`)");
 
     private MockMvc mockMvc;
 
@@ -100,6 +107,7 @@ public class StudentIntegrationTest {
         H2DbCleaner.clean(dataSource);
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
             .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
     }
@@ -115,6 +123,7 @@ public class StudentIntegrationTest {
                     it.withUsername("woodyn1002")
                         .withFullName("최우진")
                         .withPhone("01012345678")
+                        .withRole(UserRole.USER)
                 );
                 Student student = entityHelper.generateStudent(it ->
                     it.withAccount(account)
@@ -150,7 +159,8 @@ public class StudentIntegrationTest {
                     DOC_FIELD_SCHOOL_YEAR,
                     DOC_FIELD_ACCOUNT_USERNAME,
                     DOC_FIELD_ACCOUNT_FULL_NAME,
-                    DOC_FIELD_ACCOUNT_PHONE
+                    DOC_FIELD_ACCOUNT_PHONE,
+                    DOC_FIELD_ACCOUNT_ROLE
                 )));
         }
 
@@ -407,7 +417,8 @@ public class StudentIntegrationTest {
     }
 
     @Test
-    void postStudent() throws Exception {
+    @WithMockUser(authorities = "ADMIN")
+    void postStudent(@Autowired PasswordEncoder passwordEncoder) throws Exception {
         // When
         StudentDto.Create dto = StudentDto.Create.builder()
             .parentPhone("01098765432")
@@ -427,7 +438,7 @@ public class StudentIntegrationTest {
             .content(body));
 
         // Then
-        actions
+        MvcResult mvcResult = actions
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.parentPhone").value("01098765432"))
@@ -437,7 +448,17 @@ public class StudentIntegrationTest {
             .andExpect(jsonPath("$.account.username").value("woodyn1002"))
             .andExpect(jsonPath("$.account.password").doesNotExist())
             .andExpect(jsonPath("$.account.fullName").value("최우진"))
-            .andExpect(jsonPath("$.account.phone").value("01012345678"));
+            .andExpect(jsonPath("$.account.phone").value("01012345678"))
+            .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        StudentDto.Result resultDto = fromJson(responseBody, StudentDto.Result.class);
+
+        String encodedPassword = trxHelper.doInTransaction(() -> {
+            Student student = studentRepository.findById(resultDto.getId()).orElseThrow();
+            return student.getAccount().getPassword();
+        });
+        assertThat(passwordEncoder.matches("this!sPassw0rd", encodedPassword)).isTrue();
 
         // Document
         actions.andDo(document("student-create-example",
@@ -456,7 +477,8 @@ public class StudentIntegrationTest {
     class PatchStudent {
 
         @Test
-        void patchStudent() throws Exception {
+        @WithMockUser(authorities = "ADMIN")
+        void patchStudent(@Autowired PasswordEncoder passwordEncoder) throws Exception {
             // Given
             Long studentId = trxHelper.doInTransaction(() -> {
                 Account account = entityHelper.generateAccount(it ->
@@ -492,7 +514,7 @@ public class StudentIntegrationTest {
                 .content(body));
 
             // Then
-            actions
+            MvcResult mvcResult = actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(studentId))
                 .andExpect(jsonPath("$.parentPhone").value("01098765432"))
@@ -502,7 +524,17 @@ public class StudentIntegrationTest {
                 .andExpect(jsonPath("$.account.username").value("woodyn1002"))
                 .andExpect(jsonPath("$.account.password").doesNotExist())
                 .andExpect(jsonPath("$.account.fullName").value("최우진"))
-                .andExpect(jsonPath("$.account.phone").value("01012345678"));
+                .andExpect(jsonPath("$.account.phone").value("01012345678"))
+                .andReturn();
+
+            String responseBody = mvcResult.getResponse().getContentAsString();
+            StudentDto.Result resultDto = fromJson(responseBody, StudentDto.Result.class);
+
+            String encodedPassword = trxHelper.doInTransaction(() -> {
+                Student student = studentRepository.findById(resultDto.getId()).orElseThrow();
+                return student.getAccount().getPassword();
+            });
+            assertThat(passwordEncoder.matches("newPassw0rd", encodedPassword)).isTrue();
 
             // Document
             actions.andDo(document("student-update-example",
@@ -517,6 +549,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchStudent_StudentNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aStudentUpdateDto());
@@ -536,6 +569,7 @@ public class StudentIntegrationTest {
     class DeleteStudent {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteStudent() throws Exception {
             // Given
             Long studentId = trxHelper.doInTransaction(() -> {
@@ -569,6 +603,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteStudent_StudentNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/students/{id}", 0L));
@@ -584,6 +619,7 @@ public class StudentIntegrationTest {
     class ApplyAcademy {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -617,6 +653,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy_StudentNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aStudentApplyAcademyDto());
@@ -632,6 +669,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
             // Given
             Long studentId = trxHelper.doInTransaction(() -> {
@@ -653,6 +691,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyAcademy_StudentAlreadyEnrolled_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -687,6 +726,7 @@ public class StudentIntegrationTest {
     class RemoveAppliedAcademy {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -723,6 +763,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy_StudentNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aStudentRemoveAppliedAcademyDto());
@@ -738,6 +779,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy_AcademyNotFound_NotFoundStatus() throws Exception {
             // Given
             Long studentId = trxHelper.doInTransaction(() -> {
@@ -759,6 +801,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedAcademy_StudentNotApplied_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -790,6 +833,7 @@ public class StudentIntegrationTest {
     class ApplyClassroom {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -823,6 +867,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom_StudentNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aStudentApplyClassroomDto());
@@ -838,6 +883,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
             // Given
             Long studentId = trxHelper.doInTransaction(() -> {
@@ -859,6 +905,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void applyClassroom_StudentAlreadyEnrolled_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -893,6 +940,7 @@ public class StudentIntegrationTest {
     class RemoveAppliedClassroom {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -930,6 +978,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom_StudentNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aStudentRemoveAppliedClassroomDto());
@@ -945,6 +994,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
             // Given
             Long studentId = trxHelper.doInTransaction(() -> {
@@ -966,6 +1016,7 @@ public class StudentIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void removeAppliedClassroom_StudentNotApplied_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -996,6 +1047,10 @@ public class StudentIntegrationTest {
 
     private String toJson(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);
+    }
+
+    private <T> T fromJson(String responseBody, Class<T> clazz) throws JsonProcessingException {
+        return objectMapper.readValue(responseBody, clazz);
     }
 
 }

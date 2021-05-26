@@ -15,4 +15,11 @@ public class ServiceErrorHelper {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, reason);
     }
 
+    public ResponseStatusException unauthorized(String reason) {
+        return new ResponseStatusException(HttpStatus.UNAUTHORIZED, reason);
+    }
+
+    public ResponseStatusException forbidden(String reason) {
+        return new ResponseStatusException(HttpStatus.FORBIDDEN, reason);
+    }
 }

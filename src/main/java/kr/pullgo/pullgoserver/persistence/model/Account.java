@@ -2,6 +2,8 @@ package kr.pullgo.pullgoserver.persistence.model;
 
 import com.sun.istack.NotNull;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -39,11 +41,16 @@ public class Account extends TimeEntity {
     @NotNull
     private String phone;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
+
     @Builder
-    public Account(String username, String password, String fullName, String phone) {
+    public Account(String username, String password, String fullName, String phone, UserRole role) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
         this.phone = phone;
+        this.role = role;
     }
 }

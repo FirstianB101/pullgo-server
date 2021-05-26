@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.helper;
 
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.persistence.model.Account;
+import kr.pullgo.pullgoserver.persistence.model.UserRole;
 
 public class AccountHelper {
 
@@ -16,6 +17,7 @@ public class AccountHelper {
             .password(ARBITRARY_PASSWORD)
             .fullName(ARBITRARY_FULL_NAME)
             .phone(ARBITRARY_PHONE)
+            .role(UserRole.USER)
             .build();
         account.setId(0L);
         return account;
@@ -43,6 +45,7 @@ public class AccountHelper {
             .username(ARBITRARY_USERNAME)
             .fullName(ARBITRARY_FULL_NAME)
             .phone(ARBITRARY_PHONE)
+            .role(UserRole.USER)
             .build();
     }
 

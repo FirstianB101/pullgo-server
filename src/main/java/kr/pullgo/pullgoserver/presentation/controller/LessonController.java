@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -34,8 +35,9 @@ public class LessonController {
 
     @PostMapping("/academy/classroom/lessons")
     @ResponseStatus(HttpStatus.CREATED)
-    public LessonDto.Result post(@Valid @RequestBody LessonDto.Create dto) {
-        return lessonService.create(dto);
+    public LessonDto.Result post(@Valid @RequestBody LessonDto.Create dto,
+        Authentication authentication) {
+        return lessonService.create(dto, authentication);
     }
 
     @GetMapping("/academy/classroom/lessons")
@@ -78,13 +80,14 @@ public class LessonController {
 
     @DeleteMapping("/academy/classroom/lessons/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        lessonService.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        lessonService.delete(id, authentication);
     }
 
     @PatchMapping("/academy/classroom/lessons/{id}")
-    public LessonDto.Result patch(@PathVariable Long id, @Valid @RequestBody LessonDto.Update dto) {
-        return lessonService.update(id, dto);
+    public LessonDto.Result patch(@PathVariable Long id, @Valid @RequestBody LessonDto.Update dto,
+        Authentication authentication) {
+        return lessonService.update(id, dto, authentication);
     }
 
 }

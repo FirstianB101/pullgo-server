@@ -14,11 +14,9 @@ WARNING: 이 API는 아직 구현 중에 있으며 추후에 변경될 수 있�
 ****
 다음 기능은 아직 미구현 상태입니다:
 
-* 회원가입과 로그인 API
+* 휴대폰 인증을 포함한 회원가입 API (현재 휴대폰 인증 없이 회원가입이 가능함)
 * 시험 결과를 응시자 부모의 전화번호로 전송하는 API
 * 사진과 함께 시험 문제를 생성하는 API
-* API 호출 시 사용자 신분과 권한 확인 (지금은 모두 관리자 권한을 가짐)
-* 요청으로 전달한 인자 값 유효성 검증
 ****
 
 [[overview]]
@@ -227,6 +225,36 @@ include::{snippets}/academy-list-with-paging-example/response-body.adoc[]
 
 [[resources]]
 = Resources
+
+[[resources_auth]]
+== Auth 리소스
+
+[[resources_auth_token]]
+=== 액세스 토큰 발급
+
+사용자 이름과 비밀번호를 담은 `POST /auth/token` 요청으로 액세스 토큰(JWT)을 발급합니다.
+
+액세스 토큰은 사용자 이름과 비밀번호를 대신할 인증 수단으로, API 호출 시 요청 헤더에 기입하여 사용합니다.
+
+리소스 조작 등 권한이 필요한 API들을 호출할 때 요청 헤더로 액세스 토큰을 제공해야 합니다.
+헤더 형식은 다음과 같습니다:
+
+ Authorization: Bearer ACCESS_TOKEN_HERE
+
+사용자 인증에 실패하면 `401 Unauthorized`, 리소스에 대한 권한이 없으면 `403 Forbidden` 상태 코드를 반환합니다.
+
+액세스 토큰은 보안을 위해 만료 기한이 존재하며, 만료된 토큰으로 요청하면 `401 Unauthorized` 상태 코드가 반환됩니다.
+따라서 클라이언트 개발자는 토큰 만료 시 사용자에게 로그인 페이지를 안내해야 합니다.
+
+operation::auth-generate-token-example[snippets='request-fields,response-fields,curl-request,http-response']
+
+[[resources_auth_me]]
+=== 사용자 신원 조회
+
+`POST /auth/me` 요청으로 토큰을 소유한 사용자의 신원 정보를 조회합니다.
+요청의 `Authorization` 헤더로 엑세스 토큰이 제공되어야 합니다.
+
+operation::auth-me-example[snippets='response-fields,curl-request,http-response']
 
 [[resources_academy]]
 == Academy 리소스

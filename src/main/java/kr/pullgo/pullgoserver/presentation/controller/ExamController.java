@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,8 +33,9 @@ public class ExamController {
 
     @PostMapping("/exams")
     @ResponseStatus(HttpStatus.CREATED)
-    public ExamDto.Result post(@Valid @RequestBody ExamDto.Create dto) {
-        return examService.create(dto);
+    public ExamDto.Result post(@Valid @RequestBody ExamDto.Create dto,
+        Authentication authentication) {
+        return examService.create(dto, authentication);
     }
 
     @GetMapping("/exams")
@@ -64,24 +66,25 @@ public class ExamController {
 
     @DeleteMapping("/exams/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        examService.delete(id);
+    public void delete(@PathVariable Long id, Authentication authentication) {
+        examService.delete(id, authentication);
     }
 
     @PatchMapping("/exams/{id}")
-    public ExamDto.Result patch(@PathVariable Long id, @Valid @RequestBody ExamDto.Update dto) {
-        return examService.update(id, dto);
+    public ExamDto.Result patch(@PathVariable Long id, @Valid @RequestBody ExamDto.Update dto,
+        Authentication authentication) {
+        return examService.update(id, dto, authentication);
     }
 
     @PostMapping("/exams/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void cancel(@PathVariable Long id) {
-        examService.cancelExam(id);
+    public void cancel(@PathVariable Long id, Authentication authentication) {
+        examService.cancelExam(id, authentication);
     }
 
     @PostMapping("/exams/{id}/finish")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void finish(@PathVariable Long id) {
-        examService.finishExam(id);
+    public void finish(@PathVariable Long id, Authentication authentication) {
+        examService.finishExam(id, authentication);
     }
 }

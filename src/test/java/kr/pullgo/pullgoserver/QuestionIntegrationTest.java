@@ -13,6 +13,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.requestF
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -48,6 +49,7 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -91,6 +93,7 @@ public class QuestionIntegrationTest {
         H2DbCleaner.clean(dataSource);
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
             .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
     }
@@ -257,6 +260,7 @@ public class QuestionIntegrationTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ADMIN")
     void postQuestion() throws Exception {
         // Given
         Long examId = trxHelper.doInTransaction(() -> {
@@ -300,6 +304,7 @@ public class QuestionIntegrationTest {
     class PatchQuestion {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchQuestion() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -347,6 +352,7 @@ public class QuestionIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void patchQuestion_QuestionNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aQuestionUpdateDto());
@@ -366,6 +372,7 @@ public class QuestionIntegrationTest {
     class DeleteQuestion {
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteQuestion() throws Exception {
             // Given
             Long questionId = trxHelper.doInTransaction(() -> {
@@ -389,6 +396,7 @@ public class QuestionIntegrationTest {
         }
 
         @Test
+        @WithMockUser(authorities = "ADMIN")
         void deleteQuestion_QuestionNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/exam/questions/{id}", 0));
