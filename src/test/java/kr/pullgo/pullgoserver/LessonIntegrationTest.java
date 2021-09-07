@@ -68,6 +68,8 @@ public class LessonIntegrationTest {
         fieldWithPath("name").description("수업 이름");
     private static final FieldDescriptor DOC_FIELD_CLASSROOM_ID =
         fieldWithPath("classroomId").description("소속된 반 ID");
+    private static final FieldDescriptor DOC_FIELD_ACADEMY_ID =
+        fieldWithPath("academyId").description("소속된 학원 ID");
     private static final FieldDescriptor DOC_FIELD_SCHEDULE_DATE =
         fieldWithPath("schedule.date").description("수업 날짜");
     private static final FieldDescriptor DOC_FIELD_SCHEDULE_BEGIN_TIME =
@@ -122,10 +124,13 @@ public class LessonIntegrationTest {
 
                 return new Struct()
                     .withValue("lessonId", lesson.getId())
+                    .withValue("academyId", lesson.getClassroom().getAcademy().getId())
                     .withValue("classroomId", lesson.getClassroom().getId());
+
             });
             Long lessonId = given.valueOf("lessonId");
             Long classroomId = given.valueOf("classroomId");
+            Long academyId = given.valueOf("academyId");
 
             // When
             ResultActions actions = mockMvc
@@ -137,6 +142,7 @@ public class LessonIntegrationTest {
                 .andExpect(jsonPath("$.id").value(lessonId))
                 .andExpect(jsonPath("$.name").value("5월 13일 4시 반 수업"))
                 .andExpect(jsonPath("$.classroomId").value(classroomId))
+                .andExpect(jsonPath("$.academyId").value(academyId))
                 .andExpect(jsonPath("$.schedule.id").doesNotExist())
                 .andExpect(jsonPath("$.schedule.date").value("2021-05-13"))
                 .andExpect(jsonPath("$.schedule.beginTime").value("16:30:00"))
@@ -148,6 +154,7 @@ public class LessonIntegrationTest {
                     DOC_FIELD_ID,
                     DOC_FIELD_NAME,
                     DOC_FIELD_CLASSROOM_ID,
+                    DOC_FIELD_ACADEMY_ID,
                     DOC_FIELD_SCHEDULE_DATE,
                     DOC_FIELD_SCHEDULE_BEGIN_TIME,
                     DOC_FIELD_SCHEDULE_END_TIME
