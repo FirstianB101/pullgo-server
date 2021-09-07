@@ -48,5 +48,8 @@ public interface LessonDto {
 
         @NotNull
         private ScheduleDto.Result schedule;
+
+        @NotNull
+        private Long academyId;
     }
 }
