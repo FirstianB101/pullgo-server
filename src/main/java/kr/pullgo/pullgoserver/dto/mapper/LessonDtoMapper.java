@@ -31,6 +31,7 @@ public class LessonDtoMapper implements DtoMapper<Lesson, LessonDto.Create, Less
             .schedule(scheduleDtoMapper.asResultDto(lesson.getSchedule()))
             .name(lesson.getName())
             .classroomId(lesson.getClassroom().getId())
+            .academyId(lesson.getClassroom().getAcademy().getId())
             .build();
     }
 
