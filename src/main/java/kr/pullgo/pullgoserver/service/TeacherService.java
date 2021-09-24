@@ -1,15 +1,19 @@
 package kr.pullgo.pullgoserver.service;
 
 import java.util.List;
+
 import kr.pullgo.pullgoserver.dto.TeacherDto;
+import kr.pullgo.pullgoserver.dto.mapper.AccountDtoMapper;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyEnrolledException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
+import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
+import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.service.authorizer.TeacherAuthorizer;
@@ -37,13 +41,13 @@ public class TeacherService {
 
     @Autowired
     public TeacherService(TeacherDtoMapper dtoMapper,
-        AccountService accountService,
-        TeacherRepository teacherRepository,
-        AcademyRepository academyRepository,
-        ClassroomRepository classroomRepository,
-        RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper,
-        TeacherAuthorizer teacherAuthorizer) {
+                          AccountService accountService,
+                          TeacherRepository teacherRepository,
+                          AcademyRepository academyRepository,
+                          ClassroomRepository classroomRepository,
+                          RepositoryHelper repoHelper,
+                          ServiceErrorHelper errorHelper,
+                          TeacherAuthorizer teacherAuthorizer) {
         this.dtoMapper = dtoMapper;
         this.accountService = accountService;
         this.teacherRepository = teacherRepository;
@@ -56,10 +60,9 @@ public class TeacherService {
 
     @Transactional
     public TeacherDto.Result create(TeacherDto.Create dto) {
-        Teacher teacher = teacherRepository.save(dtoMapper.asEntity(dto));
-
+        Teacher teacher = dtoMapper.asEntity(dto);
         teacher.setAccount(accountService.create(dto.getAccount()));
-
+        teacherRepository.save(teacher);
         return dtoMapper.asResultDto(teacher);
     }
 

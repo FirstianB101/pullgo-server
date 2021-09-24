@@ -56,10 +56,9 @@ public class StudentService {
 
     @Transactional
     public StudentDto.Result create(StudentDto.Create dto) {
-        Student student = studentRepository.save(dtoMapper.asEntity(dto));
-
+        Student student = dtoMapper.asEntity(dto);
         student.setAccount(accountService.create(dto.getAccount()));
-
+        studentRepository.save(student);
         return dtoMapper.asResultDto(student);
     }
 
