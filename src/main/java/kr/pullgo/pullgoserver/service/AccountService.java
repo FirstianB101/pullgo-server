@@ -2,33 +2,55 @@ package kr.pullgo.pullgoserver.service;
 
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.mapper.AccountDtoMapper;
+import kr.pullgo.pullgoserver.error.exception.AccountAlreadyEnrolledException;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.UserRole;
+import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
+import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AccountService {
 
     private final AccountDtoMapper dtoMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepository;
+    private final ServiceErrorHelper errorHelper;
 
     @Autowired
-    public AccountService(AccountDtoMapper dtoMapper, PasswordEncoder passwordEncoder) {
+    public AccountService(AccountDtoMapper dtoMapper, PasswordEncoder passwordEncoder,
+        AccountRepository accountRepository,
+        ServiceErrorHelper errorHelper) {
         this.dtoMapper = dtoMapper;
         this.passwordEncoder = passwordEncoder;
+        this.accountRepository = accountRepository;
+        this.errorHelper = errorHelper;
     }
 
     public Account create(AccountDto.Create dto) {
+        try {
+            checkAlreadyEnrollment(dto);
+        } catch (AccountAlreadyEnrolledException e) {
+            throw errorHelper.badRequest("Already enrolled account");
+        }
         Account entity = dtoMapper.asEntity(dto);
-
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
         entity.setPassword(encodedPassword);
 
         entity.setRole(UserRole.USER);
 
         return entity;
+    }
+
+    private void checkAlreadyEnrollment(AccountDto.Create dto) {
+        Optional<Account> username = accountRepository.findByUsername(dto.getUsername());
+        username.ifPresent(u -> {
+            throw new AccountAlreadyEnrolledException();
+        });
     }
 
     public void update(Account entity, AccountDto.Update dto) {
