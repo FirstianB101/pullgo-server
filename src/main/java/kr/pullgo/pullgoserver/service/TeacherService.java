@@ -41,13 +41,13 @@ public class TeacherService {
 
     @Autowired
     public TeacherService(TeacherDtoMapper dtoMapper,
-                          AccountService accountService,
-                          TeacherRepository teacherRepository,
-                          AcademyRepository academyRepository,
-                          ClassroomRepository classroomRepository,
-                          RepositoryHelper repoHelper,
-                          ServiceErrorHelper errorHelper,
-                          TeacherAuthorizer teacherAuthorizer) {
+        AccountService accountService,
+        TeacherRepository teacherRepository,
+        AcademyRepository academyRepository,
+        ClassroomRepository classroomRepository,
+        RepositoryHelper repoHelper,
+        ServiceErrorHelper errorHelper,
+        TeacherAuthorizer teacherAuthorizer) {
         this.dtoMapper = dtoMapper;
         this.accountService = accountService;
         this.teacherRepository = teacherRepository;
