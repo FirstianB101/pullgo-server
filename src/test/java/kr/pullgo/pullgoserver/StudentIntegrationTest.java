@@ -3,6 +3,7 @@ package kr.pullgo.pullgoserver;
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentApplyAcademyDto;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentApplyClassroomDto;
+import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentCreateDto;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentRemoveAppliedAcademyDto;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentRemoveAppliedClassroomDto;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentUpdateDto;
@@ -110,6 +111,86 @@ public class StudentIntegrationTest {
             .apply(springSecurity())
             .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
+    }
+
+    @Nested
+    class PostStudent {
+
+        @Test
+        void postStudent_StudentAlreadyEnrolled_BadRequestStatus() throws Exception {
+            // Given
+            String body = toJson(aStudentCreateDto());
+
+            mockMvc.perform(post("/students")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/students")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @WithMockUser(authorities = "ADMIN")
+        void postStudent(@Autowired PasswordEncoder passwordEncoder) throws Exception {
+            // When
+            StudentDto.Create dto = StudentDto.Create.builder()
+                .parentPhone("01098765432")
+                .schoolName("광운전자공업고등학교")
+                .schoolYear(1)
+                .account(AccountDto.Create.builder()
+                    .username("woodyn1002")
+                    .password("this!sPassw0rd")
+                    .fullName("최우진")
+                    .phone("01012345678")
+                    .build())
+                .build();
+            String body = toJson(dto);
+
+            ResultActions actions = mockMvc.perform(post("/students")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            MvcResult mvcResult = actions
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.parentPhone").value("01098765432"))
+                .andExpect(jsonPath("$.schoolName").value("광운전자공업고등학교"))
+                .andExpect(jsonPath("$.schoolYear").value(1))
+                .andExpect(jsonPath("$.account.id").doesNotExist())
+                .andExpect(jsonPath("$.account.username").value("woodyn1002"))
+                .andExpect(jsonPath("$.account.password").doesNotExist())
+                .andExpect(jsonPath("$.account.fullName").value("최우진"))
+                .andExpect(jsonPath("$.account.phone").value("01012345678"))
+                .andReturn();
+
+            String responseBody = mvcResult.getResponse().getContentAsString();
+            StudentDto.Result resultDto = fromJson(responseBody, StudentDto.Result.class);
+
+            String encodedPassword = trxHelper.doInTransaction(() -> {
+                Student student = studentRepository.findById(resultDto.getId()).orElseThrow();
+                return student.getAccount().getPassword();
+            });
+            assertThat(passwordEncoder.matches("this!sPassw0rd", encodedPassword)).isTrue();
+
+            // Document
+            actions.andDo(document("student-create-example",
+                requestFields(
+                    DOC_FIELD_PARENT_PHONE,
+                    DOC_FIELD_SCHOOL_NAME,
+                    DOC_FIELD_SCHOOL_YEAR,
+                    DOC_FIELD_ACCOUNT_USERNAME,
+                    DOC_FIELD_ACCOUNT_PASSWORD,
+                    DOC_FIELD_ACCOUNT_FULL_NAME,
+                    DOC_FIELD_ACCOUNT_PHONE
+                )));
+        }
     }
 
     @Nested
@@ -414,63 +495,6 @@ public class StudentIntegrationTest {
                 )));
         }
 
-    }
-
-    @Test
-    @WithMockUser(authorities = "ADMIN")
-    void postStudent(@Autowired PasswordEncoder passwordEncoder) throws Exception {
-        // When
-        StudentDto.Create dto = StudentDto.Create.builder()
-            .parentPhone("01098765432")
-            .schoolName("광운전자공업고등학교")
-            .schoolYear(1)
-            .account(AccountDto.Create.builder()
-                .username("woodyn1002")
-                .password("this!sPassw0rd")
-                .fullName("최우진")
-                .phone("01012345678")
-                .build())
-            .build();
-        String body = toJson(dto);
-
-        ResultActions actions = mockMvc.perform(post("/students")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body));
-
-        // Then
-        MvcResult mvcResult = actions
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.parentPhone").value("01098765432"))
-            .andExpect(jsonPath("$.schoolName").value("광운전자공업고등학교"))
-            .andExpect(jsonPath("$.schoolYear").value(1))
-            .andExpect(jsonPath("$.account.id").doesNotExist())
-            .andExpect(jsonPath("$.account.username").value("woodyn1002"))
-            .andExpect(jsonPath("$.account.password").doesNotExist())
-            .andExpect(jsonPath("$.account.fullName").value("최우진"))
-            .andExpect(jsonPath("$.account.phone").value("01012345678"))
-            .andReturn();
-
-        String responseBody = mvcResult.getResponse().getContentAsString();
-        StudentDto.Result resultDto = fromJson(responseBody, StudentDto.Result.class);
-
-        String encodedPassword = trxHelper.doInTransaction(() -> {
-            Student student = studentRepository.findById(resultDto.getId()).orElseThrow();
-            return student.getAccount().getPassword();
-        });
-        assertThat(passwordEncoder.matches("this!sPassw0rd", encodedPassword)).isTrue();
-
-        // Document
-        actions.andDo(document("student-create-example",
-            requestFields(
-                DOC_FIELD_PARENT_PHONE,
-                DOC_FIELD_SCHOOL_NAME,
-                DOC_FIELD_SCHOOL_YEAR,
-                DOC_FIELD_ACCOUNT_USERNAME,
-                DOC_FIELD_ACCOUNT_PASSWORD,
-                DOC_FIELD_ACCOUNT_FULL_NAME,
-                DOC_FIELD_ACCOUNT_PHONE
-            )));
     }
 
     @Nested
