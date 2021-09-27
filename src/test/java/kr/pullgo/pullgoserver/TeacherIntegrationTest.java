@@ -3,6 +3,7 @@ package kr.pullgo.pullgoserver;
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherApplyAcademyDto;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherApplyClassroomDto;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherCreateDto;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherRemoveAppliedAcademyDto;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherRemoveAppliedClassroomDto;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherUpdateDto;
@@ -104,6 +105,77 @@ public class TeacherIntegrationTest {
             .apply(springSecurity())
             .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
+    }
+
+    @Nested
+    class PostTeacher {
+
+        @Test
+        @WithMockUser(authorities = "ADMIN")
+        void postTeacher(@Autowired PasswordEncoder passwordEncoder) throws Exception {
+            // When
+            TeacherDto.Create dto = TeacherDto.Create.builder()
+                .account(AccountDto.Create.builder()
+                    .username("pte1024")
+                    .password("this!sPassw0rd")
+                    .fullName("박태언")
+                    .phone("01012345678")
+                    .build())
+                .build();
+            String body = toJson(dto);
+
+            ResultActions actions = mockMvc.perform(post("/teachers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            MvcResult mvcResult = actions
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.account.id").doesNotExist())
+                .andExpect(jsonPath("$.account.username").value("pte1024"))
+                .andExpect(jsonPath("$.account.password").doesNotExist())
+                .andExpect(jsonPath("$.account.fullName").value("박태언"))
+                .andExpect(jsonPath("$.account.phone").value("01012345678"))
+                .andReturn();
+
+            String responseBody = mvcResult.getResponse().getContentAsString();
+            TeacherDto.Result resultDto = fromJson(responseBody, TeacherDto.Result.class);
+
+            String encodedPassword = trxHelper.doInTransaction(() -> {
+                Teacher teacher = teacherRepository.findById(resultDto.getId()).orElseThrow();
+                return teacher.getAccount().getPassword();
+            });
+            assertThat(passwordEncoder.matches("this!sPassw0rd", encodedPassword)).isTrue();
+
+            // Document
+            actions.andDo(document("teacher-create-example",
+                requestFields(
+                    DOC_FIELD_ACCOUNT_USERNAME,
+                    DOC_FIELD_ACCOUNT_PASSWORD,
+                    DOC_FIELD_ACCOUNT_FULL_NAME,
+                    DOC_FIELD_ACCOUNT_PHONE
+                )));
+        }
+
+        @Test
+        void postTeacher_TeacherAlreadyEnrolled_BadRequestStatus() throws Exception {
+            // Given
+            String body = toJson(aTeacherCreateDto());
+
+            mockMvc.perform(post("/teachers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/teachers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
     }
 
     @Nested
@@ -403,54 +475,6 @@ public class TeacherIntegrationTest {
                 )));
         }
 
-    }
-
-    @Test
-    @WithMockUser(authorities = "ADMIN")
-    void postTeacher(@Autowired PasswordEncoder passwordEncoder) throws Exception {
-        // When
-        TeacherDto.Create dto = TeacherDto.Create.builder()
-            .account(AccountDto.Create.builder()
-                .username("pte1024")
-                .password("this!sPassw0rd")
-                .fullName("박태언")
-                .phone("01012345678")
-                .build())
-            .build();
-        String body = toJson(dto);
-
-        ResultActions actions = mockMvc.perform(post("/teachers")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body));
-
-        // Then
-        MvcResult mvcResult = actions
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.account.id").doesNotExist())
-            .andExpect(jsonPath("$.account.username").value("pte1024"))
-            .andExpect(jsonPath("$.account.password").doesNotExist())
-            .andExpect(jsonPath("$.account.fullName").value("박태언"))
-            .andExpect(jsonPath("$.account.phone").value("01012345678"))
-            .andReturn();
-
-        String responseBody = mvcResult.getResponse().getContentAsString();
-        TeacherDto.Result resultDto = fromJson(responseBody, TeacherDto.Result.class);
-
-        String encodedPassword = trxHelper.doInTransaction(() -> {
-            Teacher teacher = teacherRepository.findById(resultDto.getId()).orElseThrow();
-            return teacher.getAccount().getPassword();
-        });
-        assertThat(passwordEncoder.matches("this!sPassw0rd", encodedPassword)).isTrue();
-
-        // Document
-        actions.andDo(document("teacher-create-example",
-            requestFields(
-                DOC_FIELD_ACCOUNT_USERNAME,
-                DOC_FIELD_ACCOUNT_PASSWORD,
-                DOC_FIELD_ACCOUNT_FULL_NAME,
-                DOC_FIELD_ACCOUNT_PHONE
-            )));
     }
 
     @Nested
