@@ -34,6 +34,9 @@ public class AuthenticationInspector {
     }
 
     public boolean isAdmin(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw errorHelper.unauthorized("Not authenticated");
+        }
         return authentication.getAuthorities().stream()
             .anyMatch(authority -> authority.getAuthority().equals("ADMIN"));
     }
