@@ -251,7 +251,7 @@ operation::auth-generate-token-example[snippets='request-fields,response-fields,
 [[resources_auth_me]]
 === 사용자 신원 조회
 
-`POST /auth/me` 요청으로 토큰을 소유한 사용자의 신원 정보를 조회합니다.
+`GET /auth/me` 요청으로 토큰을 소유한 사용자의 신원 정보를 조회합니다.
 요청의 `Authorization` 헤더로 엑세스 토큰이 제공되어야 합니다.
 
 operation::auth-me-example[snippets='response-fields,curl-request,http-response']
