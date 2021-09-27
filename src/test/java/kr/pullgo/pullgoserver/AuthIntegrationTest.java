@@ -1,6 +1,8 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademyCreateDto;
+import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccount;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
@@ -16,17 +18,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.util.function.Function;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.config.security.UserPrincipal;
+import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.AuthDto;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Student;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.service.JwtService;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -212,4 +218,103 @@ public class AuthIntegrationTest {
         return passwordEncoder.encode(password);
     }
 
+    @Nested
+    class PostAPI {
+
+        @Test
+        void postAcademy() throws Exception {
+
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Teacher teacher = entityHelper.generateTeacher();
+                String token = generateToken(it -> teacher.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("teacherId", teacher.getId());
+            });
+            String token = given.valueOf("token");
+            Long creatorId = given.valueOf("teacherId");
+
+            String body = toJson(anAcademyCreateDto().withOwnerId(creatorId));
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/academies")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isCreated());
+        }
+
+        @Test
+        void postAcademy_InvalidCreator_ForbiddenStatus() throws Exception {
+
+            // Given
+            Long creatorId = trxHelper.doInTransaction(() -> {
+                Account account = entityHelper.generateAccount(it ->
+                    it.withUsername("test1234")
+                        .withPassword(encodedPassword("pAsSwOrD"))
+                );
+                Teacher teacher = entityHelper.generateTeacher(it -> it.withAccount(account));
+                return teacher.getId();
+            });
+
+            AcademyDto.Create dto = anAcademyCreateDto().withOwnerId(creatorId);
+            String body = toJson(dto);
+
+            // When
+            AuthDto.GenerateToken tokenDto = AuthDto.GenerateToken.builder()
+                .username("otherId")
+                .password("otherPassword")
+                .build();
+            String wrongToken = toJson(tokenDto);
+
+            ResultActions actions = mockMvc.perform(post("/academies")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + wrongToken)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isForbidden())
+                .andReturn();
+        }
+
+        @Test
+        void postAcademy_NoToken_UnauthorizedStatus() throws Exception {
+
+            // Given
+            Long creatorId = trxHelper.doInTransaction(() -> {
+                Account account = entityHelper.generateAccount(it ->
+                    it.withUsername("test1234")
+                        .withPassword(encodedPassword("pAsSwOrD"))
+                );
+                Teacher teacher = entityHelper.generateTeacher(it -> it.withAccount(account));
+                return teacher.getId();
+            });
+
+            AcademyDto.Create dto = anAcademyCreateDto().withOwnerId(creatorId);
+            String body = toJson(dto);
+
+            // When
+            ResultActions actions = mockMvc.perform(post("/academies")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+        }
+
+
+        private String generateToken(Function<? super Account, ? extends Account> initialize) {
+            Account account = anAccount().withId(null);
+
+            account = initialize.apply(account);
+            return jwtService.signJwt(account);
+        }
+    }
 }
