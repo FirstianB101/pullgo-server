@@ -24,4 +24,8 @@ public class UserPrincipalAuthenticationToken extends AbstractAuthenticationToke
         return null;
     }
 
+    @Override
+    public boolean isAuthenticated() {
+        return true;
+    }
 }
