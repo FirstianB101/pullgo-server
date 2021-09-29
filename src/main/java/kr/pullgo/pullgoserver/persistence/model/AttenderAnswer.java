@@ -1,8 +1,11 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.FetchType.*;
+
 import com.sun.istack.NotNull;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -32,12 +35,12 @@ public class AttenderAnswer extends TimeEntity {
 
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private AttenderState attenderState;
 
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Question question;
 
     @NotNull

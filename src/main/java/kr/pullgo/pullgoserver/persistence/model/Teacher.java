@@ -1,10 +1,14 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.CascadeType.*;
+import static javax.persistence.FetchType.*;
+
 import com.sun.istack.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -35,7 +39,7 @@ public class Teacher extends TimeEntity {
     private Long id;
 
     @NotNull
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = ALL, fetch = LAZY)
     @ToString.Exclude
     private Account account;
 

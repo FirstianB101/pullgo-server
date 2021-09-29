@@ -1,5 +1,8 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.CascadeType.*;
+import static javax.persistence.FetchType.LAZY;
+
 import com.sun.istack.NotNull;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -32,7 +35,7 @@ public class Lesson extends TimeEntity {
 
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Classroom classroom;
 
     @NotNull
@@ -40,7 +43,7 @@ public class Lesson extends TimeEntity {
 
     @NotNull
     @ToString.Exclude
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = ALL, fetch = LAZY)
     private Schedule schedule;
 
     @Builder

@@ -1,5 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.FetchType.LAZY;
+
 import com.sun.istack.NotNull;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -32,7 +34,7 @@ public class Question extends TimeEntity {
 
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Exam exam;
 
     @NotNull
