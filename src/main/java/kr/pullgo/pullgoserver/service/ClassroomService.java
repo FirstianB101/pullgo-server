@@ -12,6 +12,7 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.StudentRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
+import kr.pullgo.pullgoserver.service.authorizer.AcademyAuthorizer;
 import kr.pullgo.pullgoserver.service.authorizer.ClassroomAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
@@ -33,6 +34,7 @@ public class ClassroomService {
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
     private final ClassroomAuthorizer classroomAuthorizer;
+    private final AcademyAuthorizer academyAuthorizer;
 
     @Autowired
     public ClassroomService(ClassroomDtoMapper dtoMapper,
@@ -41,7 +43,8 @@ public class ClassroomService {
         StudentRepository studentRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper,
-        ClassroomAuthorizer classroomAuthorizer) {
+        ClassroomAuthorizer classroomAuthorizer,
+        AcademyAuthorizer academyAuthorizer) {
         this.dtoMapper = dtoMapper;
         this.classroomRepository = classroomRepository;
         this.teacherRepository = teacherRepository;
@@ -49,6 +52,7 @@ public class ClassroomService {
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
         this.classroomAuthorizer = classroomAuthorizer;
+        this.academyAuthorizer = academyAuthorizer;
     }
 
     @Transactional
@@ -56,7 +60,7 @@ public class ClassroomService {
         Classroom classroom = dtoMapper.asEntity(dto);
 
         Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
-        classroomAuthorizer.requireMemberTeacher(authentication, classroom);
+        academyAuthorizer.requireMemberTeacher(authentication, academy);
         academy.addClassroom(classroom);
 
         Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
