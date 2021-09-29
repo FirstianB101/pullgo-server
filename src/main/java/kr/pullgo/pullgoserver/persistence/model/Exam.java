@@ -1,5 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.FetchType.LAZY;
+
 import com.sun.istack.NotNull;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -35,12 +37,12 @@ public class Exam extends TimeEntity {
     private Long id;
 
     @ToString.Exclude
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Classroom classroom;
 
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Teacher creator;
 
     @NotNull

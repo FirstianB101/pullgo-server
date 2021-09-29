@@ -1,5 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.FetchType.LAZY;
+
 import com.sun.istack.NotNull;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -39,13 +41,13 @@ public class AttenderState extends TimeEntity {
     @Setter(AccessLevel.NONE)
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Student attender;
 
     @Setter(AccessLevel.NONE)
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Exam exam;
 
     @Enumerated(EnumType.STRING)

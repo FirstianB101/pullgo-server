@@ -1,5 +1,7 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.FetchType.LAZY;
+
 import com.sun.istack.NotNull;
 import java.util.HashSet;
 import java.util.Set;
@@ -72,7 +74,7 @@ public class Classroom extends TimeEntity {
 
     @ToString.Exclude
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = LAZY)
     private Academy academy;
 
     @Builder

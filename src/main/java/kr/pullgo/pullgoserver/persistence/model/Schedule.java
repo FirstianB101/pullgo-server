@@ -1,9 +1,12 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static javax.persistence.FetchType.*;
+
 import com.sun.istack.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -32,7 +35,7 @@ public class Schedule extends TimeEntity {
 
     @NotNull
     @ToString.Exclude
-    @OneToOne(mappedBy = "schedule")
+    @OneToOne(mappedBy = "schedule", fetch = LAZY)
     private Lesson lesson;
 
     @NotNull
