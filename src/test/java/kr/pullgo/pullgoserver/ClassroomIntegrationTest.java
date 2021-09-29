@@ -475,7 +475,7 @@ public class ClassroomIntegrationTest {
         // Given
         Struct given = trxHelper.doInTransaction(() -> {
             Academy academy = entityHelper.generateAcademy();
-            Teacher creator = entityHelper.generateTeacher();
+            Teacher creator = academy.getOwner();
 
             return new Struct()
                 .withValue("academyId", academy.getId())
