@@ -21,6 +21,24 @@ class AttenderStateTest {
     private EntityHelper entityHelper;
 
     @Test
+    public void withTest() {
+        //given
+        Exam exam = entityHelper.generateExam();
+        Student attender = entityHelper.generateStudent();
+
+        //when
+        AttenderState attenderState = entityHelper.generateAttenderState(
+            it -> it.withExam(exam).withAttender(attender)
+        );
+
+        //then
+        assertThat(attenderState.getExam()).isEqualTo(exam);
+        assertThat(exam.getAttenderStates()).contains(attenderState);
+        assertThat(attenderState.getAttender()).isEqualTo(attender);
+        assertThat(attender.getAttendingStates()).contains(attenderState);
+    }
+
+    @Test
     void createAttenderState() {
         // Given
         Student student = entityHelper.generateStudent();
