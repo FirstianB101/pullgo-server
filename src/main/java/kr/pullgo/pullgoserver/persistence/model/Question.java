@@ -53,4 +53,14 @@ public class Question extends TimeEntity {
         this.pictureUrl = pictureUrl;
         this.answer = answer;
     }
+
+    public void setExam(Exam exam) {
+        this.exam = exam;
+        exam.addQuestion(this);
+    }
+
+    public void removeThis() {
+        if (this.exam != null)
+            this.exam.removeQuestion(this);
+    }
 }

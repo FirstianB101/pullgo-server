@@ -55,4 +55,14 @@ public class Lesson extends TimeEntity {
         this.schedule = schedule;
         schedule.setLesson(this);
     }
+
+    public void setClassroom(Classroom classroom) {
+        this.classroom = classroom;
+        classroom.addLesson(this);
+    }
+
+    public void removeThis() {
+        if (this.classroom != null)
+            this.classroom.removeLesson(this);
+    }
 }

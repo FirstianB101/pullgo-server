@@ -87,7 +87,8 @@ public class AttenderState extends TimeEntity {
 
     public void addAnswer(AttenderAnswer attenderAnswer) {
         this.answers.add(attenderAnswer);
-        attenderAnswer.setAttenderState(this);
+        if (!this.equals(attenderAnswer.getAttenderState()))
+            attenderAnswer.setAttenderState(this);
     }
 
     public void removeAnswer(AttenderAnswer attenderAnswer) {

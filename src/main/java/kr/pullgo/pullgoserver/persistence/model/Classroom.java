@@ -128,24 +128,40 @@ public class Classroom extends TimeEntity {
 
     public void addLesson(Lesson lesson) {
         lessons.add(lesson);
-        lesson.setClassroom(this);
+        if (!this.equals(lesson.getClassroom()))
+            lesson.setClassroom(this);
     }
 
     public void removeLesson(Lesson lesson) {
-        if (!lessons.contains(lesson)) { throw new LessonNotFoundException(); }
+        if (!lessons.contains(lesson)) {
+            throw new LessonNotFoundException();
+        }
 
         lessons.remove(lesson);
     }
 
     public void addExam(Exam exam) {
         exams.add(exam);
-        exam.setClassroom(this);
+        if (!this.equals(exam.getClassroom()))
+            exam.setClassroom(this);
     }
 
     public void removeExam(Exam exam) {
-        if (!exams.contains(exam)) { throw new ExamNotFoundException(); }
+        if (!exams.contains(exam)) {
+            throw new ExamNotFoundException();
+        }
 
         exams.remove(exam);
         exam.setClassroom(null);
+    }
+
+    public void setAcademy(Academy academy) {
+        this.academy = academy;
+        academy.addClassroom(this);
+    }
+
+    public void removeThis() {
+        if (this.academy != null)
+            this.academy.removeClassroom(this);
     }
 }
