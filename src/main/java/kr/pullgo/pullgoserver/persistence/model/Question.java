@@ -19,7 +19,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.With;
 
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
@@ -54,9 +53,19 @@ public class Question extends TimeEntity {
         this.answer = answer;
     }
 
+    protected Question(Long id, Exam exam, String content, String pictureUrl,
+        Answer answer) {
+        this.id = id;
+        setExam(exam);
+        this.content = content;
+        this.pictureUrl = pictureUrl;
+        this.answer = answer;
+    }
+
     public void setExam(Exam exam) {
         this.exam = exam;
-        exam.addQuestion(this);
+        if (exam != null)
+            exam.addQuestion(this);
     }
 
     public void removeThis() {

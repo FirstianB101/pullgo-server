@@ -23,7 +23,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.With;
 
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
@@ -83,6 +82,25 @@ public class Exam extends TimeEntity {
         this.passScore = passScore;
     }
 
+    protected Exam(Long id, Classroom classroom, Teacher creator, String name,
+        LocalDateTime beginDateTime, LocalDateTime endDateTime, Duration timeLimit,
+        Integer passScore, boolean cancelled, boolean finished,
+        Set<Question> questions,
+        Set<AttenderState> attenderStates) {
+        this.id = id;
+        setClassroom(classroom);
+        this.creator = creator;
+        this.name = name;
+        this.beginDateTime = beginDateTime;
+        this.endDateTime = endDateTime;
+        this.timeLimit = timeLimit;
+        this.passScore = passScore;
+        this.cancelled = cancelled;
+        this.finished = finished;
+        this.questions = questions;
+        this.attenderStates = attenderStates;
+    }
+
     public void addQuestion(Question question) {
         questions.add(question);
         if (!this.equals(question.getExam()))
@@ -95,7 +113,7 @@ public class Exam extends TimeEntity {
 
     public void setClassroom(Classroom classroom) {
         this.classroom = classroom;
-        classroom.addExam(this);
+        if (classroom != null)
+            classroom.addExam(this);
     }
-
 }

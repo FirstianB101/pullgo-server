@@ -25,7 +25,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.With;
 
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor
 @Getter
 @Setter
@@ -65,6 +64,18 @@ public class AttenderState extends TimeEntity {
     @NotNull
     private LocalDateTime examStartTime;
 
+    protected AttenderState(Long id, Student attender, Exam exam,
+        AttendingProgress progress,
+        Set<AttenderAnswer> answers, Integer score, LocalDateTime examStartTime) {
+        this.id = id;
+        setAttender(attender);
+        setExam(exam);
+        this.progress = progress;
+        this.answers = answers;
+        this.score = score;
+        this.examStartTime = examStartTime;
+    }
+
     public boolean isOutOfTimeRange(LocalDateTime now) {
         return now.isBefore(exam.getBeginDateTime())
             || now.isAfter(exam.getEndDateTime());
@@ -77,12 +88,14 @@ public class AttenderState extends TimeEntity {
 
     public void setAttender(Student attender) {
         this.attender = attender;
-        attender.getAttendingStates().add(this);
+        if (attender != null)
+            attender.getAttendingStates().add(this);
     }
 
     public void setExam(Exam exam) {
         this.exam = exam;
-        exam.getAttenderStates().add(this);
+        if (exam != null)
+            exam.getAttenderStates().add(this);
     }
 
     public void addAnswer(AttenderAnswer attenderAnswer) {

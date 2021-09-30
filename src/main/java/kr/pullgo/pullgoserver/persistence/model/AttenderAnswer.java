@@ -20,7 +20,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.With;
 
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
@@ -52,8 +51,17 @@ public class AttenderAnswer extends TimeEntity {
         this.answer = answer;
     }
 
+    protected AttenderAnswer(Long id, AttenderState attenderState,
+        Question question, Answer answer) {
+        this.id = id;
+        setAttenderState(attenderState);
+        this.question = question;
+        this.answer = answer;
+    }
+
     public void setAttenderState(AttenderState attenderState) {
         this.attenderState = attenderState;
-        attenderState.addAnswer(this);
+        if (attenderState != null)
+            attenderState.addAnswer(this);
     }
 }
