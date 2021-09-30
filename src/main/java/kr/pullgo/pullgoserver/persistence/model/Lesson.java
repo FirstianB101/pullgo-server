@@ -20,7 +20,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.With;
 
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
@@ -51,14 +50,24 @@ public class Lesson extends TimeEntity {
         this.name = name;
     }
 
+    protected Lesson(Long id, Classroom classroom, String name,
+        Schedule schedule) {
+        this.id = id;
+        this.name = name;
+        setClassroom(classroom);
+        setSchedule(schedule);
+    }
+
     public void setSchedule(Schedule schedule) {
         this.schedule = schedule;
-        schedule.setLesson(this);
+        if (schedule != null)
+            schedule.setLesson(this);
     }
 
     public void setClassroom(Classroom classroom) {
         this.classroom = classroom;
-        classroom.addLesson(this);
+        if (classroom != null)
+            classroom.addLesson(this);
     }
 
     public void removeThis() {

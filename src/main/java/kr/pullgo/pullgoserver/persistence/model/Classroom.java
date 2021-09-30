@@ -26,7 +26,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.With;
 
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
@@ -80,6 +79,22 @@ public class Classroom extends TimeEntity {
     @Builder
     public Classroom(String name) {
         this.name = name;
+    }
+
+    protected Classroom(Long id, String name,
+        Set<Teacher> teachers, Set<Student> students,
+        Set<Student> applyingStudents,
+        Set<Teacher> applyingTeachers,
+        Set<Lesson> lessons, Set<Exam> exams, Academy academy) {
+        this.id = id;
+        this.name = name;
+        this.teachers = teachers;
+        this.students = students;
+        this.applyingStudents = applyingStudents;
+        this.applyingTeachers = applyingTeachers;
+        this.lessons = lessons;
+        this.exams = exams;
+        setAcademy(academy);
     }
 
     public void acceptStudent(Student student) {
@@ -157,7 +172,8 @@ public class Classroom extends TimeEntity {
 
     public void setAcademy(Academy academy) {
         this.academy = academy;
-        academy.addClassroom(this);
+        if (academy != null)
+            academy.addClassroom(this);
     }
 
     public void removeThis() {
