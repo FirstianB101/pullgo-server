@@ -1,7 +1,5 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
-import static kr.pullgo.pullgoserver.helper.LessonHelper.aLesson;
-import static kr.pullgo.pullgoserver.helper.ScheduleHelper.aSchedule;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import kr.pullgo.pullgoserver.helper.EntityHelper;
@@ -45,8 +43,8 @@ class ClassroomTest {
     @Test
     void removeLesson() {
         // Given
-        Lesson lesson = entityHelper.generateLesson();
-        Classroom classroom = lesson.getClassroom();
+        Classroom classroom = entityHelper.generateClassroom();
+        Lesson lesson = entityHelper.generateLesson(it -> it.withClassroom(classroom));
 
         classroomRepository.flush();
 
@@ -66,7 +64,6 @@ class ClassroomTest {
             it.withClassroom(classroom)
         );
 
-        classroom.addLesson(lesson2);
         classroomRepository.flush();
 
         // When
