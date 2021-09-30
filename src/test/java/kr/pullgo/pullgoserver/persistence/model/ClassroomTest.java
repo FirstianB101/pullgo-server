@@ -32,13 +32,9 @@ class ClassroomTest {
     @Test
     void removeLesson() {
         // Given
-        Classroom classroom = entityHelper.generateClassroom();
-        Lesson lesson = aLesson()
-            .withId(null)
-            .withClassroom(null)
-            .withSchedule(aSchedule().withId(null));
+        Lesson lesson = entityHelper.generateLesson();
+        Classroom classroom = lesson.getClassroom();
 
-        classroom.addLesson(lesson);
         classroomRepository.flush();
 
         // When
@@ -51,16 +47,17 @@ class ClassroomTest {
     @Test
     void removeClassroom_LessenAdded_LessonAndScheduleDeleted() {
         // Given
-        Classroom classroom = entityHelper.generateClassroom();
-        Lesson lesson = aLesson()
-            .withId(null)
-            .withClassroom(null)
-            .withSchedule(aSchedule().withId(null));
+        Lesson lesson = entityHelper.generateLesson();
+        Classroom classroom = lesson.getClassroom();
+        Lesson lesson2 = entityHelper.generateLesson(it ->
+            it.withClassroom(classroom)
+        );
 
-        classroom.addLesson(lesson);
+        classroom.addLesson(lesson2);
         classroomRepository.flush();
 
         // When
+        classroom.removeThis();
         classroomRepository.delete(classroom);
 
         // Then
