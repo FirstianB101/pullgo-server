@@ -85,10 +85,17 @@ public class Exam extends TimeEntity {
 
     public void addQuestion(Question question) {
         questions.add(question);
-        question.setExam(this);
+        if (!this.equals(question.getExam()))
+            question.setExam(this);
     }
 
     public void removeQuestion(Question question) {
         questions.remove(question);
     }
+
+    public void setClassroom(Classroom classroom) {
+        this.classroom = classroom;
+        classroom.addExam(this);
+    }
+
 }

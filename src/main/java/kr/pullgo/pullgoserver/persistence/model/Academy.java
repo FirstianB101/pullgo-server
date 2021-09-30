@@ -135,7 +135,8 @@ public class Academy extends TimeEntity {
 
     public void addClassroom(Classroom classroom) {
         classrooms.add(classroom);
-        classroom.setAcademy(this);
+        if (!this.equals(classroom.getAcademy()))
+            classroom.setAcademy(this);
     }
 
     public void removeClassroom(Classroom classroom) {

@@ -51,4 +51,9 @@ public class AttenderAnswer extends TimeEntity {
     public AttenderAnswer(Answer answer) {
         this.answer = answer;
     }
+
+    public void setAttenderState(AttenderState attenderState) {
+        this.attenderState = attenderState;
+        attenderState.addAnswer(this);
+    }
 }
