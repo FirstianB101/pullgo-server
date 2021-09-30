@@ -36,10 +36,9 @@ class ExamTest {
     @Test
     void removeQuestion() {
         // Given
-        Exam exam = entityHelper.generateExam();
         Question question = entityHelper.generateQuestion();
+        Exam exam = question.getExam();
 
-        exam.addQuestion(question);
         examRepository.flush();
 
         // When
