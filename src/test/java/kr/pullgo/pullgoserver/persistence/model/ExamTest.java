@@ -34,6 +34,19 @@ class ExamTest {
     private EntityManager em;
 
     @Test
+    public void withTest() {
+        //given
+        Classroom classroom = entityHelper.generateClassroom();
+
+        //when
+        Exam exam = entityHelper.generateExam(it -> it.withClassroom(classroom));
+
+        //then
+        assertThat(exam.getClassroom()).isEqualTo(classroom);
+        assertThat(classroom.getExams()).contains(exam);
+    }
+
+    @Test
     void removeQuestion() {
         // Given
         Question question = entityHelper.generateQuestion();

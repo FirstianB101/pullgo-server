@@ -30,6 +30,19 @@ class ClassroomTest {
     private EntityHelper entityHelper;
 
     @Test
+    public void withTest() {
+        //given
+        Academy academy = entityHelper.generateAcademy();
+
+        //when
+        Classroom classroom = entityHelper.generateClassroom(it -> it.withAcademy(academy));
+
+        //then
+        assertThat(classroom.getAcademy()).isEqualTo(academy);
+        assertThat(academy.getClassrooms()).contains(classroom);
+    }
+
+    @Test
     void removeLesson() {
         // Given
         Lesson lesson = entityHelper.generateLesson();
