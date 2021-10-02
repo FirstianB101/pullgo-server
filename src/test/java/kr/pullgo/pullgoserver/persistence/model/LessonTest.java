@@ -21,7 +21,7 @@ public class LessonTest {
     private EntityManager em;
 
     @Test
-    public void withTest() {
+    public void generateLessonWithClassroom_AlreadyExistedClassroom_CoexistedEntityMapping() {
         //given
         Classroom classroom = entityHelper.generateClassroom();
 

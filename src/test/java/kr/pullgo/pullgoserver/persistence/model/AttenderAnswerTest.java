@@ -21,7 +21,7 @@ public class AttenderAnswerTest {
     private EntityManager em;
 
     @Test
-    public void withTest() {
+    public void generateAnswerWithAttenderState_AlreadyExistedAttenderState_CoexistedEntityMapping() {
         //given
         AttenderState attenderState = entityHelper.generateAttenderState();
 

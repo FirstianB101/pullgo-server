@@ -21,7 +21,7 @@ public class QuestionTest {
     private EntityManager em;
 
     @Test
-    public void withTest() {
+    public void generateQuestionWithExam_AlreadyExistedExam_CoexistedEntityMapping() {
         //given
         Exam exam = entityHelper.generateExam();
 
