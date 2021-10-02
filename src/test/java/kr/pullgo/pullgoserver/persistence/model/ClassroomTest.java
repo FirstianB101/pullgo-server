@@ -67,7 +67,7 @@ class ClassroomTest {
         classroomRepository.flush();
 
         // When
-        classroom.removeThis();
+        classroom.setAcademy(null);
         classroomRepository.delete(classroom);
 
         // Then
