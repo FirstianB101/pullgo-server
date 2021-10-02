@@ -63,13 +63,13 @@ public class Question extends TimeEntity {
     }
 
     public void setExam(Exam exam) {
-        this.exam = exam;
-        if (exam != null)
-            exam.addQuestion(this);
-    }
-
-    public void removeThis() {
-        if (this.exam != null)
-            this.exam.removeQuestion(this);
+        if (this.exam != exam) {
+            if (this.exam != null)
+                this.exam.removeQuestion(this);
+            this.exam = exam;
+            if (exam != null) {
+                exam.addQuestion(this);
+            }
+        }
     }
 }

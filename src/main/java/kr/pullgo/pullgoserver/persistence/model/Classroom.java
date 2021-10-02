@@ -171,13 +171,13 @@ public class Classroom extends TimeEntity {
     }
 
     public void setAcademy(Academy academy) {
-        this.academy = academy;
-        if (academy != null)
-            academy.addClassroom(this);
-    }
-
-    public void removeThis() {
-        if (this.academy != null)
-            this.academy.removeClassroom(this);
+        if (this.academy != academy) {
+            if (this.academy != null)
+                this.academy.removeClassroom(this);
+            this.academy = academy;
+            if (academy != null) {
+                academy.addClassroom(this);
+            }
+        }
     }
 }

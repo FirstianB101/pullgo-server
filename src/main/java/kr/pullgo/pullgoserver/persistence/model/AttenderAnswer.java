@@ -60,8 +60,13 @@ public class AttenderAnswer extends TimeEntity {
     }
 
     public void setAttenderState(AttenderState attenderState) {
-        this.attenderState = attenderState;
-        if (attenderState != null)
-            attenderState.addAnswer(this);
+        if (this.attenderState != attenderState) {
+            if (this.attenderState != null)
+                this.attenderState.removeAnswer(this);
+            this.attenderState = attenderState;
+            if (attenderState != null) {
+                attenderState.addAnswer(this);
+            }
+        }
     }
 }

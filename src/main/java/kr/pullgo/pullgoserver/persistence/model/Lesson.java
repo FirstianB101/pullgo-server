@@ -59,19 +59,23 @@ public class Lesson extends TimeEntity {
     }
 
     public void setSchedule(Schedule schedule) {
-        this.schedule = schedule;
-        if (schedule != null)
-            schedule.setLesson(this);
+        if (this.schedule != schedule) {
+            if (this.schedule != null)
+                this.schedule.setLesson(null);
+            this.schedule = schedule;
+            if (schedule != null)
+                schedule.setLesson(this);
+        }
     }
 
     public void setClassroom(Classroom classroom) {
-        this.classroom = classroom;
-        if (classroom != null)
-            classroom.addLesson(this);
-    }
-
-    public void removeThis() {
-        if (this.classroom != null)
-            this.classroom.removeLesson(this);
+        if (this.classroom != classroom) {
+            if (this.classroom != null)
+                this.classroom.removeLesson(this);
+            this.classroom = classroom;
+            if (classroom != null) {
+                classroom.addLesson(this);
+            }
+        }
     }
 }

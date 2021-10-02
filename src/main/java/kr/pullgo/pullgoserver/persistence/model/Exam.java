@@ -112,8 +112,13 @@ public class Exam extends TimeEntity {
     }
 
     public void setClassroom(Classroom classroom) {
-        this.classroom = classroom;
-        if (classroom != null)
-            classroom.addExam(this);
+        if (this.classroom != classroom) {
+            if (this.classroom != null)
+                this.classroom.removeExam(this);
+            this.classroom = classroom;
+            if (classroom != null) {
+                classroom.addExam(this);
+            }
+        }
     }
 }
