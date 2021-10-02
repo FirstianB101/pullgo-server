@@ -28,7 +28,7 @@ class ClassroomTest {
     private EntityHelper entityHelper;
 
     @Test
-    public void withTest() {
+    public void generateClassroomWithAcademy_AlreadyExistedAcademy_CoexistedEntityMapping() {
         //given
         Academy academy = entityHelper.generateAcademy();
 

@@ -34,7 +34,7 @@ class ExamTest {
     private EntityManager em;
 
     @Test
-    public void withTest() {
+    public void generateExamWithClassroom_AlreadyExistedClassroom_CoexistedEntityMapping() {
         //given
         Classroom classroom = entityHelper.generateClassroom();
 

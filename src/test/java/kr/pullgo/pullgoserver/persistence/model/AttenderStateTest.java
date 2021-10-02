@@ -21,7 +21,7 @@ class AttenderStateTest {
     private EntityHelper entityHelper;
 
     @Test
-    public void withTest() {
+    public void generateAttenderStateWithExamAndAttender_AlreadyExistedExamAndAttender_CoexistedEntityMapping() {
         //given
         Exam exam = entityHelper.generateExam();
         Student attender = entityHelper.generateStudent();
