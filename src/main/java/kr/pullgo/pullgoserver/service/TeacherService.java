@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.service;
 
 import java.util.List;
 
+import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.dto.mapper.AccountDtoMapper;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
@@ -169,5 +170,13 @@ public class TeacherService {
         } catch (ClassroomNotFoundException e) {
             throw errorHelper.badRequest("Teacher did not apply classroom");
         }
+    }
+
+    @Transactional
+    public AccountDto.CheckDuplicationResult checkDuplicateUsername(String username) {
+        Boolean result = accountService.checkDuplicateUsername(username);
+        return AccountDto.CheckDuplicationResult.builder()
+            .isExists(result)
+            .build();
     }
 }
