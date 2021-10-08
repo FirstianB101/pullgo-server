@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
 import javax.validation.Valid;
+import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.service.TeacherService;
@@ -77,6 +78,12 @@ public class TeacherController {
     public TeacherDto.Result patch(@PathVariable Long id,
         @Valid @RequestBody TeacherDto.Update dto, Authentication authentication) {
         return teacherService.update(id, dto, authentication);
+    }
+
+    @GetMapping("/teachers/{username}/exists")
+    @ResponseStatus(HttpStatus.OK)
+    public AccountDto.CheckDuplicationResult checkDuplicateUsername(@PathVariable String username) {
+        return teacherService.checkDuplicateUsername(username);
     }
 
     @PostMapping("/teachers/{id}/apply-academy")
