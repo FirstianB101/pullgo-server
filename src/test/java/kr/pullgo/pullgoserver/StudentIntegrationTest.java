@@ -34,6 +34,7 @@ import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.StudentDto;
+import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
@@ -84,6 +85,8 @@ public class StudentIntegrationTest {
         fieldWithPath("account.phone").description("전화번호");
     private static final FieldDescriptor DOC_FIELD_ACCOUNT_ROLE =
         fieldWithPath("account.role").description("시스템 역할 (`USER`, `ADMIN`)");
+    private static final FieldDescriptor DOC_FIELD_USERNAME_DUPLICATION =
+        fieldWithPath("isExists").description("사용자 ID 중복 여부");
 
     private MockMvc mockMvc;
 
@@ -1067,6 +1070,58 @@ public class StudentIntegrationTest {
                 .andExpect(status().isBadRequest());
         }
 
+    }
+
+    @Nested
+    class CheckDuplicateUsername {
+
+        @Test
+        public void 중복되지_않는_username_중복확인조회() throws Exception {
+            //When
+            ResultActions actions = mockMvc.perform(get("/students/{username}/exists", "newUser"));
+
+            //Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isExists").value(false));
+
+            // Document
+            actions.andDo(document("student-check-duplicate-username-example",
+                responseFields(
+                    DOC_FIELD_USERNAME_DUPLICATION
+                )));
+        }
+
+        @Test
+        public void 중복되는_username_중복확인조회() throws Exception {
+            // Given
+            StudentDto.Create dto = StudentDto.Create.builder()
+                .parentPhone("01098765432")
+                .schoolName("광운전자공업고등학교")
+                .schoolYear(1)
+                .account(AccountDto.Create.builder()
+                    .username("woodyn1002")
+                    .password("this!sPassw0rd")
+                    .fullName("최우진")
+                    .phone("01012345678")
+                    .build())
+                .build();
+            String body = toJson(dto);
+
+            mockMvc.perform(post("/students")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/students/{username}/exists",
+                dto.getAccount().getUsername()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isExists").value(true));
+
+        }
     }
 
     private String toJson(Object object) throws JsonProcessingException {

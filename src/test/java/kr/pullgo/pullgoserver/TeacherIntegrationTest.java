@@ -78,6 +78,8 @@ public class TeacherIntegrationTest {
         fieldWithPath("account.phone").description("전화번호");
     private static final FieldDescriptor DOC_FIELD_ACCOUNT_ROLE =
         fieldWithPath("account.role").description("시스템 역할 (`USER`, `ADMIN`)");
+    private static final FieldDescriptor DOC_FIELD_USERNAME_DUPLICATION =
+        fieldWithPath("isExists").description("사용자 ID 중복 여부");
 
     private MockMvc mockMvc;
 
@@ -1035,6 +1037,54 @@ public class TeacherIntegrationTest {
                 .andExpect(status().isBadRequest());
         }
 
+    }
+
+    @Nested
+    class CheckDuplicateUsername {
+
+        @Test
+        public void 중복되지_않는_username_중복확인조회() throws Exception {
+            //When
+            ResultActions actions = mockMvc.perform(get("/teachers/{username}/exists", "newUser"));
+
+            //Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isExists").value(false));
+
+            // Document
+            actions.andDo(document("teacher-check-duplicate-username-example",
+                responseFields(
+                    DOC_FIELD_USERNAME_DUPLICATION
+                )));
+        }
+
+        @Test
+        public void 중복되는_username_중복확인조회() throws Exception {
+            // Given
+            TeacherDto.Create dto = TeacherDto.Create.builder()
+                .account(AccountDto.Create.builder()
+                    .username("pte1024")
+                    .password("this!sPassw0rd")
+                    .fullName("박태언")
+                    .phone("01012345678")
+                    .build())
+                .build();
+            String body = toJson(dto);
+
+            mockMvc.perform(post("/teachers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/teachers/{username}/exists",
+                dto.getAccount().getUsername()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isExists").value(true));
+        }
     }
 
     private String toJson(Object object) throws JsonProcessingException {
