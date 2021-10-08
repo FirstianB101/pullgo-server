@@ -55,4 +55,13 @@ public interface AccountDto {
         @NotNull
         private UserRole role;
     }
+
+    @Data
+    @Builder
+    @With
+    class CheckDuplicationResult {
+
+        @NotNull
+        private Boolean isExists;
+    }
 }
