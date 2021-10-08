@@ -33,7 +33,7 @@ public class AccountService {
 
     public Account create(AccountDto.Create dto) {
         try {
-            checkAlreadyEnrollment(dto);
+            checkAlreadyEnrollment(dto.getUsername());
         } catch (AccountAlreadyEnrolledException e) {
             throw errorHelper.badRequest("Already enrolled account");
         }
@@ -44,13 +44,6 @@ public class AccountService {
         entity.setRole(UserRole.USER);
 
         return entity;
-    }
-
-    private void checkAlreadyEnrollment(AccountDto.Create dto) {
-        Optional<Account> username = accountRepository.findByUsername(dto.getUsername());
-        username.ifPresent(u -> {
-            throw new AccountAlreadyEnrolledException();
-        });
     }
 
     public void update(Account entity, AccountDto.Update dto) {
@@ -66,4 +59,19 @@ public class AccountService {
         }
     }
 
+    public Boolean checkDuplicateUsername(String username) {
+        try {
+            checkAlreadyEnrollment(username);
+        } catch (AccountAlreadyEnrolledException e) {
+            return true;
+        }
+        return false;
+    }
+
+    private void checkAlreadyEnrollment(String username) {
+        Optional<Account> sameName = accountRepository.findByUsername(username);
+        sameName.ifPresent(u -> {
+            throw new AccountAlreadyEnrolledException();
+        });
+    }
 }
