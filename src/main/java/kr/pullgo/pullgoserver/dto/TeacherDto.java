@@ -15,7 +15,6 @@ public interface TeacherDto {
     class Create {
 
         @NotNull
-        @NotNull
         private AccountDto.Create account;
 
         public Create(@NotNull AccountDto.Create account) {
