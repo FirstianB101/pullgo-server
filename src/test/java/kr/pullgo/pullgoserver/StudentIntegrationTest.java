@@ -1,6 +1,8 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccountCreateDto;
+import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudent;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentApplyAcademyDto;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentApplyClassroomDto;
 import static kr.pullgo.pullgoserver.helper.StudentHelper.aStudentCreateDto;
@@ -1095,26 +1097,12 @@ public class StudentIntegrationTest {
         @Test
         public void 중복되는_username_중복확인조회() throws Exception {
             // Given
-            StudentDto.Create dto = StudentDto.Create.builder()
-                .parentPhone("01098765432")
-                .schoolName("광운전자공업고등학교")
-                .schoolYear(1)
-                .account(AccountDto.Create.builder()
-                    .username("woodyn1002")
-                    .password("this!sPassw0rd")
-                    .fullName("최우진")
-                    .phone("01012345678")
-                    .build())
-                .build();
-            String body = toJson(dto);
-
-            mockMvc.perform(post("/students")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
+            Student student = aStudent();
+            studentRepository.save(student);
 
             // When
             ResultActions actions = mockMvc.perform(get("/students/{username}/exists",
-                dto.getAccount().getUsername()));
+                student.getAccount().getUsername()));
 
             // Then
             actions
