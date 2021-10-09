@@ -59,7 +59,7 @@ public class AccountService {
         }
     }
 
-    public Boolean checkDuplicateUsername(String username) {
+    public boolean checkDuplicateUsername(String username) {
         try {
             checkAlreadyEnrollment(username);
         } catch (AccountAlreadyEnrolledException e) {
