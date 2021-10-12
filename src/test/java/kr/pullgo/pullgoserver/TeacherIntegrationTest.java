@@ -1220,6 +1220,7 @@ public class TeacherIntegrationTest {
             // When
             ResultActions actions = mockMvc.perform(get("/teachers/{username}/exists",
                 username));
+            
 
             // Then
             actions

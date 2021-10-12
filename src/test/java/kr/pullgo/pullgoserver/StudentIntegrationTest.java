@@ -1233,6 +1233,7 @@ public class StudentIntegrationTest {
         @Test
         public void 중복되는_username_중복확인조회() throws Exception {
             // Given
+
             String username = trxHelper.doInTransaction(() -> {
                 Student student = entityHelper.generateStudent();
                 return student.getAccount().getUsername();
@@ -1242,6 +1243,7 @@ public class StudentIntegrationTest {
             // When
             ResultActions actions = mockMvc.perform(get("/students/{username}/exists",
                 username));
+
 
             // Then
             actions
