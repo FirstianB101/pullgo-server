@@ -26,15 +26,30 @@ import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
+import kr.pullgo.pullgoserver.service.JwtService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class EntityHelper {
 
     private final EntityManager em;
+    private final JwtService jwtService;
 
-    public EntityHelper(EntityManager em) {
+    public EntityHelper(EntityManager em, JwtService jwtService) {
         this.em = em;
+        this.jwtService = jwtService;
+    }
+
+    public String generateToken(){
+        return generateToken(noInit());
+    }
+
+    public String generateToken(Function<? super Account, ? extends Account> initialize){
+        Account account = anAccount().withId(null);
+
+        account = initialize.apply(account);
+        return jwtService.signJwt(account);
     }
 
     public Account generateAccount() {
