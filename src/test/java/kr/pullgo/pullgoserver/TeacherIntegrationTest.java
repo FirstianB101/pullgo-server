@@ -163,11 +163,15 @@ public class TeacherIntegrationTest {
         @Test
         void postTeacher_TeacherAlreadyEnrolled_BadRequestStatus() throws Exception {
             // Given
-            String body = toJson(aTeacherCreateDto());
+            String username = trxHelper.doInTransaction(() -> {
+                Teacher teacher = entityHelper.generateTeacher();
+                return teacher.getAccount().getUsername();
+            });
 
-            mockMvc.perform(post("/teachers")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
+            TeacherDto.Create dto = aTeacherCreateDto().withAccount(
+                anAccountCreateDto().withUsername(username)
+            );
+            String body = toJson(dto);
 
             // When
             ResultActions actions = mockMvc.perform(post("/teachers")
@@ -1062,23 +1066,14 @@ public class TeacherIntegrationTest {
         @Test
         public void 중복되는_username_중복확인조회() throws Exception {
             // Given
-            TeacherDto.Create dto = TeacherDto.Create.builder()
-                .account(AccountDto.Create.builder()
-                    .username("pte1024")
-                    .password("this!sPassw0rd")
-                    .fullName("박태언")
-                    .phone("01012345678")
-                    .build())
-                .build();
-            String body = toJson(dto);
-
-            mockMvc.perform(post("/teachers")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
+            String username = trxHelper.doInTransaction(() -> {
+                Teacher teacher = entityHelper.generateTeacher();
+                return teacher.getAccount().getUsername();
+            });
 
             // When
             ResultActions actions = mockMvc.perform(get("/teachers/{username}/exists",
-                dto.getAccount().getUsername()));
+                username));
 
             // Then
             actions
