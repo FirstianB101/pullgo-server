@@ -35,7 +35,7 @@ public class TeacherAuthorizer extends AbstractAuthorizer {
         Account account = authInspector.getAccountOrThrow(authentication);
 
         Teacher requester = getTeacherOrThrow(account);
-        if (requester != teacher && !academy.getTeachers().contains(teacher)) {
+        if (requester != teacher && !academy.getTeachers().contains(requester)) {
             throw errorHelper.forbidden("Not a member teacher or requested oneself");
         }
     }
@@ -47,7 +47,7 @@ public class TeacherAuthorizer extends AbstractAuthorizer {
         Account account = authInspector.getAccountOrThrow(authentication);
 
         Teacher requester = getTeacherOrThrow(account);
-        if (requester != teacher && !classroom.getTeachers().contains(teacher)) {
+        if (requester != teacher && !classroom.getTeachers().contains(requester)) {
             throw errorHelper.forbidden("Not a member teacher or requested oneself");
         }
     }
