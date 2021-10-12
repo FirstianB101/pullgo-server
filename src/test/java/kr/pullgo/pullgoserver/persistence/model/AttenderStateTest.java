@@ -2,16 +2,18 @@ package kr.pullgo.pullgoserver.persistence.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
+import kr.pullgo.pullgoserver.service.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 @DataJpaTest
-@Import(EntityHelper.class)
+@Import({EntityHelper.class, JwtService.class, ObjectMapper.class})
 class AttenderStateTest {
 
     @Autowired
