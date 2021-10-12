@@ -748,8 +748,47 @@ public class TeacherIntegrationTest {
     class RemoveAppliedAcademy {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
-        void removeAppliedAcademy() throws Exception {
+        void 학원_가입요청_철회() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Academy academy = entityHelper.generateAcademy();
+                Teacher teacher = entityHelper.generateTeacher(it -> {
+                    it.applyAcademy(academy);
+                    return it;
+                });
+                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                return new Struct()
+                    .withValue("academyId", academy.getId())
+                    .withValue("teacherId", teacher.getId())
+                    .withValue("token", token);
+            });
+            Long academyId = given.valueOf("academyId");
+            Long teacherId = given.valueOf("teacherId");
+            String token = given.valueOf("token");
+
+            // When
+            String body = toJson(aTeacherRemoveAppliedAcademyDto().withAcademyId(academyId));
+
+            ResultActions actions = mockMvc
+                .perform(post("/teachers/{id}/remove-applied-academy", teacherId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("teacher-remove-applied-academy-example",
+                requestFields(
+                    fieldWithPath("academyId").description("가입 요청을 철회할 학원 ID")
+                )));
+        }
+
+        @Test
+        void 학원_가입요청_거절() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Academy academy = entityHelper.generateAcademy();
@@ -985,8 +1024,7 @@ public class TeacherIntegrationTest {
     class RemoveAppliedClassroom {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
-        void removeAppliedClassroom() throws Exception {
+        void 반_가입요청_철회() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
@@ -1028,7 +1066,51 @@ public class TeacherIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
+        void 반_가입요청_거절() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Teacher classroomTeacher = entityHelper.generateTeacher();
+                Classroom classroom = entityHelper.generateClassroom(it ->{
+                    it.addTeacher(classroomTeacher);
+                    return it;
+                });
+                Teacher teacher = entityHelper.generateTeacher(it -> {
+                    it.applyClassroom(classroom);
+                    return it;
+                });
+                String token = entityHelper.generateToken(it -> classroomTeacher.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("teacherId", teacher.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long teacherId = given.valueOf("teacherId");
+            String token = given.valueOf("token");
+
+            // When
+            String body = toJson(
+                aTeacherRemoveAppliedClassroomDto().withClassroomId(classroomId));
+
+            ResultActions actions = mockMvc
+                .perform(post("/teachers/{id}/remove-applied-classroom", teacherId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(emptyString()));
+
+            // Document
+            actions.andDo(document("teacher-remove-applied-classroom-example",
+                requestFields(
+                    fieldWithPath("classroomId").description("가입 요청을 거절할 반 ID")
+                )));
+        }
+
+        @Test
         void removeAppliedClassroom_TeacherNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aTeacherRemoveAppliedClassroomDto());
