@@ -124,11 +124,15 @@ public class StudentIntegrationTest {
         @Test
         void postStudent_StudentAlreadyEnrolled_BadRequestStatus() throws Exception {
             // Given
-            String body = toJson(aStudentCreateDto());
+            String username = trxHelper.doInTransaction(() -> {
+                Student student = entityHelper.generateStudent();
+                return student.getAccount().getUsername();
+            });
 
-            mockMvc.perform(post("/students")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
+            StudentDto.Create dto = aStudentCreateDto().withAccount(
+                anAccountCreateDto().withUsername(username)
+            );
+            String body = toJson(dto);
 
             // When
             ResultActions actions = mockMvc.perform(post("/students")
@@ -1097,12 +1101,15 @@ public class StudentIntegrationTest {
         @Test
         public void 중복되는_username_중복확인조회() throws Exception {
             // Given
-            Student student = aStudent();
-            studentRepository.save(student);
+            String username = trxHelper.doInTransaction(() -> {
+                Student student = entityHelper.generateStudent();
+                return student.getAccount().getUsername();
+            });
+
 
             // When
             ResultActions actions = mockMvc.perform(get("/students/{username}/exists",
-                student.getAccount().getUsername()));
+                username));
 
             // Then
             actions
