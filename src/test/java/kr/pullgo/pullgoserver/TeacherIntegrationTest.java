@@ -1,8 +1,7 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
-import static kr.pullgo.pullgoserver.helper.AccountHelper.*;
-import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
+import static kr.pullgo.pullgoserver.helper.AccountHelper.anAccountCreateDto;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherApplyAcademyDto;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherApplyClassroomDto;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherCreateDto;
@@ -36,8 +35,7 @@ import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
-import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
-import kr.pullgo.pullgoserver.helper.AccountHelper;
+import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
@@ -101,6 +99,9 @@ public class TeacherIntegrationTest {
 
     @Autowired
     private EntityHelper entityHelper;
+
+    @Autowired
+    private AuthHelper authHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -503,7 +504,7 @@ public class TeacherIntegrationTest {
                 Teacher teacher = entityHelper.generateTeacher(it ->
                     it.withAccount(account)
                 );
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("teacherId", teacher.getId());
@@ -590,7 +591,7 @@ public class TeacherIntegrationTest {
                     it.applyClassroom(applyingClassroom);
                     return it;
                 });
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("teacherId", teacher.getId());
@@ -635,7 +636,7 @@ public class TeacherIntegrationTest {
             Struct given = trxHelper.doInTransaction(() -> {
                 Academy academy = entityHelper.generateAcademy();
                 Teacher teacher = entityHelper.generateTeacher();
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("academyId", academy.getId())
@@ -686,7 +687,7 @@ public class TeacherIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Teacher teacher = entityHelper.generateTeacher();
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("teacherId", teacher.getId());
@@ -718,7 +719,7 @@ public class TeacherIntegrationTest {
                     academy.addTeacher(it);
                     return it;
                 });
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("academyId", academy.getId())
@@ -756,7 +757,7 @@ public class TeacherIntegrationTest {
                     it.applyAcademy(academy);
                     return it;
                 });
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("academyId", academy.getId())
                     .withValue("teacherId", teacher.getId())
@@ -797,7 +798,7 @@ public class TeacherIntegrationTest {
                     return it;
                 });
                 Teacher creator = academy.getOwner();
-                String token = entityHelper.generateToken(it -> creator.getAccount());
+                String token = authHelper.generateToken(it -> creator.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("academyId", academy.getId())
@@ -848,7 +849,7 @@ public class TeacherIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Teacher teacher = entityHelper.generateTeacher();
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("teacherId", teacher.getId());
@@ -877,7 +878,7 @@ public class TeacherIntegrationTest {
                 Academy academy = entityHelper.generateAcademy();
                 Teacher teacher = entityHelper.generateTeacher();
                 Teacher creator = academy.getOwner();
-                String token = entityHelper.generateToken(it -> creator.getAccount());
+                String token = authHelper.generateToken(it -> creator.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("academyId", academy.getId())
@@ -912,7 +913,7 @@ public class TeacherIntegrationTest {
             Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
                 Teacher teacher = entityHelper.generateTeacher();
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
@@ -963,7 +964,7 @@ public class TeacherIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Teacher teacher = entityHelper.generateTeacher();
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("teacherId", teacher.getId());
@@ -994,7 +995,7 @@ public class TeacherIntegrationTest {
                     classroom.addTeacher(it);
                     return it;
                 });
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
@@ -1033,7 +1034,7 @@ public class TeacherIntegrationTest {
                     return it;
                 });
 
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
@@ -1078,7 +1079,7 @@ public class TeacherIntegrationTest {
                     it.applyClassroom(classroom);
                     return it;
                 });
-                String token = entityHelper.generateToken(it -> classroomTeacher.getAccount());
+                String token = authHelper.generateToken(it -> classroomTeacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
@@ -1130,7 +1131,7 @@ public class TeacherIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Teacher teacher = entityHelper.generateTeacher();
-                String token = entityHelper.generateToken(it -> teacher.getAccount());
+                String token = authHelper.generateToken(it -> teacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("teacherId", teacher.getId());
@@ -1162,7 +1163,7 @@ public class TeacherIntegrationTest {
                     return it;
                 });
                 Teacher teacher = entityHelper.generateTeacher();
-                String token = entityHelper.generateToken(it -> classroomTeacher.getAccount());
+                String token = authHelper.generateToken(it -> classroomTeacher.getAccount());
                 return new Struct()
                     .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
