@@ -30,13 +30,6 @@ public class AttenderStateHelper {
             .build();
     }
 
-    public static AttenderStateDto.Update anAttenderStateUpdateDto() {
-        return AttenderStateDto.Update.builder()
-            .progress(ARBITRARY_PROGRESS)
-            .score(ARBITRARY_SCORE)
-            .build();
-    }
-
     public static AttenderStateDto.Result anAttenderStateResultDto() {
         return AttenderStateDto.Result.builder()
             .id(0L)

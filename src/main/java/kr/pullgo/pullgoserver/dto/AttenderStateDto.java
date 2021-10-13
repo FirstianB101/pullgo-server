@@ -23,16 +23,6 @@ public interface AttenderStateDto {
     @Data
     @Builder
     @With
-    class Update {
-
-        private AttendingProgress progress;
-
-        private Integer score;
-    }
-
-    @Data
-    @Builder
-    @With
     class Result {
 
         @NotNull

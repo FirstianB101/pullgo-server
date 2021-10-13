@@ -1,6 +1,5 @@
 package kr.pullgo.pullgoserver;
 
-import static kr.pullgo.pullgoserver.helper.AttenderStateHelper.anAttenderStateUpdateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -23,7 +22,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
-import kr.pullgo.pullgoserver.dto.AttenderStateDto.Update;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
@@ -289,64 +287,6 @@ public class AttenderStateIntegrationTest {
             .andExpect(jsonPath("$.examId").value(examId))
             .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
             .andExpect(jsonPath("$.score").value(nullValue()));
-    }
-
-    @Nested
-    class PatchAttenderState {
-
-        @Test
-        @WithMockUser(authorities = "ADMIN")
-        void patchAttenderState() throws Exception {
-            // Given
-            Struct given = trxHelper.doInTransaction(() -> {
-                AttenderState attenderState = entityHelper.generateAttenderState();
-
-                return new Struct()
-                    .withValue("attenderStateId", attenderState.getId())
-                    .withValue("attenderId", attenderState.getAttender().getId())
-                    .withValue("examId", attenderState.getExam().getId());
-            });
-            Long attenderStateId = given.valueOf("attenderStateId");
-            Long attenderId = given.valueOf("attenderId");
-            Long examId = given.valueOf("examId");
-
-            // When
-            Update dto = Update.builder()
-                .progress(AttendingProgress.COMPLETE)
-                .score(85)
-                .build();
-            String body = toJson(dto);
-
-            ResultActions actions = mockMvc
-                .perform(patch("/exam/attender-states/{id}", attenderStateId)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(body));
-
-            // Then
-            actions
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.attenderId").value(attenderId))
-                .andExpect(jsonPath("$.examId").value(examId))
-                .andExpect(jsonPath("$.progress").value(AttendingProgress.COMPLETE.toString()))
-                .andExpect(jsonPath("$.score").value(85));
-        }
-
-        @Test
-        @WithMockUser(authorities = "ADMIN")
-        void patchAttenderState_AttenderStateNotFound_NotFoundStatus() throws Exception {
-            // When
-            String body = toJson(anAttenderStateUpdateDto());
-
-            ResultActions actions = mockMvc.perform(patch("/exam/attender-states/{id}", 0)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
-
-            // Then
-            actions
-                .andExpect(status().isNotFound());
-        }
-
     }
 
     @Nested
