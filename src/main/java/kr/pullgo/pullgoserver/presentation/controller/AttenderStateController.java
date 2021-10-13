@@ -73,7 +73,7 @@ public class AttenderStateController {
         return attenderStateService.update(id, dto, authentication);
     }
 
-    @PostMapping("/exam/attender-states/{id}")
+    @PostMapping("/exam/attender-states/{id}/submit")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void submit(@PathVariable Long id, Authentication authentication) {
         attenderStateService.submit(id, authentication);
