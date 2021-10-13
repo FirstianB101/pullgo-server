@@ -74,21 +74,6 @@ public class AttenderStateService {
     }
 
     @Transactional
-    public AttenderStateDto.Result update(Long id, AttenderStateDto.Update dto,
-        Authentication authentication) {
-        AttenderState entity = repoHelper.findAttenderStateOrThrow(id);
-        attenderStateAuthorizer.requireOwningAttender(authentication, entity);
-
-        if (dto.getProgress() != null) {
-            entity.setProgress(dto.getProgress());
-        }
-        if (dto.getScore() != null) {
-            entity.setScore(dto.getScore());
-        }
-        return dtoMapper.asResultDto(attenderStateRepository.save(entity));
-    }
-
-    @Transactional
     public void delete(Long id, Authentication authentication) {
         AttenderState entity = repoHelper.findAttenderStateOrThrow(id);
         attenderStateAuthorizer.requireOwningAttender(authentication, entity);

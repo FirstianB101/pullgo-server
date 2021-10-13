@@ -67,12 +67,6 @@ public class AttenderStateController {
         attenderStateService.delete(id, authentication);
     }
 
-    @PatchMapping("/exam/attender-states/{id}")
-    public AttenderStateDto.Result patch(@PathVariable Long id,
-        @Valid @RequestBody AttenderStateDto.Update dto, Authentication authentication) {
-        return attenderStateService.update(id, dto, authentication);
-    }
-
     @PostMapping("/exam/attender-states/{id}/submit")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void submit(@PathVariable Long id, Authentication authentication) {
