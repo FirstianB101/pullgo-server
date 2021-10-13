@@ -377,7 +377,7 @@ public class AttenderStateIntegrationTest {
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
 
             // Then
             actions
@@ -393,7 +393,7 @@ public class AttenderStateIntegrationTest {
         @Test
         void submitAttenderState_AttenderStateNotFound_NotFoundStatus() throws Exception {
             // When
-            ResultActions actions = mockMvc.perform(post("/exam/attender-states/{id}", 0));
+            ResultActions actions = mockMvc.perform(post("/exam/attender-states/{id}/submit", 0));
 
             // Then
             actions
@@ -413,7 +413,7 @@ public class AttenderStateIntegrationTest {
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
 
             // Then
             actions
@@ -440,7 +440,7 @@ public class AttenderStateIntegrationTest {
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
 
             // Then
             actions
@@ -464,7 +464,7 @@ public class AttenderStateIntegrationTest {
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
 
             // Then
             actions
@@ -488,7 +488,7 @@ public class AttenderStateIntegrationTest {
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
 
             // Then
             actions
@@ -513,7 +513,7 @@ public class AttenderStateIntegrationTest {
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
 
             // Then
             actions
