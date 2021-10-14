@@ -372,6 +372,7 @@ operation::teacher-create-example[snippets='request-fields,curl-request,http-res
 === Teacher 수정
 
 `PATCH /teachers/{id}` 요청으로 Teacher를 수정합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 갱신된 Teacher를 응답 Body로 전달합니다.
 
 operation::teacher-update-example[snippets='request-fields,curl-request,http-response']
@@ -380,6 +381,7 @@ operation::teacher-update-example[snippets='request-fields,curl-request,http-res
 === Teacher 삭제
 
 `DELETE /teachers/{id}` 요청으로 Teacher를 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::teacher-delete-example[snippets='curl-request,http-response']
 
@@ -387,27 +389,33 @@ operation::teacher-delete-example[snippets='curl-request,http-response']
 === 학원에 가입 요청
 
 `POST /teachers/{teacherId}/apply-academy` 요청으로 학원에 가입을 요청합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::teacher-apply-academy-example[snippets='request-fields,curl-request,http-response']
 
 [[resources_teacher_remove-applied-academy]]
-=== 학원에 보낸 가입 요청 철회
+=== 학원에 보낸 가입 요청 철회 및 거절
 
 `POST /teachers/{teacherId}/remove-applied-academy` 요청으로 학원에 보낸 가입 요청을 철회합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 또는 해당 `Academy` 에 속하는 `Teacher` 의 해당 엑세스 토큰이 제공되어야 합니다.
 
 operation::teacher-remove-applied-academy-example[snippets='request-fields,curl-request,http-response']
+
+operation::academy-member-remove-teacher-applied-academy-example[snippets='request-fields,curl-request,http-response']
 
 [[resources_teacher_apply-classroom]]
 === 반에 가입 요청
 
 `POST /teachers/{teacherId}/apply-classroom` 요청으로 반에 가입을 요청합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::teacher-apply-classroom-example[snippets='request-fields,curl-request,http-response']
 
 [[resources_teacher_remove-applied-classroom]]
-=== 반에 보낸 가입 요청 철회
+=== 반에 보낸 가입 요청 철회 및 거절
 
 `POST /teachers/{teacherId}/remove-applied-classroom` 요청으로 반에 보낸 가입 요청을 철회합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 또는 해당 `Classroom` 에 속하는 `Teacher` 의 해당 엑세스 토큰이 제공되어야 합니다.
 
 operation::teacher-remove-applied-classroom-example[snippets='request-fields,curl-request,http-response']
 
@@ -449,6 +457,7 @@ operation::student-create-example[snippets='request-fields,curl-request,http-res
 === Student 수정
 
 `PATCH /students/{id}` 요청으로 Student를 수정합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 갱신된 Student를 응답 Body로 전달합니다.
 
 operation::student-update-example[snippets='request-fields,curl-request,http-response']
@@ -457,6 +466,7 @@ operation::student-update-example[snippets='request-fields,curl-request,http-res
 === Student 삭제
 
 `DELETE /students/{id}` 요청으로 Student를 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::student-delete-example[snippets='curl-request,http-response']
 
@@ -464,13 +474,16 @@ operation::student-delete-example[snippets='curl-request,http-response']
 === 학원에 가입 요청
 
 `POST /students/{studentId}/apply-academy` 요청으로 학원에 가입을 요청합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::student-apply-academy-example[snippets='request-fields,curl-request,http-response']
 
 [[resources_student_remove-applied-academy]]
-=== 학원에 보낸 가입 요청 철회
+=== 학원에 보낸 가입 요청 철회 및 거절
 
 `POST /students/{studentId}/remove-applied-academy` 요청으로 학원에 보낸 가입 요청을 철회합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 또는 해당 `Academy` 에 속하는 `Teacher` 의 해당 엑세스 토큰이 제공되어야 합니다.
+
 
 operation::student-remove-applied-academy-example[snippets='request-fields,curl-request,http-response']
 
@@ -478,6 +491,7 @@ operation::student-remove-applied-academy-example[snippets='request-fields,curl-
 === 반에 가입 요청
 
 `POST /students/{studentId}/apply-classroom` 요청으로 반에 가입을 요청합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::student-apply-classroom-example[snippets='request-fields,curl-request,http-response']
 
@@ -485,6 +499,7 @@ operation::student-apply-classroom-example[snippets='request-fields,curl-request
 === 반에 보낸 가입 요청 철회
 
 `POST /students/{studentId}/remove-applied-classroom` 요청으로 반에 보낸 가입 요청을 철회합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 또는 해당 `Classroom` 에 속하는 `Teacher` 의 해당 엑세스 토큰이 제공되어야 합니다.
 
 operation::student-remove-applied-classroom-example[snippets='request-fields,curl-request,http-response']
 
