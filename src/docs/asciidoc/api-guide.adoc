@@ -368,6 +368,14 @@ operation::teacher-search-example[snippets='request-parameters,curl-request,http
 
 operation::teacher-create-example[snippets='request-fields,curl-request,http-response']
 
+[[resources_teacher_check_duplication]]
+=== Teacher 중복 검사
+
+`GET /teachers/{username}/exists` 요청으로 해당 `username` 의 중복여부를 응답 Body로 전달합니다.
+
+operation::teacher-check-duplicate-username-example[snippets='curl-request,http-response']
+
+
 [[resources_teacher_upate]]
 === Teacher 수정
 
@@ -453,6 +461,13 @@ operation::student-search-example[snippets='request-parameters,curl-request,http
 
 operation::student-create-example[snippets='request-fields,curl-request,http-response']
 
+[[resources_student_check_duplication]]
+=== Student 중복 검사
+
+`GET /students/{username}/exists` 요청으로 해당 `username` 의 중복여부를 응답 Body로 전달합니다.
+
+operation::student-check-duplicate-username-example[snippets='curl-request,http-response']
+
 [[resources_student_upate]]
 === Student 수정
 
@@ -496,7 +511,7 @@ operation::student-remove-applied-academy-example[snippets='request-fields,curl-
 operation::student-apply-classroom-example[snippets='request-fields,curl-request,http-response']
 
 [[resources_student_remove-applied-classroom]]
-=== 반에 보낸 가입 요청 철회
+=== 반에 보낸 가입 요청 철회 및 거절
 
 `POST /students/{studentId}/remove-applied-classroom` 요청으로 반에 보낸 가입 요청을 철회합니다.
 요청의 `Authorization` 헤더로 요청을 보낸 `Student` 또는 해당 `Classroom` 에 속하는 `Teacher` 의 해당 엑세스 토큰이 제공되어야 합니다.
