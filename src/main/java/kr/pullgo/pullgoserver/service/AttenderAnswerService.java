@@ -54,8 +54,8 @@ public class AttenderAnswerService {
     }
 
     @Transactional(readOnly = true)
-    public AttenderAnswerDto.Result read(Long id) {
-        AttenderAnswer entity = repoHelper.findAttenderAnswerOrThrow(id);
+    public AttenderAnswerDto.Result read(Long attenderStateId, Long questionId) {
+        AttenderAnswer entity = repoHelper.findAttenderAnswerOrThrow(attenderStateId, questionId);
         return dtoMapper.asResultDto(entity);
     }
 
@@ -67,9 +67,10 @@ public class AttenderAnswerService {
     }
 
     @Transactional
-    public AttenderAnswerDto.Result update(Long id, AttenderAnswerDto.Update dto,
+    public AttenderAnswerDto.Result update(Long attenderStateId, Long questionId,
+        AttenderAnswerDto.Update dto,
         Authentication authentication) {
-        AttenderAnswer entity = repoHelper.findAttenderAnswerOrThrow(id);
+        AttenderAnswer entity = repoHelper.findAttenderAnswerOrThrow(attenderStateId, questionId);
         attenderAnswerAuthorizer.requireOwningAttender(authentication, entity);
 
         if (dto.getAnswer() != null) {
@@ -79,8 +80,8 @@ public class AttenderAnswerService {
     }
 
     @Transactional
-    public void delete(Long id, Authentication authentication) {
-        AttenderAnswer entity = repoHelper.findAttenderAnswerOrThrow(id);
+    public void delete(Long attenderStateId, Long questionId, Authentication authentication) {
+        AttenderAnswer entity = repoHelper.findAttenderAnswerOrThrow(attenderStateId, questionId);
         attenderAnswerAuthorizer.requireOwningAttender(authentication, entity);
 
         attenderAnswerRepository.delete(entity);
