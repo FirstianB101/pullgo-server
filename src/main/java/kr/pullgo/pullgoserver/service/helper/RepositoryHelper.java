@@ -79,10 +79,8 @@ public class RepositoryHelper {
 
     public AttenderAnswer findAttenderAnswerOrThrow(Long attenderStateId, Long questionId)
         throws ResponseStatusException {
-        AttenderAnswer attenderAnswer = findAttenderStateOrThrow(attenderStateId)
+        return findAttenderStateOrThrow(attenderStateId)
             .getAnswers().stream().filter(it -> it.getQuestion().getId().equals(questionId))
             .findAny().orElseThrow(() -> errorHelper.notFound("attender answer was not found"));
-
-        return findOrThrow(AttenderAnswer.class, attenderAnswer.getId());
     }
 }
