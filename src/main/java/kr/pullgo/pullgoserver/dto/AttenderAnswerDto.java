@@ -57,16 +57,15 @@ public interface AttenderAnswerDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
     @With
     class Put {
 
         @NotNull
-        private Long attenderStateId;
-
-        @NotNull
-        private Long questionId;
-
-        @NotNull
         private Set<Integer> answer;
+
+        public Put(Set<Integer> answer) {
+            this.answer = answer;
+        }
     }
 }
