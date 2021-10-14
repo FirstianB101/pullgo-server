@@ -17,7 +17,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import kr.pullgo.pullgoserver.error.exception.AttenderAnswerNotFoundException;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -110,7 +109,6 @@ public class AttenderState extends TimeEntity {
         }
 
         this.answers.remove(attenderAnswer);
-        attenderAnswer.setAttenderState(null);
     }
 
     @Builder
