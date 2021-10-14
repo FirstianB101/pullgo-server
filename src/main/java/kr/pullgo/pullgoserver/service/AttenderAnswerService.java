@@ -14,12 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AttenderAnswerService {
@@ -38,23 +35,6 @@ public class AttenderAnswerService {
         this.attenderAnswerRepository = attenderAnswerRepository;
         this.repoHelper = repoHelper;
         this.attenderAnswerAuthorizer = attenderAnswerAuthorizer;
-    }
-
-    @Transactional
-    public ResponseEntity<AttenderAnswerDto.Result> put(Long attenderStateId, Long questionId,
-        AttenderAnswerDto.Put dto, Authentication authentication) {
-        try {
-            return new ResponseEntity<>(
-                update(attenderStateId, questionId, AttenderAnswerDto.Update.builder()
-                    .answer(dto.getAnswer())
-                    .build(), authentication), HttpStatus.OK);
-        } catch (ResponseStatusException e) {
-            return new ResponseEntity<>(create(AttenderAnswerDto.Create.builder()
-                .answer(dto.getAnswer())
-                .attenderStateId(attenderStateId)
-                .questionId(questionId)
-                .build(), authentication), HttpStatus.CREATED);
-        }
     }
 
     @Transactional
