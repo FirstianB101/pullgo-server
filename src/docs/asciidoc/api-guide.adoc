@@ -556,6 +556,7 @@ operation::classroom-search-example[snippets='request-parameters,curl-request,ht
 
 `POST /academy/classrooms` 요청으로 Classroom를 생성합니다.
 creatorId로 지정한 선생님은 반의 첫 선생님으로 등록됩니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 생성한 Classroom를 응답 Body로 전달합니다.
 
 operation::classroom-create-example[snippets='request-fields,curl-request,http-response']
@@ -564,6 +565,7 @@ operation::classroom-create-example[snippets='request-fields,curl-request,http-r
 === Classroom 수정
 
 `PATCH /academy/classrooms/{id}` 요청으로 Classroom를 수정합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 갱신된 Classroom를 응답 Body로 전달합니다.
 
 operation::classroom-update-example[snippets='request-fields,curl-request,http-response']
@@ -572,6 +574,7 @@ operation::classroom-update-example[snippets='request-fields,curl-request,http-r
 === Classroom 삭제
 
 `DELETE /academy/classrooms/{id}` 요청으로 Classroom를 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::classroom-delete-example[snippets='curl-request,http-response']
 
@@ -579,6 +582,7 @@ operation::classroom-delete-example[snippets='curl-request,http-response']
 === 반에 가입 요청한 선생님 승인
 
 `POST /academy/classrooms/{classroomId}/accept-teacher` 요청으로 Classroom에 가입 요청한 선생님을 승인합니다.
+요청의 `Authorization` 헤더로 가입 승인 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::classroom-accept-teacher-example[snippets='request-fields,curl-request,http-response']
 
@@ -586,6 +590,7 @@ operation::classroom-accept-teacher-example[snippets='request-fields,curl-reques
 === 반에 가입 요청한 학생 승인
 
 `POST /academy/classrooms/{classroomId}/accept-student` 요청으로 Classroom에 가입 요청한 학생을 승인합니다.
+요청의 `Authorization` 헤더로 가입 승인 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::classroom-accept-student-example[snippets='request-fields,curl-request,http-response']
 
@@ -593,6 +598,7 @@ operation::classroom-accept-student-example[snippets='request-fields,curl-reques
 === 반에 등록된 선생님 추방
 
 `POST /academy/classrooms/{classroomId}/kick-teacher` 요청으로 Classroom에 등록된 선생님을 추방합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::classroom-kick-teacher-example[snippets='request-fields,curl-request,http-response']
 
@@ -600,6 +606,7 @@ operation::classroom-kick-teacher-example[snippets='request-fields,curl-request,
 === 반에 등록된 학생 추방
 
 `POST /academy/classrooms/{classroomId}/kick-student` 요청으로 Classroom에 등록된 학생을 추방합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::classroom-kick-student-example[snippets='request-fields,curl-request,http-response']
 
