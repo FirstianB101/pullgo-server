@@ -696,6 +696,7 @@ operation::exam-search-example[snippets='request-parameters,curl-request,http-re
 === Exam 생성
 
 `POST /exams` 요청으로 Exam을 생성합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 생성한 Exam을 응답 Body로 전달합니다.
 
 operation::exam-create-example[snippets='request-fields,curl-request,http-response']
@@ -704,6 +705,7 @@ operation::exam-create-example[snippets='request-fields,curl-request,http-respon
 === Exam 수정
 
 `PATCH /exams/{id}` 요청으로 Exam을 수정합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 갱신된 Exam을 응답 Body로 전달합니다.
 
 operation::exam-update-example[snippets='request-fields,curl-request,http-response']
@@ -712,6 +714,7 @@ operation::exam-update-example[snippets='request-fields,curl-request,http-respon
 === Exam 삭제
 
 `DELETE /exams/{id}` 요청으로 Exam을 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::exam-delete-example[snippets='curl-request,http-response']
 
@@ -719,6 +722,7 @@ operation::exam-delete-example[snippets='curl-request,http-response']
 === 시험 취소
 
 `POST /exams/{id}/cancel` 요청으로 시험을 취소합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 시험이 이미 취소되었거나 종료되었으면 `400 Bad Request` 에러를 반환합니다.
 
 operation::exam-cancel-example[snippets='curl-request,http-response']
@@ -727,6 +731,7 @@ operation::exam-cancel-example[snippets='curl-request,http-response']
 === 시험 종료
 
 `POST /exams/{id}/finish` 요청으로 시험을 종료합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 시험이 이미 취소되었거나 종료되었으면 `400 Bad Request` 에러를 반환합니다.
 
 operation::exam-finish-example[snippets='curl-request,http-response']
