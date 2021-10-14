@@ -821,12 +821,6 @@ public class TeacherIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
-
-            // Document
-            actions.andDo(document("teacher-remove-applied-academy-example",
-                requestFields(
-                    fieldWithPath("academyId").description("가입 요청을 거절할 학원 ID")
-                )));
         }
 
         @Test
@@ -1103,12 +1097,6 @@ public class TeacherIntegrationTest {
             actions
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(emptyString()));
-
-            // Document
-            actions.andDo(document("teacher-remove-applied-classroom-example",
-                requestFields(
-                    fieldWithPath("classroomId").description("가입 요청을 거절할 반 ID")
-                )));
         }
 
         @Test
