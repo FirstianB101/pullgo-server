@@ -54,4 +54,19 @@ public interface AttenderAnswerDto {
         @NotNull
         private Set<Integer> answer;
     }
+
+    @Data
+    @Builder
+    @With
+    class Put {
+
+        @NotNull
+        private Long attenderStateId;
+
+        @NotNull
+        private Long questionId;
+
+        @NotNull
+        private Set<Integer> answer;
+    }
 }

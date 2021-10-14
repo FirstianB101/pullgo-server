@@ -11,12 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -30,13 +30,6 @@ public class AttenderAnswerController {
     @Autowired
     public AttenderAnswerController(AttenderAnswerService attenderAnswerService) {
         this.attenderAnswerService = attenderAnswerService;
-    }
-
-    @PostMapping("/exam/attender-state/answers")
-    @ResponseStatus(HttpStatus.CREATED)
-    public AttenderAnswerDto.Result post(@Valid @RequestBody AttenderAnswerDto.Create dto,
-        Authentication authentication) {
-        return attenderAnswerService.create(dto, authentication);
     }
 
     @GetMapping("/exam/attender-state/answers")
@@ -65,11 +58,11 @@ public class AttenderAnswerController {
         attenderAnswerService.delete(attenderStateId, questionId, authentication);
     }
 
-    @PatchMapping("/exam/attender-state/{attenderStateId}/answers/{questionId}")
-    public AttenderAnswerDto.Result patch(@PathVariable Long attenderStateId,
+    @PutMapping("/exam/attender-state/{attenderStateId}/answers/{questionId}")
+    public ResponseEntity<AttenderAnswerDto.Result> put(@PathVariable Long attenderStateId,
         @PathVariable Long questionId,
-        @Valid @RequestBody AttenderAnswerDto.Update dto, Authentication authentication) {
-        return attenderAnswerService.update(attenderStateId, questionId, dto, authentication);
+        @Valid @RequestBody AttenderAnswerDto.Put dto, Authentication authentication) {
+        return attenderAnswerService.put(attenderStateId, questionId, dto, authentication);
     }
 
 }
