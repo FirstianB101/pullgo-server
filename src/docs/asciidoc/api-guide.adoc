@@ -766,6 +766,7 @@ operation::question-search-example[snippets='request-parameters,curl-request,htt
 === Question 생성
 
 `POST /exam/questions` 요청으로 Question을 생성합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 생성한 Question을 응답 Body로 전달합니다.
 
 operation::question-create-example[snippets='request-fields,curl-request,http-response']
@@ -774,6 +775,7 @@ operation::question-create-example[snippets='request-fields,curl-request,http-re
 === Question 수정
 
 `PATCH /exam/questions/{id}` 요청으로 Question을 수정합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 갱신된 Question을 응답 Body로 전달합니다.
 
 operation::question-update-example[snippets='request-fields,curl-request,http-response']
@@ -782,6 +784,7 @@ operation::question-update-example[snippets='request-fields,curl-request,http-re
 === Question 삭제
 
 `DELETE /exam/questions/{id}` 요청으로 Question을 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::question-delete-example[snippets='curl-request,http-response']
 
