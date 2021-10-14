@@ -287,6 +287,7 @@ operation::academy-search-example[snippets='request-parameters,curl-request,http
 
 `POST /academies` 요청으로 Academy를 생성합니다.
 ownerId로 지정한 선생님은 학원의 첫 선생님으로 등록됩니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 생성한 Academy를 응답 Body로 전달합니다.
 
 operation::academy-create-example[snippets='request-fields,curl-request,http-response']
@@ -295,6 +296,7 @@ operation::academy-create-example[snippets='request-fields,curl-request,http-res
 === Academy 수정
 
 `PATCH /academies/{id}` 요청으로 Academy를 수정합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 갱신된 Academy를 응답 Body로 전달합니다.
 
 operation::academy-update-example[snippets='request-fields,curl-request,http-response']
@@ -303,6 +305,7 @@ operation::academy-update-example[snippets='request-fields,curl-request,http-res
 === Academy 삭제
 
 `DELETE /academies/{id}` 요청으로 Academy를 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::academy-delete-example[snippets='curl-request,http-response']
 
@@ -310,6 +313,7 @@ operation::academy-delete-example[snippets='curl-request,http-response']
 === 학원에 가입 요청한 선생님 승인
 
 `POST /academies/{academyId}/accept-teacher` 요청으로 Academy에 가입 요청한 선생님을 승인합니다.
+요청의 `Authorization` 헤더로 가입 승인 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::academy-accept-teacher-example[snippets='request-fields,curl-request,http-response']
 
@@ -317,6 +321,7 @@ operation::academy-accept-teacher-example[snippets='request-fields,curl-request,
 === 학원에 가입 요청한 학생 승인
 
 `POST /academies/{academyId}/accept-student` 요청으로 Academy에 가입 요청한 학생을 승인합니다.
+요청의 `Authorization` 헤더로 가입 거절 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::academy-accept-student-example[snippets='request-fields,curl-request,http-response']
 
@@ -324,6 +329,7 @@ operation::academy-accept-student-example[snippets='request-fields,curl-request,
 === 학원에 등록된 선생님 추방
 
 `POST /academies/{academyId}/kick-teacher` 요청으로 Academy에 등록된 선생님을 추방합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::academy-kick-teacher-example[snippets='request-fields,curl-request,http-response']
 
@@ -331,6 +337,7 @@ operation::academy-kick-teacher-example[snippets='request-fields,curl-request,ht
 === 학원에 등록된 학생 추방
 
 `POST /academies/{academyId}/kick-student` 요청으로 Academy에 등록된 학생을 추방합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::academy-kick-student-example[snippets='request-fields,curl-request,http-response']
 
