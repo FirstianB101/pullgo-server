@@ -52,21 +52,24 @@ public class AttenderAnswerController {
         return attenderAnswerService.search(spec, pageable);
     }
 
-    @GetMapping("/exam/attender-state/answers/{id}")
-    public AttenderAnswerDto.Result get(@PathVariable Long id) {
-        return attenderAnswerService.read(id);
+    @GetMapping("/exam/attender-state/{attenderStateId}/answers/{questionId}")
+    public AttenderAnswerDto.Result get(@PathVariable Long attenderStateId,
+        @PathVariable Long questionId) {
+        return attenderAnswerService.read(attenderStateId, questionId);
     }
 
-    @DeleteMapping("/exam/attender-state/answers/{id}")
+    @DeleteMapping("/exam/attender-state/{attenderStateId}/answers/{questionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id, Authentication authentication) {
-        attenderAnswerService.delete(id, authentication);
+    public void delete(@PathVariable Long attenderStateId, @PathVariable Long questionId,
+        Authentication authentication) {
+        attenderAnswerService.delete(attenderStateId, questionId, authentication);
     }
 
-    @PatchMapping("/exam/attender-state/answers/{id}")
-    public AttenderAnswerDto.Result patch(@PathVariable Long id,
+    @PatchMapping("/exam/attender-state/{attenderStateId}/answers/{questionId}")
+    public AttenderAnswerDto.Result patch(@PathVariable Long attenderStateId,
+        @PathVariable Long questionId,
         @Valid @RequestBody AttenderAnswerDto.Update dto, Authentication authentication) {
-        return attenderAnswerService.update(id, dto, authentication);
+        return attenderAnswerService.update(attenderStateId, questionId, dto, authentication);
     }
 
 }
