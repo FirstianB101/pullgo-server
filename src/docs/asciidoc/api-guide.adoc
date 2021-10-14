@@ -644,6 +644,7 @@ operation::lesson-search-example[snippets='request-parameters,curl-request,http-
 === Lesson 생성
 
 `POST /academy/classroom/lessons` 요청으로 Lesson을 생성합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 생성한 Lesson을 응답 Body로 전달합니다.
 
 operation::lesson-create-example[snippets='request-fields,curl-request,http-response']
@@ -652,6 +653,7 @@ operation::lesson-create-example[snippets='request-fields,curl-request,http-resp
 === Lesson 수정
 
 `PATCH /academy/classroom/lessons/{id}` 요청으로 Lesson을 수정합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 성공 시 갱신된 Lesson을 응답 Body로 전달합니다.
 
 operation::lesson-update-example[snippets='request-fields,curl-request,http-response']
@@ -660,6 +662,7 @@ operation::lesson-update-example[snippets='request-fields,curl-request,http-resp
 === Lesson 삭제
 
 `DELETE /academy/classroom/lessons/{id}` 요청으로 Lesson을 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
 
 operation::lesson-delete-example[snippets='curl-request,http-response']
 
