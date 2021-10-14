@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
+import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -60,6 +60,9 @@ public class AttenderAnswerIntegrationTest {
 
     @Autowired
     private EntityHelper entityHelper;
+
+    @Autowired
+    private AuthHelper authHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext) throws SQLException {
@@ -222,19 +225,21 @@ public class AttenderAnswerIntegrationTest {
     class PutAttenderAnswer {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void put으로_AttenderAnswer_신규생성() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 AttenderState attenderState = entityHelper.generateAttenderState();
                 Question question = entityHelper.generateQuestion();
-
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("attenderStateId", attenderState.getId())
                     .withValue("questionId", question.getId());
             });
             Long attenderStateId = given.valueOf("attenderStateId");
             Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
 
             // When
             AttenderAnswerDto.Create dto = AttenderAnswerDto.Create.builder()
@@ -248,6 +253,7 @@ public class AttenderAnswerIntegrationTest {
                 put("/exam/attender-state/{attenderStateId}/answers/{questionId}", attenderStateId,
                     questionId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body)).andDo(print());
 
             // Then
@@ -262,20 +268,22 @@ public class AttenderAnswerIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void put으로_AttenderAnswer_수정() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 AttenderAnswer attenderAnswer = entityHelper.generateAttenderAnswer(it ->
                     it.withAnswer(new Answer(4, 5))
                 );
-
+                String token = authHelper.generateToken(
+                    it -> attenderAnswer.getAttenderState().getAttender().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("attenderStateId", attenderAnswer.getAttenderState().getId())
                     .withValue("questionId", attenderAnswer.getQuestion().getId());
             });
             Long attenderStateId = given.valueOf("attenderStateId");
             Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
 
             // When
             AttenderAnswerDto.Put dto = AttenderAnswerDto.Put.builder()
@@ -289,6 +297,7 @@ public class AttenderAnswerIntegrationTest {
                 put("/exam/attender-state/{attenderStateId}/answers/{questionId}", attenderStateId,
                     questionId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -309,15 +318,16 @@ public class AttenderAnswerIntegrationTest {
     class DeleteAttenderAnswer {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteAttenderAnswer() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 AttenderAnswer attenderAnswer = entityHelper.generateAttenderAnswer(it ->
                     it.withAnswer(new Answer(4, 5))
                 );
-
+                String token = authHelper.generateToken(
+                    it -> attenderAnswer.getAttenderState().getAttender().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("attenderAnswerId", attenderAnswer.getId())
                     .withValue("attenderStateId", attenderAnswer.getAttenderState().getId())
                     .withValue("questionId", attenderAnswer.getQuestion().getId());
@@ -325,11 +335,13 @@ public class AttenderAnswerIntegrationTest {
             Long attenderAnswerId = given.valueOf("attenderAnswerId");
             Long attenderStateId = given.valueOf("attenderStateId");
             Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
 
             // When
             ResultActions actions = mockMvc
                 .perform(delete("/exam/attender-state/{attenderStateId}/answers/{questionId}",
-                    attenderStateId, questionId));
+                    attenderStateId, questionId)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -340,7 +352,6 @@ public class AttenderAnswerIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteAttenderAnswer_AttenderAnswerNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(
