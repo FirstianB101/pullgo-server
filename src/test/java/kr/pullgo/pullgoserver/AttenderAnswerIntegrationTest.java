@@ -287,8 +287,6 @@ public class AttenderAnswerIntegrationTest {
 
             // When
             AttenderAnswerDto.Put dto = AttenderAnswerDto.Put.builder()
-                .attenderStateId(attenderStateId)
-                .questionId(questionId)
                 .answer(Set.of(1, 2, 3))
                 .build();
             String body = toJson(dto);
