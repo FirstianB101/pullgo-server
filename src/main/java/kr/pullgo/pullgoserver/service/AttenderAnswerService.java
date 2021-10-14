@@ -104,6 +104,7 @@ public class AttenderAnswerService {
         AttenderAnswer entity = repoHelper.findAttenderAnswerOrThrow(attenderStateId, questionId);
         attenderAnswerAuthorizer.requireOwningAttender(authentication, entity);
 
+        entity.setAttenderState(null);
         attenderAnswerRepository.delete(entity);
     }
 }
