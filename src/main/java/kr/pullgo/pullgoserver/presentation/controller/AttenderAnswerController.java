@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class AttenderAnswerController {
@@ -63,12 +62,12 @@ public class AttenderAnswerController {
     public ResponseEntity<AttenderAnswerDto.Result> put(@PathVariable Long attenderStateId,
         @PathVariable Long questionId,
         @Valid @RequestBody AttenderAnswerDto.Put dto, Authentication authentication) {
-        try {
+        if (attenderAnswerService.isExists(attenderStateId, questionId)){
             return new ResponseEntity<>(attenderAnswerService.update(attenderStateId, questionId,
                 AttenderAnswerDto.Update.builder()
                     .answer(dto.getAnswer())
                     .build(), authentication), HttpStatus.OK);
-        } catch (ResponseStatusException e) {
+        } else {
             return new ResponseEntity<>(
                 attenderAnswerService.create(AttenderAnswerDto.Create.builder()
                     .answer(dto.getAnswer())

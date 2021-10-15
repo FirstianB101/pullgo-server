@@ -17,6 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AttenderAnswerService {
@@ -86,5 +87,11 @@ public class AttenderAnswerService {
 
         entity.setAttenderState(null);
         attenderAnswerRepository.delete(entity);
+    }
+
+    public boolean isExists(Long attenderStateId, Long questionId)
+        throws ResponseStatusException {
+        return repoHelper.findAttenderStateOrThrow(attenderStateId)
+            .getAnswers().stream().anyMatch(it -> it.getQuestion().getId().equals(questionId));
     }
 }
