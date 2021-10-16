@@ -4,6 +4,7 @@ import java.util.List;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.dto.mapper.QuestionDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
+import kr.pullgo.pullgoserver.persistence.model.Choice;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
@@ -75,6 +76,9 @@ public class QuestionService {
         }
         if (dto.getAnswer() != null) {
             entity.setAnswer(new Answer(dto.getAnswer()));
+        }
+        if (dto.getChoice() != null) {
+            entity.setChoice(new Choice(dto.getChoice()));
         }
         return dtoMapper.asResultDto(questionRepository.save(entity));
     }
