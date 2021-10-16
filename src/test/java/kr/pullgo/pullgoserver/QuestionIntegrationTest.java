@@ -6,11 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.subsectionWithPath;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -26,15 +28,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.dto.QuestionDto.Update;
+import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
+import kr.pullgo.pullgoserver.persistence.model.Choice;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
@@ -49,7 +54,6 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -63,6 +67,8 @@ public class QuestionIntegrationTest {
         fieldWithPath("id").description("문제 ID");
     private static final FieldDescriptor DOC_FIELD_ANSWER =
         fieldWithPath("answer").description("정답 (객관식, 1~5 범위의 정수 배열)");
+    private static final FieldDescriptor DOC_FIELD_CHOICE =
+        subsectionWithPath("choice").type("Choice").description("객관식 보기 (1~5 범위의 정수, 보기 내용)");
     private static final FieldDescriptor DOC_FIELD_PICTURE_URL =
         fieldWithPath("pictureUrl").description("첨부된 사진의 URL");
     private static final FieldDescriptor DOC_FIELD_CONTENT =
@@ -87,6 +93,9 @@ public class QuestionIntegrationTest {
     @Autowired
     private EntityHelper entityHelper;
 
+    @Autowired
+    private AuthHelper authHelper;
+
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
         RestDocumentationContextProvider restDocumentation) throws SQLException {
@@ -98,59 +107,58 @@ public class QuestionIntegrationTest {
             .build();
     }
 
-    @Nested
-    class GetQuestion {
+    @Test
+    void postQuestion() throws Exception {
+        // Given
+        Struct given = trxHelper.doInTransaction(() -> {
+            Exam exam = entityHelper.generateExam();
+            String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+            return new Struct()
+                .withValue("token", token)
+                .withValue("examId", exam.getId());
+        });
+        String token = given.valueOf("token");
+        Long examId = given.valueOf("examId");
 
-        @Test
-        void getQuestion() throws Exception {
-            // Given
-            Struct given = trxHelper.doInTransaction(() -> {
-                Question question = entityHelper.generateQuestion(it ->
-                    it.withContent("4보다 작은 자연수는?")
-                        .withPictureUrl("https://i.imgur.com/JOKsNeT.jpg")
-                        .withAnswer(new Answer(1, 2, 3))
-                );
-                return new Struct()
-                    .withValue("questionId", question.getId())
-                    .withValue("examId", question.getExam().getId());
-            });
-            Long questionId = given.valueOf("questionId");
-            Long examId = given.valueOf("examId");
+        // When
+        QuestionDto.Create dto = QuestionDto.Create.builder()
+            .content("4보다 작은 자연수는?")
+            .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
+            .answer(Set.of(1, 2, 3))
+            .choice(Map.of(
+                "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"))
+            .examId(examId)
+            .build();
+        String body = toJson(dto);
 
-            // When
-            ResultActions actions = mockMvc
-                .perform(get("/exam/questions/{id}", questionId)).andDo(print());
+        ResultActions actions = mockMvc.perform(post("/exam/questions")
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer " + token)
+            .content(body));
 
-            // Then
-            actions
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(questionId))
-                .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
-                .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
-                .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
-                .andExpect(jsonPath("$.examId").value(examId));
+        // Then
+        actions
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").isNumber())
+            .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
+            .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
+            .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
+            .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
+            .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
+            .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
+            .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
+            .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
+            .andExpect(jsonPath("$.examId").value(examId));
 
-            // Document
-            actions.andDo(document("question-retrieve-example",
-                responseFields(
-                    DOC_FIELD_ID,
-                    DOC_FIELD_ANSWER,
-                    DOC_FIELD_PICTURE_URL,
-                    DOC_FIELD_CONTENT,
-                    DOC_FIELD_EXAM_ID
-                )));
-        }
-
-        @Test
-        void getQuestion_QuestionNotFound_NotFoundStatus() throws Exception {
-            // When
-            ResultActions actions = mockMvc.perform(get("/exam/questions/{id}", 0L));
-
-            // Then
-            actions
-                .andExpect(status().isNotFound());
-        }
-
+        // Document
+        actions.andDo(document("question-create-example",
+            requestFields(
+                DOC_FIELD_ANSWER,
+                DOC_FIELD_CHOICE,
+                DOC_FIELD_PICTURE_URL.optional(),
+                DOC_FIELD_CONTENT,
+                DOC_FIELD_EXAM_ID
+            )));
     }
 
     @Nested
@@ -259,59 +267,18 @@ public class QuestionIntegrationTest {
 
     }
 
-    @Test
-    @WithMockUser(authorities = "ADMIN")
-    void postQuestion() throws Exception {
-        // Given
-        Long examId = trxHelper.doInTransaction(() -> {
-            Exam exam = entityHelper.generateExam();
-            return exam.getId();
-        });
-
-        // When
-        QuestionDto.Create dto = QuestionDto.Create.builder()
-            .content("4보다 작은 자연수는?")
-            .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
-            .answer(Set.of(1, 2, 3))
-            .examId(examId)
-            .build();
-        String body = toJson(dto);
-
-        ResultActions actions = mockMvc.perform(post("/exam/questions")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(body));
-
-        // Then
-        actions
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
-            .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
-            .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
-            .andExpect(jsonPath("$.examId").value(examId));
-
-        // Document
-        actions.andDo(document("question-create-example",
-            requestFields(
-                DOC_FIELD_ANSWER,
-                DOC_FIELD_PICTURE_URL.optional(),
-                DOC_FIELD_CONTENT,
-                DOC_FIELD_EXAM_ID
-            )));
-    }
-
     @Nested
-    class PatchQuestion {
+    class GetQuestion {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
-        void patchQuestion() throws Exception {
+        void getQuestion() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Question question = entityHelper.generateQuestion(it ->
-                    it.withContent("2보다 작은 자연수는?")
-                        .withPictureUrl("https://i.imgur.com/oPR4BiX.jpeg")
-                        .withAnswer(new Answer(1))
+                    it.withContent("4보다 작은 자연수는?")
+                        .withPictureUrl("https://i.imgur.com/JOKsNeT.jpg")
+                        .withAnswer(new Answer(1, 2, 3))
+                        .withChoice(new Choice("1", "2", "3", "4", "5"))
                 );
                 return new Struct()
                     .withValue("questionId", question.getId())
@@ -321,16 +288,84 @@ public class QuestionIntegrationTest {
             Long examId = given.valueOf("examId");
 
             // When
+            ResultActions actions = mockMvc
+                .perform(get("/exam/questions/{id}", questionId)).andDo(print());
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(questionId))
+                .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
+                .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
+                .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
+                .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
+                .andExpect(jsonPath("$.examId").value(examId));
+
+            // Document
+            actions.andDo(document("question-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_ANSWER,
+                    DOC_FIELD_CHOICE,
+                    DOC_FIELD_PICTURE_URL,
+                    DOC_FIELD_CONTENT,
+                    DOC_FIELD_EXAM_ID
+                )));
+        }
+
+        @Test
+        void getQuestion_QuestionNotFound_NotFoundStatus() throws Exception {
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/questions/{id}", 0L));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
+    }
+
+    @Nested
+    class PatchQuestion {
+
+        @Test
+        void patchQuestion() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Question question = entityHelper.generateQuestion(it ->
+                    it.withContent("2보다 작은 자연수는?")
+                        .withPictureUrl("https://i.imgur.com/oPR4BiX.jpeg")
+                        .withChoice(new Choice("1", "0", "-1", "-2", "-3"))
+                        .withAnswer(new Answer(1))
+                );
+                String token = authHelper.generateToken(it -> question.getExam().getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("questionId", question.getId())
+                    .withValue("examId", question.getExam().getId());
+            });
+            String token = given.valueOf("token");
+            Long questionId = given.valueOf("questionId");
+            Long examId = given.valueOf("examId");
+
+            // When
             Update dto = Update.builder()
                 .content("4보다 작은 자연수는?")
                 .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
                 .answer(Set.of(1, 2, 3))
+                .choice(Map.of(
+                    "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"))
                 .build();
             String body = toJson(dto);
 
             ResultActions actions = mockMvc
                 .perform(patch("/exam/questions/{id}", questionId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -340,19 +375,24 @@ public class QuestionIntegrationTest {
                 .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
                 .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
                 .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
+                .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
                 .andExpect(jsonPath("$.examId").value(examId));
 
             // Document
             actions.andDo(document("question-update-example",
                 requestFields(
                     DOC_FIELD_ANSWER.optional(),
+                    DOC_FIELD_CHOICE.optional(),
                     DOC_FIELD_PICTURE_URL.optional(),
                     DOC_FIELD_CONTENT.optional()
                 )));
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void patchQuestion_QuestionNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aQuestionUpdateDto());
@@ -372,17 +412,27 @@ public class QuestionIntegrationTest {
     class DeleteQuestion {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteQuestion() throws Exception {
             // Given
-            Long questionId = trxHelper.doInTransaction(() -> {
-                Question question = entityHelper.generateQuestion();
-                return question.getId();
+            Struct given = trxHelper.doInTransaction(() -> {
+                Question question = entityHelper.generateQuestion(it ->
+                    it.withContent("2보다 작은 자연수는?")
+                        .withPictureUrl("https://i.imgur.com/oPR4BiX.jpeg")
+                        .withChoice(new Choice("1", "0", "-1", "-2", "-3"))
+                        .withAnswer(new Answer(1))
+                );
+                String token = authHelper.generateToken(it -> question.getExam().getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("questionId", question.getId());
             });
+            String token = given.valueOf("token");
+            Long questionId = given.valueOf("questionId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/exam/questions/{id}", questionId));
+                .perform(delete("/exam/questions/{id}", questionId)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -396,7 +446,6 @@ public class QuestionIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteQuestion_QuestionNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/exam/questions/{id}", 0));
