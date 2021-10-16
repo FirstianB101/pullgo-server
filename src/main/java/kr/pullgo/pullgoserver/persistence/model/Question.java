@@ -10,8 +10,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
+import kr.pullgo.pullgoserver.persistence.converter.ChoiceConverter;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,21 +45,27 @@ public class Question extends TimeEntity {
     @Convert(converter = AnswerConverter.class)
     private Answer answer;
 
+    @NotNull
+    @Convert(converter = ChoiceConverter.class)
+    private Choice choice;
+
     @Builder
     public Question(String content, String pictureUrl,
-        Answer answer) {
+        Answer answer, Choice choice) {
         this.content = content;
         this.pictureUrl = pictureUrl;
         this.answer = answer;
+        this.choice = choice;
     }
 
     protected Question(Long id, Exam exam, String content, String pictureUrl,
-        Answer answer) {
+        Answer answer, Choice choice) {
         this.id = id;
         setExam(exam);
         this.content = content;
         this.pictureUrl = pictureUrl;
         this.answer = answer;
+        this.choice = choice;
     }
 
     public void setExam(Exam exam) {
