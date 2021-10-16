@@ -3,9 +3,11 @@ package kr.pullgo.pullgoserver.dto.mapper;
 import static kr.pullgo.pullgoserver.helper.ExamHelper.anExam;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Map;
 import java.util.Set;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
+import kr.pullgo.pullgoserver.persistence.model.Choice;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +23,8 @@ class QuestionDtoMapperTest {
             .content("test content")
             .pictureUrl(null)
             .answer(Set.of(1, 3))
-            .build();
+            .choice(Map.of(
+                "1", "1", "2", "2", "3", "3", "4", "4", "5", "5")).build();
 
         Question entity = dtoMapper.asEntity(dto);
 
@@ -29,6 +32,8 @@ class QuestionDtoMapperTest {
         assertThat(entity.getContent()).isEqualTo("test content");
         assertThat(entity.getPictureUrl()).isNull();
         assertThat(entity.getAnswer().getObjectiveNumbers()).containsOnly(1, 3);
+        assertThat(entity.getChoice().getChoices()).isEqualTo(Map.of(
+            "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"));
     }
 
     @Test
@@ -38,6 +43,7 @@ class QuestionDtoMapperTest {
             .content("test content")
             .pictureUrl(null)
             .answer(new Answer(1, 3))
+            .choice(new Choice("test choice 1", "test choice 2", "test choice 3", "test choice 4", "test choice 5"))
             .build();
         entity.setId(0L);
         entity.setExam(anExam().withId(1L));
@@ -50,6 +56,8 @@ class QuestionDtoMapperTest {
         assertThat(dto.getContent()).isEqualTo("test content");
         assertThat(dto.getPictureUrl()).isNull();
         assertThat(dto.getAnswer()).containsOnly(1, 3);
+        assertThat(dto.getChoice()).isEqualTo(Map.of(
+            "1", "test choice 1", "2", "test choice 2", "3", "test choice 3", "4", "test choice 4", "5", "test choice 5"));
     }
 
 }
