@@ -81,7 +81,7 @@ public class TeacherIntegrationTest {
     private static final FieldDescriptor DOC_FIELD_ACCOUNT_ROLE =
         fieldWithPath("account.role").description("시스템 역할 (`USER`, `ADMIN`)");
     private static final FieldDescriptor DOC_FIELD_USERNAME_DUPLICATION =
-        fieldWithPath("isExists").description("사용자 ID 중복 여부");
+        fieldWithPath("exists").description("사용자 ID 중복 여부");
 
     private MockMvc mockMvc;
 
@@ -1189,7 +1189,7 @@ public class TeacherIntegrationTest {
             //Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isExists").value(false));
+                .andExpect(jsonPath("$.exists").value(false));
 
             // Document
             actions.andDo(document("teacher-check-duplicate-username-example",
@@ -1213,7 +1213,7 @@ public class TeacherIntegrationTest {
             // Then
             actions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isExists").value(true));
+                .andExpect(jsonPath("$.exists").value(true));
         }
     }
 

@@ -1,20 +1,16 @@
 package kr.pullgo.pullgoserver.service;
 
 import java.util.List;
-
 import kr.pullgo.pullgoserver.dto.AccountDto;
 import kr.pullgo.pullgoserver.dto.TeacherDto;
-import kr.pullgo.pullgoserver.dto.mapper.AccountDtoMapper;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyEnrolledException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
-import kr.pullgo.pullgoserver.persistence.model.Account;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
-import kr.pullgo.pullgoserver.persistence.repository.AccountRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ClassroomRepository;
 import kr.pullgo.pullgoserver.persistence.repository.TeacherRepository;
 import kr.pullgo.pullgoserver.service.authorizer.TeacherAuthorizer;
@@ -176,7 +172,7 @@ public class TeacherService {
     public AccountDto.CheckDuplicationResult checkDuplicateUsername(String username) {
         Boolean result = accountService.checkDuplicateUsername(username);
         return AccountDto.CheckDuplicationResult.builder()
-            .isExists(result)
+            .exists(result)
             .build();
     }
 }

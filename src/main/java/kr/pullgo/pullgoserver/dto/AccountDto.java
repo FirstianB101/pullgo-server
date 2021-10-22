@@ -62,6 +62,6 @@ public interface AccountDto {
     class CheckDuplicationResult {
 
         @NotNull
-        private Boolean isExists;
+        private Boolean exists;
     }
 }
