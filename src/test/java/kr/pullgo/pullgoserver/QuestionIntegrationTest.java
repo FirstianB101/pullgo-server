@@ -39,8 +39,8 @@ import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
-import kr.pullgo.pullgoserver.persistence.model.Choice;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
+import kr.pullgo.pullgoserver.persistence.model.MultipleChoice;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
@@ -67,8 +67,8 @@ public class QuestionIntegrationTest {
         fieldWithPath("id").description("문제 ID");
     private static final FieldDescriptor DOC_FIELD_ANSWER =
         fieldWithPath("answer").description("정답 (객관식, 1~5 범위의 정수 배열)");
-    private static final FieldDescriptor DOC_FIELD_CHOICE =
-        subsectionWithPath("choice").type("Choice").description("객관식 보기 (1~5 범위의 정수, 보기 내용)");
+    private static final FieldDescriptor DOC_FIELD_MULTIPLE_CHOICE =
+        subsectionWithPath("choice").type("MultipleChoice").description("객관식 보기 (1~5 범위의 정수, 보기 내용)");
     private static final FieldDescriptor DOC_FIELD_PICTURE_URL =
         fieldWithPath("pictureUrl").description("첨부된 사진의 URL");
     private static final FieldDescriptor DOC_FIELD_CONTENT =
@@ -154,7 +154,7 @@ public class QuestionIntegrationTest {
         actions.andDo(document("question-create-example",
             requestFields(
                 DOC_FIELD_ANSWER,
-                DOC_FIELD_CHOICE,
+                DOC_FIELD_MULTIPLE_CHOICE,
                 DOC_FIELD_PICTURE_URL.optional(),
                 DOC_FIELD_CONTENT,
                 DOC_FIELD_EXAM_ID
@@ -278,7 +278,7 @@ public class QuestionIntegrationTest {
                     it.withContent("4보다 작은 자연수는?")
                         .withPictureUrl("https://i.imgur.com/JOKsNeT.jpg")
                         .withAnswer(new Answer(1, 2, 3))
-                        .withChoice(new Choice("1", "2", "3", "4", "5"))
+                        .withMultipleChoice(new MultipleChoice("1", "2", "3", "4", "5"))
                 );
                 return new Struct()
                     .withValue("questionId", question.getId())
@@ -310,7 +310,7 @@ public class QuestionIntegrationTest {
                 responseFields(
                     DOC_FIELD_ID,
                     DOC_FIELD_ANSWER,
-                    DOC_FIELD_CHOICE,
+                    DOC_FIELD_MULTIPLE_CHOICE,
                     DOC_FIELD_PICTURE_URL,
                     DOC_FIELD_CONTENT,
                     DOC_FIELD_EXAM_ID
@@ -339,7 +339,7 @@ public class QuestionIntegrationTest {
                 Question question = entityHelper.generateQuestion(it ->
                     it.withContent("2보다 작은 자연수는?")
                         .withPictureUrl("https://i.imgur.com/oPR4BiX.jpeg")
-                        .withChoice(new Choice("1", "0", "-1", "-2", "-3"))
+                        .withMultipleChoice(new MultipleChoice("1", "0", "-1", "-2", "-3"))
                         .withAnswer(new Answer(1))
                 );
                 String token = authHelper.generateToken(it -> question.getExam().getCreator().getAccount());
@@ -386,7 +386,7 @@ public class QuestionIntegrationTest {
             actions.andDo(document("question-update-example",
                 requestFields(
                     DOC_FIELD_ANSWER.optional(),
-                    DOC_FIELD_CHOICE.optional(),
+                    DOC_FIELD_MULTIPLE_CHOICE.optional(),
                     DOC_FIELD_PICTURE_URL.optional(),
                     DOC_FIELD_CONTENT.optional()
                 )));
@@ -418,7 +418,7 @@ public class QuestionIntegrationTest {
                 Question question = entityHelper.generateQuestion(it ->
                     it.withContent("2보다 작은 자연수는?")
                         .withPictureUrl("https://i.imgur.com/oPR4BiX.jpeg")
-                        .withChoice(new Choice("1", "0", "-1", "-2", "-3"))
+                        .withMultipleChoice(new MultipleChoice("1", "0", "-1", "-2", "-3"))
                         .withAnswer(new Answer(1))
                 );
                 String token = authHelper.generateToken(it -> question.getExam().getCreator().getAccount());

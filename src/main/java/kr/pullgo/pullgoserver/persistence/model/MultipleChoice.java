@@ -7,17 +7,17 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class Choice {
+public class MultipleChoice {
 
     private Map<String , String> choices = new HashMap<>();
 
-    public Choice(String... choices) {
+    public MultipleChoice(String... choices) {
         for (int i = 0; i < choices.length; i++) {
             this.choices.put(String.valueOf(i+1), choices[i]);
         }
     }
 
-    public Choice(Map<String, String> choices) {
+    public MultipleChoice(Map<String, String> choices) {
         this.choices=choices;
     }
 }
