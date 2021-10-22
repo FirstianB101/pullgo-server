@@ -89,7 +89,7 @@ public class AttenderAnswerService {
         attenderAnswerRepository.delete(entity);
     }
 
-    public boolean isExists(Long attenderStateId, Long questionId)
+    public boolean exists(Long attenderStateId, Long questionId)
         throws ResponseStatusException {
         return repoHelper.findAttenderStateOrThrow(attenderStateId)
             .getAnswers().stream().anyMatch(it -> it.getQuestion().getId().equals(questionId));

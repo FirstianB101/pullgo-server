@@ -184,7 +184,7 @@ public class StudentService {
     public AccountDto.CheckDuplicationResult checkDuplicateUsername(String username) {
         Boolean result = accountService.checkDuplicateUsername(username);
         return AccountDto.CheckDuplicationResult.builder()
-            .isExists(result)
+            .exists(result)
             .build();
     }
 }

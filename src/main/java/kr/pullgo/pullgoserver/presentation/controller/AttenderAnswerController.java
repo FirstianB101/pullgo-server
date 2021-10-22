@@ -62,7 +62,7 @@ public class AttenderAnswerController {
     public ResponseEntity<AttenderAnswerDto.Result> put(@PathVariable Long attenderStateId,
         @PathVariable Long questionId,
         @Valid @RequestBody AttenderAnswerDto.Put dto, Authentication authentication) {
-        if (attenderAnswerService.isExists(attenderStateId, questionId)){
+        if (attenderAnswerService.exists(attenderStateId, questionId)){
             return new ResponseEntity<>(attenderAnswerService.update(attenderStateId, questionId,
                 AttenderAnswerDto.Update.builder()
                     .answer(dto.getAnswer())
