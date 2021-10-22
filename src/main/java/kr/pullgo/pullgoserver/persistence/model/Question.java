@@ -47,25 +47,25 @@ public class Question extends TimeEntity {
 
     @NotNull
     @Convert(converter = ChoiceConverter.class)
-    private Choice choice;
+    private MultipleChoice multipleChoice;
 
     @Builder
     public Question(String content, String pictureUrl,
-        Answer answer, Choice choice) {
+        Answer answer, MultipleChoice multipleChoice) {
         this.content = content;
         this.pictureUrl = pictureUrl;
         this.answer = answer;
-        this.choice = choice;
+        this.multipleChoice = multipleChoice;
     }
 
     protected Question(Long id, Exam exam, String content, String pictureUrl,
-        Answer answer, Choice choice) {
+        Answer answer, MultipleChoice multipleChoice) {
         this.id = id;
         setExam(exam);
         this.content = content;
         this.pictureUrl = pictureUrl;
         this.answer = answer;
-        this.choice = choice;
+        this.multipleChoice = multipleChoice;
     }
 
     public void setExam(Exam exam) {

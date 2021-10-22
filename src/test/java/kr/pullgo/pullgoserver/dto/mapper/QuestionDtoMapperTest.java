@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
-import kr.pullgo.pullgoserver.persistence.model.Choice;
+import kr.pullgo.pullgoserver.persistence.model.MultipleChoice;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +32,7 @@ class QuestionDtoMapperTest {
         assertThat(entity.getContent()).isEqualTo("test content");
         assertThat(entity.getPictureUrl()).isNull();
         assertThat(entity.getAnswer().getObjectiveNumbers()).containsOnly(1, 3);
-        assertThat(entity.getChoice().getChoices()).isEqualTo(Map.of(
+        assertThat(entity.getMultipleChoice().getChoices()).isEqualTo(Map.of(
             "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"));
     }
 
@@ -43,7 +43,7 @@ class QuestionDtoMapperTest {
             .content("test content")
             .pictureUrl(null)
             .answer(new Answer(1, 3))
-            .choice(new Choice("test choice 1", "test choice 2", "test choice 3", "test choice 4", "test choice 5"))
+            .multipleChoice(new MultipleChoice("test choice 1", "test choice 2", "test choice 3", "test choice 4", "test choice 5"))
             .build();
         entity.setId(0L);
         entity.setExam(anExam().withId(1L));

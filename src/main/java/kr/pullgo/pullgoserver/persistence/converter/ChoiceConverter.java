@@ -6,16 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import kr.pullgo.pullgoserver.error.exception.ChoiceJsonProcessingException;
-import kr.pullgo.pullgoserver.persistence.model.Choice;
+import kr.pullgo.pullgoserver.persistence.model.MultipleChoice;
 
 @Converter
-public class ChoiceConverter implements AttributeConverter<Choice, String> {
+public class ChoiceConverter implements AttributeConverter<MultipleChoice, String> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     @Override
-    public String convertToDatabaseColumn(Choice attribute) {
+    public String convertToDatabaseColumn(MultipleChoice attribute) {
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
@@ -24,7 +24,7 @@ public class ChoiceConverter implements AttributeConverter<Choice, String> {
     }
 
     @Override
-    public Choice convertToEntityAttribute(String dbData) {
+    public MultipleChoice convertToEntityAttribute(String dbData) {
         try {
             return objectMapper.readValue(dbData, new TypeReference<>() {
             });

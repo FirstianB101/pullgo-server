@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
-import kr.pullgo.pullgoserver.persistence.model.Choice;
+import kr.pullgo.pullgoserver.persistence.model.MultipleChoice;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 
 public class QuestionHelper {
@@ -17,7 +17,7 @@ public class QuestionHelper {
         "https://avatars.githubusercontent.com/u/77564110?s=200&v=4";
     private static final Set<Integer> ARBITRARY_ANSWER = Set.of(1);
 
-    private static final Map<String ,String> ARBITRARY_CHOICES = Map.of(
+    private static final Map<String ,String> ARBITRARY_MULTIPLE_CHOICE = Map.of(
         "1", "1", "2", "2", "3", "3", "4", "4", "5", "5");
 
     public static Question aQuestion() {
@@ -25,7 +25,7 @@ public class QuestionHelper {
             .content(ARBITRARY_CONTENT)
             .pictureUrl(ARBITRARY_PICTURE_URL)
             .answer(new Answer(ARBITRARY_ANSWER))
-            .choice(new Choice(ARBITRARY_CHOICES))
+            .multipleChoice(new MultipleChoice(ARBITRARY_MULTIPLE_CHOICE))
             .build();
         question.setId(0L);
         question.setExam(anExam());
@@ -38,7 +38,7 @@ public class QuestionHelper {
             .content(ARBITRARY_CONTENT)
             .pictureUrl(ARBITRARY_PICTURE_URL)
             .answer(ARBITRARY_ANSWER)
-            .choice(ARBITRARY_CHOICES)
+            .choice(ARBITRARY_MULTIPLE_CHOICE)
             .build();
     }
 
@@ -47,7 +47,7 @@ public class QuestionHelper {
             .content(ARBITRARY_CONTENT)
             .pictureUrl(ARBITRARY_PICTURE_URL)
             .answer(ARBITRARY_ANSWER)
-            .choice(ARBITRARY_CHOICES)
+            .choice(ARBITRARY_MULTIPLE_CHOICE)
             .build();
     }
 
@@ -58,7 +58,7 @@ public class QuestionHelper {
             .content(ARBITRARY_CONTENT)
             .pictureUrl(ARBITRARY_PICTURE_URL)
             .answer(ARBITRARY_ANSWER)
-            .choice(ARBITRARY_CHOICES)
+            .choice(ARBITRARY_MULTIPLE_CHOICE)
             .build();
     }
 
