@@ -2,6 +2,10 @@ language: java
 install: skip
 
 os: linux
+arch:
+  - arm64
+  - ppc64le
+  - s390x
 dist: trusty
 jdk: openjdk11
 
