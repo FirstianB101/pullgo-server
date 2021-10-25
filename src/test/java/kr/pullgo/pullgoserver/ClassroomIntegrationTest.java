@@ -68,6 +68,8 @@ public class ClassroomIntegrationTest {
 
     private static final FieldDescriptor DOC_FIELD_ID =
         fieldWithPath("id").description("반 ID");
+    private static final FieldDescriptor DOC_FIELD_CREATOR_ID =
+        fieldWithPath("creatorId").description("생성한 선생님 ID");
     private static final FieldDescriptor DOC_FIELD_NAME =
         fieldWithPath("name").description("반 이름");
     private static final FieldDescriptor DOC_FIELD_ACADEMY_ID =
@@ -122,10 +124,12 @@ public class ClassroomIntegrationTest {
 
                 return new Struct()
                     .withValue("academyId", academy.getId())
-                    .withValue("classroomId", classroom.getId());
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("creatorId", classroom.getCreator().getId());
             });
             Long academyId = given.valueOf("academyId");
             Long classroomId = given.valueOf("classroomId");
+            Long creatorId = given.valueOf("creatorId");
 
             // When
             ResultActions actions = mockMvc
@@ -135,6 +139,7 @@ public class ClassroomIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(classroomId))
+                .andExpect(jsonPath("$.creatorId").value(creatorId))
                 .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (월수금)"))
                 .andExpect(jsonPath("$.academyId").value(academyId));
 
@@ -143,6 +148,7 @@ public class ClassroomIntegrationTest {
                 responseFields(
                     DOC_FIELD_ID,
                     DOC_FIELD_NAME,
+                    DOC_FIELD_CREATOR_ID,
                     DOC_FIELD_ACADEMY_ID
                 )));
         }
@@ -501,6 +507,7 @@ public class ClassroomIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").isNumber())
             .andExpect(jsonPath("$.name").value("test name"))
+            .andExpect(jsonPath("$.creatorId").value(creatorId))
             .andExpect(jsonPath("$.academyId").value(academyId))
             .andReturn();
 
@@ -519,8 +526,8 @@ public class ClassroomIntegrationTest {
         actions.andDo(document("classroom-create-example",
             requestFields(
                 DOC_FIELD_NAME,
-                DOC_FIELD_ACADEMY_ID,
-                fieldWithPath("creatorId").description("반을 생성한 선생님 ID")
+                DOC_FIELD_CREATOR_ID,
+                DOC_FIELD_ACADEMY_ID
             )));
     }
 
@@ -540,9 +547,11 @@ public class ClassroomIntegrationTest {
 
                 return new Struct()
                     .withValue("academyId", academy.getId())
+                    .withValue("creatorId", classroom.getCreator().getId())
                     .withValue("classroomId", classroom.getId());
             });
             Long academyId = given.valueOf("academyId");
+            Long creatorId = given.valueOf("creatorId");
             Long classroomId = given.valueOf("classroomId");
 
             // When
@@ -561,6 +570,7 @@ public class ClassroomIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(classroomId))
                 .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (화목)"))
+                .andExpect(jsonPath("$.creatorId").value(creatorId))
                 .andExpect(jsonPath("$.academyId").value(academyId));
 
             // Document
