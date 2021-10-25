@@ -411,12 +411,10 @@ public class TeacherIntegrationTest {
         void searchTeachersByClassroomId() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
-                Classroom classroom = entityHelper.generateClassroom();
-
-                Teacher teacherA = entityHelper.generateTeacher(it -> {
-                    classroom.addTeacher(it);
-                    return it;
-                });
+                Teacher teacherA = entityHelper.generateTeacher();
+                Classroom classroom = entityHelper.generateClassroom(
+                    it -> it.withCreator(teacherA)
+                );
                 Teacher teacherB = entityHelper.generateTeacher(it -> {
                     classroom.addTeacher(it);
                     return it;
