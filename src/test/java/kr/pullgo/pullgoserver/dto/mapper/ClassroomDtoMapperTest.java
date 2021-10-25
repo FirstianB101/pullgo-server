@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.dto.mapper;
 
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademy;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
@@ -33,6 +34,7 @@ class ClassroomDtoMapperTest {
             .build();
         entity.setId(0L);
         entity.setAcademy(anAcademy().withId(1L));
+        entity.setCreator(aTeacher().withId(2L));
 
         ClassroomDto.Result dto = dtoMapper.asResultDto(entity);
 
@@ -40,6 +42,7 @@ class ClassroomDtoMapperTest {
         assertThat(dto.getId()).isEqualTo(0L);
         assertThat(dto.getName()).isEqualTo("test name");
         assertThat(dto.getAcademyId()).isEqualTo(1L);
+        assertThat(dto.getCreatorId()).isEqualTo(2L);
     }
 
 }
