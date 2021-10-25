@@ -65,6 +65,7 @@ public class ClassroomService {
 
         Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
         classroomAuthorizer.requireByOneself(authentication, creator);
+        classroom.setCreator(creator);
         classroom.addTeacher(creator);
 
         return dtoMapper.asResultDto(classroomRepository.save(classroom));
