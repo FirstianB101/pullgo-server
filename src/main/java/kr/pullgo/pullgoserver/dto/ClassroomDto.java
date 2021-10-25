@@ -49,6 +49,9 @@ public interface ClassroomDto {
 
         @NotNull
         private String name;
+
+        @NotNull
+        private Long creatorId;
     }
 
 
