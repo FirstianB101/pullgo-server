@@ -115,11 +115,19 @@ public class EntityHelper {
         Function<? super Classroom, ? extends Classroom> initialize) {
         Classroom classroom = aClassroom()
             .withId(null)
+            .withCreator(null)
             .withAcademy(null);
 
         classroom = initialize.apply(classroom);
         if (classroom.getAcademy() == null) {
             classroom.setAcademy(generateAcademy());
+        }
+        if (classroom.getCreator() == null) {
+            Teacher creator = generateTeacher();
+            classroom.setCreator(creator);
+            classroom.addTeacher(creator);
+        } else {
+            classroom.addTeacher(classroom.getCreator());
         }
 
         em.persist(classroom);
