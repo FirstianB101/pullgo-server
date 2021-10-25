@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.helper;
 
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademy;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
 
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
@@ -15,12 +16,15 @@ public class ClassroomHelper {
             .build();
         classroom.setId(0L);
         classroom.setAcademy(anAcademy());
+        classroom.setCreator(aTeacher());
         return classroom;
     }
 
     public static ClassroomDto.Create aClassroomCreateDto() {
         return ClassroomDto.Create.builder()
             .name(ARBITRARY_NAME)
+            .academyId(0L)
+            .creatorId(0L)
             .build();
     }
 
@@ -34,6 +38,7 @@ public class ClassroomHelper {
         return ClassroomDto.Result.builder()
             .id(0L)
             .academyId(0L)
+            .creatorId(0L)
             .name(ARBITRARY_NAME)
             .build();
     }
