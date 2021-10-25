@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
+import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
@@ -55,7 +56,6 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.FieldDescriptor;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -97,6 +97,9 @@ public class ClassroomIntegrationTest {
 
     @Autowired
     private EntityHelper entityHelper;
+
+    @Autowired
+    private AuthHelper authHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -476,17 +479,18 @@ public class ClassroomIntegrationTest {
     }
 
     @Test
-    @WithMockUser(authorities = "ADMIN")
     void postClassroom() throws Exception {
         // Given
         Struct given = trxHelper.doInTransaction(() -> {
             Academy academy = entityHelper.generateAcademy();
             Teacher creator = academy.getOwner();
-
+            String token = authHelper.generateToken(it -> creator.getAccount());
             return new Struct()
+                .withValue("token", token)
                 .withValue("academyId", academy.getId())
                 .withValue("creatorId", creator.getId());
         });
+        String token = given.valueOf("token");
         Long academyId = given.valueOf("academyId");
         Long creatorId = given.valueOf("creatorId");
 
@@ -500,6 +504,7 @@ public class ClassroomIntegrationTest {
 
         ResultActions actions = mockMvc.perform(post("/academy/classrooms")
             .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer " + token)
             .content(body));
 
         // Then
@@ -535,7 +540,6 @@ public class ClassroomIntegrationTest {
     class PatchClassroom {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void patchClassroom() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -544,12 +548,14 @@ public class ClassroomIntegrationTest {
                     it.withAcademy(academy)
                         .withName("컴퓨터네트워크 최웅철 (월수금)")
                 );
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("academyId", academy.getId())
                     .withValue("creatorId", classroom.getCreator().getId())
                     .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
             Long academyId = given.valueOf("academyId");
             Long creatorId = given.valueOf("creatorId");
             Long classroomId = given.valueOf("classroomId");
@@ -563,6 +569,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(patch("/academy/classrooms/{id}", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -581,7 +588,6 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void patchClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aClassroomUpdateDto());
@@ -601,7 +607,6 @@ public class ClassroomIntegrationTest {
     class DeleteClassroom {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteClassroom() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -624,14 +629,16 @@ public class ClassroomIntegrationTest {
                     it.applyClassroom(classroom);
                     return it;
                 });
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
                     .withValue("joinedTeacherId", joinedTeacher.getId())
                     .withValue("joinedStudentId", joinedStudent.getId())
                     .withValue("appliedTeacherId", appliedTeacher.getId())
                     .withValue("appliedStudentId", appliedStudent.getId());
             });
+            String token = given.valueOf("token");
             Long classroomId = given.valueOf("classroomId");
             Long joinedTeacherId = given.valueOf("joinedTeacherId");
             Long joinedStudentId = given.valueOf("joinedStudentId");
@@ -640,7 +647,8 @@ public class ClassroomIntegrationTest {
 
             // When
             ResultActions actions = mockMvc
-                .perform(delete("/academy/classrooms/{id}", classroomId));
+                .perform(delete("/academy/classrooms/{id}", classroomId)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -659,7 +667,6 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/academy/classrooms/{id}", 0));
@@ -675,21 +682,22 @@ public class ClassroomIntegrationTest {
     class AcceptTeacher {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptTeacher() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 Teacher teacher = entityHelper.generateTeacher(it -> {
                     it.applyClassroom(classroom);
                     return it;
                 });
 
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
                     .withValue("teacherId", teacher.getId());
             });
+            String token = given.valueOf("token");
             Long classroomId = given.valueOf("classroomId");
             Long teacherId = given.valueOf("teacherId");
 
@@ -699,6 +707,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -714,7 +723,6 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptTeacher_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aClassroomAcceptTeacherDto());
@@ -730,13 +738,17 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptTeacher_TeacherNotFound_NotFoundStatus() throws Exception {
             // Given
-            Long classroomId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
-                return classroom.getId();
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
             String body = toJson(aClassroomAcceptTeacherDto().withTeacherId(0L));
@@ -744,6 +756,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -752,17 +765,19 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptTeacher_TeacherNotApplied_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
                 Teacher teacher = entityHelper.generateTeacher();
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
 
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
                     .withValue("teacherId", teacher.getId());
             });
+            String token = given.valueOf("token");
             Long classroomId = given.valueOf("classroomId");
             Long teacherId = given.valueOf("teacherId");
 
@@ -772,6 +787,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -784,7 +800,6 @@ public class ClassroomIntegrationTest {
     class KickTeacher {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickTeacher() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -793,11 +808,13 @@ public class ClassroomIntegrationTest {
                     it.addTeacher(teacher);
                     return it;
                 });
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("teacherId", teacher.getId())
                     .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
             Long teacherId = given.valueOf("teacherId");
             Long classroomId = given.valueOf("classroomId");
 
@@ -807,6 +824,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -822,7 +840,6 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickTeacher_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aClassroomKickTeacherDto());
@@ -838,20 +855,24 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickTeacher_TeacherNotFound_NotFoundStatus() throws Exception {
             // Given
-            Long classroomId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
-                return classroom.getId();
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("classroomId", classroom.getId());
             });
-
+            String token = given.valueOf("token");
+            Long classroomId = given.valueOf("classroomId");
             // When
             String body = toJson(aClassroomKickTeacherDto().withTeacherId(0L));
 
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -860,17 +881,18 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickTeacher_TeacherNotEnrolled_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Teacher teacher = entityHelper.generateTeacher();
                 Classroom classroom = entityHelper.generateClassroom();
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("teacherId", teacher.getId())
                     .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
             Long teacherId = given.valueOf("teacherId");
             Long classroomId = given.valueOf("classroomId");
 
@@ -880,6 +902,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-teacher", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -893,7 +916,6 @@ public class ClassroomIntegrationTest {
     class AcceptStudent {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptStudent() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -903,11 +925,13 @@ public class ClassroomIntegrationTest {
                     it.applyClassroom(classroom);
                     return it;
                 });
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
                     .withValue("studentId", student.getId());
             });
+            String token = given.valueOf("token");
             Long classroomId = given.valueOf("classroomId");
             Long studentId = given.valueOf("studentId");
 
@@ -917,6 +941,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -932,7 +957,6 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptStudent_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aClassroomAcceptStudentDto());
@@ -948,13 +972,17 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptStudent_StudentNotFound_NotFoundStatus() throws Exception {
             // Given
-            Long classroomId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
-                return classroom.getId();
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
             String body = toJson(aClassroomAcceptStudentDto().withStudentId(0L));
@@ -962,6 +990,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -970,17 +999,18 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void acceptStudent_StudentNotApplied_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
                 Student student = entityHelper.generateStudent();
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("classroomId", classroom.getId())
                     .withValue("studentId", student.getId());
             });
+            String token = given.valueOf("token");
             Long classroomId = given.valueOf("classroomId");
             Long studentId = given.valueOf("studentId");
 
@@ -990,6 +1020,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/accept-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -1003,7 +1034,6 @@ public class ClassroomIntegrationTest {
     class KickStudent {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickStudent() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -1012,11 +1042,13 @@ public class ClassroomIntegrationTest {
                     it.addStudent(student);
                     return it;
                 });
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("studentId", student.getId())
                     .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
             Long studentId = given.valueOf("studentId");
             Long classroomId = given.valueOf("classroomId");
 
@@ -1026,6 +1058,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -1041,7 +1074,6 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickStudent_ClassroomNotFound_NotFoundStatus() throws Exception {
             // When
             String body = toJson(aClassroomKickStudentDto());
@@ -1057,13 +1089,17 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickStudent_StudentNotFound_NotFoundStatus() throws Exception {
             // Given
-            Long classroomId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Classroom classroom = entityHelper.generateClassroom();
-                return classroom.getId();
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
+            Long classroomId = given.valueOf("classroomId");
 
             // When
             String body = toJson(aClassroomKickStudentDto().withStudentId(0L));
@@ -1071,6 +1107,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
@@ -1079,17 +1116,18 @@ public class ClassroomIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void kickStudent_StudentNotEnrolled_BadRequestStatus() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Student student = entityHelper.generateStudent();
                 Classroom classroom = entityHelper.generateClassroom();
-
+                String token = authHelper.generateToken(it -> classroom.getCreator().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("studentId", student.getId())
                     .withValue("classroomId", classroom.getId());
             });
+            String token = given.valueOf("token");
             Long studentId = given.valueOf("studentId");
             Long classroomId = given.valueOf("classroomId");
 
@@ -1099,6 +1137,7 @@ public class ClassroomIntegrationTest {
             ResultActions actions = mockMvc
                 .perform(post("/academy/classrooms/{id}/kick-student", classroomId)
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
                     .content(body));
 
             // Then
