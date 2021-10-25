@@ -20,6 +20,7 @@ public class ClassroomDtoMapper implements
         return ClassroomDto.Result.builder()
             .id(classroom.getId())
             .name(classroom.getName())
+            .creatorId(classroom.getCreator().getId())
             .academyId(classroom.getAcademy().getId())
             .build();
     }
