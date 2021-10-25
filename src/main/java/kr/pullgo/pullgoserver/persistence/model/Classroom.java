@@ -18,7 +18,6 @@ import kr.pullgo.pullgoserver.error.exception.LessonNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,6 +39,11 @@ public class Classroom extends TimeEntity {
 
     @NotNull
     private String name;
+
+    @ToString.Exclude
+    @NotNull
+    @ManyToOne(fetch = LAZY)
+    private Teacher creator;
 
     @ToString.Exclude
     @NotNull
@@ -81,13 +85,14 @@ public class Classroom extends TimeEntity {
         this.name = name;
     }
 
-    protected Classroom(Long id, String name,
+    protected Classroom(Long id, String name, Teacher creator,
         Set<Teacher> teachers, Set<Student> students,
         Set<Student> applyingStudents,
         Set<Teacher> applyingTeachers,
         Set<Lesson> lessons, Set<Exam> exams, Academy academy) {
         this.id = id;
         this.name = name;
+        this.creator = creator;
         this.teachers = teachers;
         this.students = students;
         this.applyingStudents = applyingStudents;
