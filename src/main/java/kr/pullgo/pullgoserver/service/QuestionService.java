@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.service;
 
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
+import kr.pullgo.pullgoserver.dto.helper.DtoValidationCheckHelper;
 import kr.pullgo.pullgoserver.dto.mapper.QuestionDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
@@ -10,6 +11,7 @@ import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import kr.pullgo.pullgoserver.service.authorizer.QuestionAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
+import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,21 +27,27 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final RepositoryHelper repoHelper;
     private final QuestionAuthorizer questionAuthorizer;
+    private final ServiceErrorHelper errorHelper;
 
     @Autowired
     public QuestionService(
         QuestionDtoMapper dtoMapper,
         QuestionRepository questionRepository,
         RepositoryHelper repoHelper,
-        QuestionAuthorizer questionAuthorizer) {
+        QuestionAuthorizer questionAuthorizer,
+        ServiceErrorHelper errorHelper) {
         this.dtoMapper = dtoMapper;
         this.questionRepository = questionRepository;
         this.repoHelper = repoHelper;
         this.questionAuthorizer = questionAuthorizer;
+        this.errorHelper = errorHelper;
     }
 
     @Transactional
     public QuestionDto.Result create(QuestionDto.Create dto, Authentication authentication) {
+        if (!DtoValidationCheckHelper.isValid(dto)) {
+            throw errorHelper.badRequest("incomplete data body receive");
+        }
         Question question = dtoMapper.asEntity(dto);
 
         Exam exam = repoHelper.findExamOrThrow(dto.getExamId());
