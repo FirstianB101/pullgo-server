@@ -20,11 +20,14 @@ class QuestionDtoMapperTest {
         // When
         QuestionDto.Create dto = QuestionDto.Create.builder()
             .examId(0L)
-            .content("test content")
-            .pictureUrl(null)
-            .answer(Set.of(1, 3))
-            .choice(Map.of(
-                "1", "1", "2", "2", "3", "3", "4", "4", "5", "5")).build();
+            .questionConfig(QuestionDto.QuestionConfig.builder()
+                .content("test content")
+                .pictureUrl(null)
+                .answer(Set.of(1, 3))
+                .choice(Map.of(
+                    "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"))
+                .build())
+            .build();
 
         Question entity = dtoMapper.asEntity(dto);
 
@@ -43,7 +46,8 @@ class QuestionDtoMapperTest {
             .content("test content")
             .pictureUrl(null)
             .answer(new Answer(1, 3))
-            .multipleChoice(new MultipleChoice("test choice 1", "test choice 2", "test choice 3", "test choice 4", "test choice 5"))
+            .multipleChoice(new MultipleChoice("test choice 1", "test choice 2", "test choice 3",
+                "test choice 4", "test choice 5"))
             .build();
         entity.setId(0L);
         entity.setExam(anExam().withId(1L));
@@ -53,11 +57,12 @@ class QuestionDtoMapperTest {
         // Then
         assertThat(dto.getId()).isEqualTo(0L);
         assertThat(dto.getExamId()).isEqualTo(1L);
-        assertThat(dto.getContent()).isEqualTo("test content");
-        assertThat(dto.getPictureUrl()).isNull();
-        assertThat(dto.getAnswer()).containsOnly(1, 3);
-        assertThat(dto.getChoice()).isEqualTo(Map.of(
-            "1", "test choice 1", "2", "test choice 2", "3", "test choice 3", "4", "test choice 4", "5", "test choice 5"));
+        assertThat(dto.getQuestionConfig().getContent()).isEqualTo("test content");
+        assertThat(dto.getQuestionConfig().getPictureUrl()).isNull();
+        assertThat(dto.getQuestionConfig().getAnswer()).containsOnly(1, 3);
+        assertThat(dto.getQuestionConfig().getChoice()).isEqualTo(Map.of(
+            "1", "test choice 1", "2", "test choice 2", "3", "test choice 3", "4", "test choice 4",
+            "5", "test choice 5"));
     }
 
 }
