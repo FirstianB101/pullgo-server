@@ -69,7 +69,9 @@ public class ClassroomIntegrationTest {
     private static final FieldDescriptor DOC_FIELD_ID =
         fieldWithPath("id").description("반 ID");
     private static final FieldDescriptor DOC_FIELD_CREATOR_ID =
-        fieldWithPath("creatorId").description("생성한 선생님 ID");
+        fieldWithPath("creatorId").description("생성한 선생님의 teacher ID");
+    private static final FieldDescriptor DOC_FIELD_CREATOR_FULL_NAME =
+        fieldWithPath("creatorFullName").description("생성한 선생님 이름");
     private static final FieldDescriptor DOC_FIELD_NAME =
         fieldWithPath("name").description("반 이름");
     private static final FieldDescriptor DOC_FIELD_ACADEMY_ID =
@@ -128,11 +130,14 @@ public class ClassroomIntegrationTest {
                 return new Struct()
                     .withValue("academyId", academy.getId())
                     .withValue("classroomId", classroom.getId())
-                    .withValue("creatorId", classroom.getCreator().getId());
+                    .withValue("creatorId", classroom.getCreator().getId())
+                    .withValue("creatorFullName",
+                        classroom.getCreator().getAccount().getFullName());
             });
             Long academyId = given.valueOf("academyId");
             Long classroomId = given.valueOf("classroomId");
             Long creatorId = given.valueOf("creatorId");
+            String creatorFullName = given.valueOf("creatorFullName");
 
             // When
             ResultActions actions = mockMvc
@@ -144,7 +149,8 @@ public class ClassroomIntegrationTest {
                 .andExpect(jsonPath("$.id").value(classroomId))
                 .andExpect(jsonPath("$.creatorId").value(creatorId))
                 .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (월수금)"))
-                .andExpect(jsonPath("$.academyId").value(academyId));
+                .andExpect(jsonPath("$.academyId").value(academyId))
+                .andExpect(jsonPath("$.creatorFullName").value(creatorFullName));
 
             // Document
             actions.andDo(document("classroom-retrieve-example",
@@ -152,6 +158,7 @@ public class ClassroomIntegrationTest {
                     DOC_FIELD_ID,
                     DOC_FIELD_NAME,
                     DOC_FIELD_CREATOR_ID,
+                    DOC_FIELD_CREATOR_FULL_NAME,
                     DOC_FIELD_ACADEMY_ID
                 )));
         }
@@ -488,11 +495,13 @@ public class ClassroomIntegrationTest {
             return new Struct()
                 .withValue("token", token)
                 .withValue("academyId", academy.getId())
-                .withValue("creatorId", creator.getId());
+                .withValue("creatorId", creator.getId())
+                .withValue("creatorFullName", creator.getAccount().getFullName());
         });
         String token = given.valueOf("token");
         Long academyId = given.valueOf("academyId");
         Long creatorId = given.valueOf("creatorId");
+        String creatorFullName = given.valueOf("creatorFullName");
 
         // When
         ClassroomDto.Create dto = ClassroomDto.Create.builder()
@@ -514,6 +523,7 @@ public class ClassroomIntegrationTest {
             .andExpect(jsonPath("$.name").value("test name"))
             .andExpect(jsonPath("$.creatorId").value(creatorId))
             .andExpect(jsonPath("$.academyId").value(academyId))
+            .andExpect(jsonPath("$.creatorFullName").value(creatorFullName))
             .andReturn();
 
         String responseBody = mvcResult.getResponse().getContentAsString();

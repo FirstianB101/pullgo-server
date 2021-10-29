@@ -21,6 +21,7 @@ public class ClassroomDtoMapper implements
             .id(classroom.getId())
             .name(classroom.getName())
             .creatorId(classroom.getCreator().getId())
+            .creatorFullName(classroom.getCreator().getAccount().getFullName())
             .academyId(classroom.getAcademy().getId())
             .build();
     }

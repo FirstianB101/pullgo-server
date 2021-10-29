@@ -9,6 +9,7 @@ import kr.pullgo.pullgoserver.persistence.model.Classroom;
 public class ClassroomHelper {
 
     private static final String ARBITRARY_NAME = "컴퓨터네트워크 최웅철 (월수금)";
+    private static final String ARBITRARY_CREATOR_FULL_NAME = "최웅철";
 
     public static Classroom aClassroom() {
         Classroom classroom = Classroom.builder()
@@ -38,6 +39,7 @@ public class ClassroomHelper {
         return ClassroomDto.Result.builder()
             .id(0L)
             .academyId(0L)
+            .creatorFullName(ARBITRARY_CREATOR_FULL_NAME)
             .creatorId(0L)
             .name(ARBITRARY_NAME)
             .build();
