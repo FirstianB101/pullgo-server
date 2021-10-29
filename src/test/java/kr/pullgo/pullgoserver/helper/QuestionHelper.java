@@ -35,6 +35,12 @@ public class QuestionHelper {
     public static QuestionDto.Create aQuestionCreateDto() {
         return QuestionDto.Create.builder()
             .examId(0L)
+            .questionConfig(aQuestionConfigDto())
+            .build();
+    }
+
+    public static QuestionDto.QuestionConfig aQuestionConfigDto() {
+        return QuestionDto.QuestionConfig.builder()
             .content(ARBITRARY_CONTENT)
             .pictureUrl(ARBITRARY_PICTURE_URL)
             .answer(ARBITRARY_ANSWER)
@@ -55,10 +61,7 @@ public class QuestionHelper {
         return QuestionDto.Result.builder()
             .id(0L)
             .examId(0L)
-            .content(ARBITRARY_CONTENT)
-            .pictureUrl(ARBITRARY_PICTURE_URL)
-            .answer(ARBITRARY_ANSWER)
-            .choice(ARBITRARY_MULTIPLE_CHOICE)
+            .questionConfig(aQuestionConfigDto())
             .build();
     }
 
