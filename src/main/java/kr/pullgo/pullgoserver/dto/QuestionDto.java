@@ -12,10 +12,7 @@ public interface QuestionDto {
     @Data
     @Builder
     @With
-    class Create {
-
-        @NotNull
-        private Long examId;
+    class QuestionConfig {
 
         @NotNull
         private String content;
@@ -24,9 +21,21 @@ public interface QuestionDto {
 
         @NotNull
         private Set<Integer> answer;
-
         @NotNull
         private Map<String, String> choice;
+
+    }
+
+    @Data
+    @Builder
+    @With
+    class Create {
+
+        @NotNull
+        private Long examId;
+
+        @NotNull
+        private QuestionConfig questionConfig;
     }
 
     @Data
@@ -55,14 +64,6 @@ public interface QuestionDto {
         private Long examId;
 
         @NotNull
-        private String content;
-
-        private String pictureUrl;
-
-        @NotNull
-        private Set<Integer> answer;
-
-        @NotNull
-        private Map<String, String> choice;
+        private QuestionConfig questionConfig;
     }
 }
