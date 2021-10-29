@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -36,6 +37,18 @@ public interface QuestionDto {
 
         @NotNull
         private QuestionConfig questionConfig;
+    }
+
+    @Data
+    @Builder
+    @With
+    class MultipleCreate {
+
+        @NotNull
+        private Long examId;
+
+        @NotNull
+        private List<QuestionDto.QuestionConfig> questionConfigs;
     }
 
     @Data
