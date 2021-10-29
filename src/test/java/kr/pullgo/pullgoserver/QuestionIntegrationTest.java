@@ -1,7 +1,10 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestionConfigDto;
+import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestionCreateDto;
 import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestionUpdateDto;
+import static kr.pullgo.pullgoserver.helper.QuestionHelper.multipleQuestionCreateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -28,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.sql.DataSource;
@@ -83,6 +87,9 @@ public class QuestionIntegrationTest {
     private static final FieldDescriptor DOC_FIELD_EXAM_ID =
         fieldWithPath("examId").description("소속된 시험 ID");
 
+    private static final int CREATE = 201;
+    private static final int BAD_REQUEST = 400;
+
     private MockMvc mockMvc;
 
     @Autowired
@@ -114,18 +121,21 @@ public class QuestionIntegrationTest {
             .build();
     }
 
-    @Test
-    void postQuestion() throws Exception {
-        // Given
-        Struct given = trxHelper.doInTransaction(() -> {
-            Exam exam = entityHelper.generateExam();
-            String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
-            return new Struct()
-                .withValue("token", token)
-                .withValue("examId", exam.getId());
-        });
-        String token = given.valueOf("token");
-        Long examId = given.valueOf("examId");
+    @Nested
+    class PostQuestions {
+
+        @Test
+        void postQuestion() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("examId", exam.getId());
+            });
+            String token = given.valueOf("token");
+            Long examId = given.valueOf("examId");
 
             // When
             QuestionDto.MultipleCreate dto = QuestionDto.MultipleCreate.builder()
@@ -140,10 +150,10 @@ public class QuestionIntegrationTest {
                 .build();
             String body = toJson(dto);
 
-        ResultActions actions = mockMvc.perform(post("/exam/questions")
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer " + token)
-            .content(body));
+            ResultActions actions = mockMvc.perform(post("/exam/questions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
 
             // Then
             actions
@@ -176,6 +186,125 @@ public class QuestionIntegrationTest {
                 )));
         }
 
+        @Test
+        void 불완전한_request_body로_question_생성_실패() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("examId", exam.getId());
+            });
+            String token = given.valueOf("token");
+
+            // When
+            String body = toJson(QuestionDto.MultipleCreate.builder().build());
+
+            ResultActions actions = mockMvc.perform(post("/exam/questions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void 존재하지_않는_exam에_question_생성_실패() throws Exception {
+            // When
+            String body = toJson(aQuestionCreateDto());
+
+            ResultActions actions = mockMvc.perform(post("/exam/questions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void multiPostQuestions() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("examId", exam.getId());
+            });
+            String token = given.valueOf("token");
+            Long examId = given.valueOf("examId");
+
+            // When
+            QuestionDto.MultipleCreate dto = multipleQuestionCreateDto()
+                .withExamId(examId)
+                .withQuestionConfigs(List.of(aQuestionConfigDto(),
+                    aQuestionConfigDto(),
+                    aQuestionConfigDto(),
+                    aQuestionConfigDto(),
+                    aQuestionConfigDto()));
+            String body = toJson(dto);
+
+            ResultActions actions = mockMvc.perform(post("/exam/questions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(5)))
+                .andExpect(jsonPath("$[*].statusCodeValue").value(contains(
+                    CREATE, CREATE, CREATE, CREATE, CREATE
+                )));
+
+            // Document
+
+        }
+
+        @Test
+        void 일부_실패하는_question_다중생성() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("examId", exam.getId());
+            });
+            String token = given.valueOf("token");
+            Long examId = given.valueOf("examId");
+
+            // When
+            QuestionDto.MultipleCreate dto = multipleQuestionCreateDto()
+                .withExamId(examId)
+                .withQuestionConfigs(List.of(aQuestionConfigDto(),
+                    QuestionDto.QuestionConfig.builder().build(),
+                    aQuestionConfigDto().withContent(null),
+                    aQuestionConfigDto().withChoice(null),
+                    aQuestionConfigDto().withAnswer(null),
+                    aQuestionConfigDto().withPictureUrl(null)));
+            String body = toJson(dto);
+
+            ResultActions actions = mockMvc.perform(post("/exam/questions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$").value(hasSize(6)))
+                .andExpect(jsonPath("$[*].statusCodeValue").value(contains(
+                    CREATE, BAD_REQUEST, BAD_REQUEST, BAD_REQUEST, BAD_REQUEST, CREATE
+                )));
+
+            // Document
+
+        }
     }
 
     @Nested
