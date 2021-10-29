@@ -13,10 +13,10 @@ public class QuestionDtoMapper implements
     @Override
     public Question asEntity(QuestionDto.Create dto) {
         return Question.builder()
-            .content(dto.getContent())
-            .pictureUrl(dto.getPictureUrl())
-            .answer(new Answer(dto.getAnswer()))
-            .multipleChoice(new MultipleChoice(dto.getChoice()))
+            .content(dto.getQuestionConfig().getContent())
+            .pictureUrl(dto.getQuestionConfig().getPictureUrl())
+            .answer(new Answer(dto.getQuestionConfig().getAnswer()))
+            .multipleChoice(new MultipleChoice(dto.getQuestionConfig().getChoice()))
             .build();
     }
 
@@ -25,10 +25,12 @@ public class QuestionDtoMapper implements
         return QuestionDto.Result.builder()
             .id(question.getId())
             .examId(question.getExam().getId())
-            .content(question.getContent())
-            .pictureUrl(question.getPictureUrl())
-            .answer(question.getAnswer().getObjectiveNumbers())
-            .choice(question.getMultipleChoice().getChoices())
+            .questionConfig(QuestionDto.QuestionConfig.builder()
+                .content(question.getContent())
+                .pictureUrl(question.getPictureUrl())
+                .answer(question.getAnswer().getObjectiveNumbers())
+                .choice(question.getMultipleChoice().getChoices())
+                .build())
             .build();
     }
 
