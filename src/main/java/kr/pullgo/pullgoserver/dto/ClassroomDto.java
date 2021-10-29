@@ -52,6 +52,9 @@ public interface ClassroomDto {
 
         @NotNull
         private Long creatorId;
+
+        @NotNull
+        private String creatorFullName;
     }
 
 
