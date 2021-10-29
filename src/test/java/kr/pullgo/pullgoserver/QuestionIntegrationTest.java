@@ -65,10 +65,17 @@ public class QuestionIntegrationTest {
 
     private static final FieldDescriptor DOC_FIELD_ID =
         fieldWithPath("id").description("문제 ID");
+    private static final FieldDescriptor DOC_FIELD_QUSTION_CONFIG =
+        subsectionWithPath("questionConfig").type("QuestionConfig")
+            .description("문제의 구성요소");
+    private static final FieldDescriptor DOC_FIELD_QUSTION_CONFIGS =
+        subsectionWithPath("questionConfigs[]").type("QuestionConfig")
+            .description("여러개 문제의 구성요소들");
     private static final FieldDescriptor DOC_FIELD_ANSWER =
         fieldWithPath("answer").description("정답 (객관식, 1~5 범위의 정수 배열)");
     private static final FieldDescriptor DOC_FIELD_MULTIPLE_CHOICE =
-        subsectionWithPath("choice").type("MultipleChoice").description("객관식 보기 (1~5 범위의 정수, 보기 내용)");
+        subsectionWithPath("choice").type("MultipleChoice")
+            .description("객관식 보기 (1~5 범위의 정수, 보기 내용)");
     private static final FieldDescriptor DOC_FIELD_PICTURE_URL =
         fieldWithPath("pictureUrl").description("첨부된 사진의 URL");
     private static final FieldDescriptor DOC_FIELD_CONTENT =
@@ -120,45 +127,55 @@ public class QuestionIntegrationTest {
         String token = given.valueOf("token");
         Long examId = given.valueOf("examId");
 
-        // When
-        QuestionDto.Create dto = QuestionDto.Create.builder()
-            .content("4보다 작은 자연수는?")
-            .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
-            .answer(Set.of(1, 2, 3))
-            .choice(Map.of(
-                "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"))
-            .examId(examId)
-            .build();
-        String body = toJson(dto);
+            // When
+            QuestionDto.MultipleCreate dto = QuestionDto.MultipleCreate.builder()
+                .examId(examId)
+                .questionConfigs(List.of(QuestionDto.QuestionConfig.builder()
+                    .content("4보다 작은 자연수는?")
+                    .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
+                    .answer(Set.of(1, 2, 3))
+                    .choice(Map.of(
+                        "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"))
+                    .build()))
+                .build();
+            String body = toJson(dto);
 
         ResultActions actions = mockMvc.perform(post("/exam/questions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("Authorization", "Bearer " + token)
             .content(body));
 
-        // Then
-        actions
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
-            .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
-            .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
-            .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
-            .andExpect(jsonPath("$.examId").value(examId));
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].body.id").isNumber())
+                .andExpect(jsonPath("$[0].body.questionConfig.content").value("4보다 작은 자연수는?"))
+                .andExpect(jsonPath("$[0].body.questionConfig.pictureUrl").value(
+                    "https://i.imgur.com/JOKsNeT.jpg"))
+                .andExpect(
+                    jsonPath("$[0].body.questionConfig.answer").value(containsInAnyOrder(1, 2, 3)))
+                .andExpect(jsonPath("$[0].body.questionConfig.choice").value(hasEntry("1", "1")))
+                .andExpect(jsonPath("$[0].body.questionConfig.choice").value(hasEntry("2", "2")))
+                .andExpect(jsonPath("$[0].body.questionConfig.choice").value(hasEntry("3", "3")))
+                .andExpect(jsonPath("$[0].body.questionConfig.choice").value(hasEntry("4", "4")))
+                .andExpect(jsonPath("$[0].body.questionConfig.choice").value(hasEntry("5", "5")))
+                .andExpect(jsonPath("$[0].body.examId").value(examId));
 
-        // Document
-        actions.andDo(document("question-create-example",
-            requestFields(
-                DOC_FIELD_ANSWER,
-                DOC_FIELD_MULTIPLE_CHOICE,
-                DOC_FIELD_PICTURE_URL.optional(),
-                DOC_FIELD_CONTENT,
-                DOC_FIELD_EXAM_ID
-            )));
+            // Document
+            actions.andDo(document("question-create-example",
+                requestFields(
+                    DOC_FIELD_EXAM_ID,
+                    DOC_FIELD_QUSTION_CONFIGS,
+                    fieldWithPath("questionConfigs[].answer").description(
+                        "정답 (객관식, 1~5 범위의 정수 배열)"),
+                    subsectionWithPath("questionConfigs[].choice").type("MultipleChoice")
+                        .description("객관식 보기 (1~5 범위의 정수, 보기 내용)"),
+                    fieldWithPath("questionConfigs[].pictureUrl").description("첨부된 사진의 URL")
+                        .optional(),
+                    fieldWithPath("questionConfigs[].content").description("문제 내용")
+                )));
+        }
+
     }
 
     @Nested
@@ -295,25 +312,29 @@ public class QuestionIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(questionId))
-                .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
-                .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
-                .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
-                .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
+                .andExpect(jsonPath("$.questionConfig.content").value("4보다 작은 자연수는?"))
+                .andExpect(jsonPath("$.questionConfig.pictureUrl").value(
+                    "https://i.imgur.com/JOKsNeT.jpg"))
+                .andExpect(jsonPath("$.questionConfig.answer").value(containsInAnyOrder(1, 2, 3)))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("1", "1")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("2", "2")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("3", "3")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("4", "4")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("5", "5")))
                 .andExpect(jsonPath("$.examId").value(examId));
 
             // Document
             actions.andDo(document("question-retrieve-example",
                 responseFields(
                     DOC_FIELD_ID,
-                    DOC_FIELD_ANSWER,
-                    DOC_FIELD_MULTIPLE_CHOICE,
-                    DOC_FIELD_PICTURE_URL,
-                    DOC_FIELD_CONTENT,
-                    DOC_FIELD_EXAM_ID
+                    DOC_FIELD_EXAM_ID,
+                    DOC_FIELD_QUSTION_CONFIG,
+                    fieldWithPath("questionConfig.answer").description("정답 (객관식, 1~5 범위의 정수 배열)"),
+                    subsectionWithPath("questionConfig.choice").type("MultipleChoice")
+                        .description("객관식 보기 (1~5 범위의 정수, 보기 내용)"),
+                    fieldWithPath("questionConfig.pictureUrl").description("첨부된 사진의 URL")
+                        .optional(),
+                    fieldWithPath("questionConfig.content").description("문제 내용")
                 )));
         }
 
@@ -372,15 +393,16 @@ public class QuestionIntegrationTest {
             actions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").isNumber())
-                .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
-                .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
-                .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
-                .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
-                .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
-                .andExpect(jsonPath("$.examId").value(examId));
+                .andExpect(jsonPath("$.examId").value(examId))
+                .andExpect(jsonPath("$.questionConfig.content").value("4보다 작은 자연수는?"))
+                .andExpect(jsonPath("$.questionConfig.pictureUrl").value(
+                    "https://i.imgur.com/JOKsNeT.jpg"))
+                .andExpect(jsonPath("$.questionConfig.answer").value(containsInAnyOrder(1, 2, 3)))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("1", "1")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("2", "2")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("3", "3")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("4", "4")))
+                .andExpect(jsonPath("$.questionConfig.choice").value(hasEntry("5", "5")));
 
             // Document
             actions.andDo(document("question-update-example",
