@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.helper;
 
 import static kr.pullgo.pullgoserver.helper.ExamHelper.anExam;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
@@ -45,6 +46,16 @@ public class QuestionHelper {
             .pictureUrl(ARBITRARY_PICTURE_URL)
             .answer(ARBITRARY_ANSWER)
             .choice(ARBITRARY_MULTIPLE_CHOICE)
+            .build();
+    }
+
+    public static QuestionDto.MultipleCreate multipleQuestionCreateDto() {
+        return QuestionDto.MultipleCreate.builder()
+            .examId(0L)
+            .questionConfigs(List.of(
+                aQuestionConfigDto(),
+                aQuestionConfigDto(),
+                aQuestionConfigDto()))
             .build();
     }
 
