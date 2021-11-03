@@ -42,7 +42,7 @@ class ClassroomDtoMapperTest {
         assertThat(dto.getId()).isEqualTo(0L);
         assertThat(dto.getName()).isEqualTo("test name");
         assertThat(dto.getAcademyId()).isEqualTo(1L);
-        assertThat(dto.getCreatorId()).isEqualTo(2L);
+        assertThat(dto.getCreator().getId()).isEqualTo(2L);
     }
 
 }

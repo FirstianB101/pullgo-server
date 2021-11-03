@@ -15,6 +15,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.subsectionWithPath;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -68,6 +69,9 @@ public class ClassroomIntegrationTest {
 
     private static final FieldDescriptor DOC_FIELD_ID =
         fieldWithPath("id").description("반 ID");
+    private static final FieldDescriptor DOC_FIELD_CREATOR =
+        subsectionWithPath("creator")
+            .type("creator").description("생성한 선생님");
     private static final FieldDescriptor DOC_FIELD_CREATOR_ID =
         fieldWithPath("creatorId").description("생성한 선생님 ID");
     private static final FieldDescriptor DOC_FIELD_NAME =
@@ -112,60 +116,62 @@ public class ClassroomIntegrationTest {
             .build();
     }
 
-    @Nested
-    class GetClassroom {
+    @Test
+    void postClassroom() throws Exception {
+        // Given
+        Struct given = trxHelper.doInTransaction(() -> {
+            Academy academy = entityHelper.generateAcademy();
+            Teacher creator = academy.getOwner();
+            String token = authHelper.generateToken(it -> creator.getAccount());
+            return new Struct()
+                .withValue("token", token)
+                .withValue("academyId", academy.getId())
+                .withValue("creator", creator);
+        });
+        String token = given.valueOf("token");
+        Long academyId = given.valueOf("academyId");
+        Teacher creator = given.valueOf("creator");
 
-        @Test
-        void getClassroom() throws Exception {
-            // Given
-            Struct given = trxHelper.doInTransaction(() -> {
-                Academy academy = entityHelper.generateAcademy();
-                Classroom classroom = entityHelper.generateClassroom(it ->
-                    it.withName("컴퓨터네트워크 최웅철 (월수금)")
-                        .withAcademy(academy)
-                );
+        // When
+        ClassroomDto.Create dto = ClassroomDto.Create.builder()
+            .name("test name")
+            .academyId(academyId)
+            .creatorId(creator.getId())
+            .build();
+        String body = toJson(dto);
 
-                return new Struct()
-                    .withValue("academyId", academy.getId())
-                    .withValue("classroomId", classroom.getId())
-                    .withValue("creatorId", classroom.getCreator().getId());
-            });
-            Long academyId = given.valueOf("academyId");
-            Long classroomId = given.valueOf("classroomId");
-            Long creatorId = given.valueOf("creatorId");
+        ResultActions actions = mockMvc.perform(post("/academy/classrooms")
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer " + token)
+            .content(body));
 
-            // When
-            ResultActions actions = mockMvc
-                .perform(get("/academy/classrooms/{id}", classroomId));
+        // Then
+        MvcResult mvcResult = actions
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").isNumber())
+            .andExpect(jsonPath("$.name").value("test name"))
+            .andExpect(jsonPath("$.creator.id").value(creator.getId()))
+            .andExpect(jsonPath("$.academyId").value(academyId))
+            .andReturn();
 
-            // Then
-            actions
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(classroomId))
-                .andExpect(jsonPath("$.creatorId").value(creatorId))
-                .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (월수금)"))
-                .andExpect(jsonPath("$.academyId").value(academyId));
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        ClassroomDto.Result resultDto = fromJson(responseBody, ClassroomDto.Result.class);
 
-            // Document
-            actions.andDo(document("classroom-retrieve-example",
-                responseFields(
-                    DOC_FIELD_ID,
-                    DOC_FIELD_NAME,
-                    DOC_FIELD_CREATOR_ID,
-                    DOC_FIELD_ACADEMY_ID
-                )));
-        }
+        List<Long> teacherIds = trxHelper.doInTransaction(() -> {
+            Classroom classroom = classroomRepository.findById(resultDto.getId()).orElseThrow();
+            return classroom.getTeachers().stream()
+                .map(Teacher::getId)
+                .collect(Collectors.toList());
+        });
+        assertThat(teacherIds).contains(creator.getId());
 
-        @Test
-        void getClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
-            // When
-            ResultActions actions = mockMvc.perform(get("/academy/classrooms/{id}", 0L));
-
-            // Then
-            actions
-                .andExpect(status().isNotFound());
-        }
-
+        // Document
+        actions.andDo(document("classroom-create-example",
+            requestFields(
+                DOC_FIELD_NAME,
+                DOC_FIELD_CREATOR_ID,
+                DOC_FIELD_ACADEMY_ID
+            )));
     }
 
     @Nested
@@ -478,62 +484,60 @@ public class ClassroomIntegrationTest {
 
     }
 
-    @Test
-    void postClassroom() throws Exception {
-        // Given
-        Struct given = trxHelper.doInTransaction(() -> {
-            Academy academy = entityHelper.generateAcademy();
-            Teacher creator = academy.getOwner();
-            String token = authHelper.generateToken(it -> creator.getAccount());
-            return new Struct()
-                .withValue("token", token)
-                .withValue("academyId", academy.getId())
-                .withValue("creatorId", creator.getId());
-        });
-        String token = given.valueOf("token");
-        Long academyId = given.valueOf("academyId");
-        Long creatorId = given.valueOf("creatorId");
+    @Nested
+    class GetClassroom {
 
-        // When
-        ClassroomDto.Create dto = ClassroomDto.Create.builder()
-            .name("test name")
-            .academyId(academyId)
-            .creatorId(creatorId)
-            .build();
-        String body = toJson(dto);
+        @Test
+        void getClassroom() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Academy academy = entityHelper.generateAcademy();
+                Classroom classroom = entityHelper.generateClassroom(it ->
+                    it.withName("컴퓨터네트워크 최웅철 (월수금)")
+                        .withAcademy(academy)
+                );
 
-        ResultActions actions = mockMvc.perform(post("/academy/classrooms")
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer " + token)
-            .content(body));
+                return new Struct()
+                    .withValue("academyId", academy.getId())
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("creator", classroom.getCreator());
+            });
+            Long academyId = given.valueOf("academyId");
+            Long classroomId = given.valueOf("classroomId");
+            Teacher creator = given.valueOf("creator");
 
-        // Then
-        MvcResult mvcResult = actions
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.name").value("test name"))
-            .andExpect(jsonPath("$.creatorId").value(creatorId))
-            .andExpect(jsonPath("$.academyId").value(academyId))
-            .andReturn();
+            // When
+            ResultActions actions = mockMvc
+                .perform(get("/academy/classrooms/{id}", classroomId));
 
-        String responseBody = mvcResult.getResponse().getContentAsString();
-        ClassroomDto.Result resultDto = fromJson(responseBody, ClassroomDto.Result.class);
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(classroomId))
+                .andExpect(jsonPath("$.creator.id").value(creator.getId()))
+                .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (월수금)"))
+                .andExpect(jsonPath("$.academyId").value(academyId));
 
-        List<Long> teacherIds = trxHelper.doInTransaction(() -> {
-            Classroom classroom = classroomRepository.findById(resultDto.getId()).orElseThrow();
-            return classroom.getTeachers().stream()
-                .map(Teacher::getId)
-                .collect(Collectors.toList());
-        });
-        assertThat(teacherIds).contains(creatorId);
+            // Document
+            actions.andDo(document("classroom-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_NAME,
+                    DOC_FIELD_CREATOR,
+                    DOC_FIELD_ACADEMY_ID
+                )));
+        }
 
-        // Document
-        actions.andDo(document("classroom-create-example",
-            requestFields(
-                DOC_FIELD_NAME,
-                DOC_FIELD_CREATOR_ID,
-                DOC_FIELD_ACADEMY_ID
-            )));
+        @Test
+        void getClassroom_ClassroomNotFound_NotFoundStatus() throws Exception {
+            // When
+            ResultActions actions = mockMvc.perform(get("/academy/classrooms/{id}", 0L));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
     }
 
     @Nested
@@ -552,12 +556,12 @@ public class ClassroomIntegrationTest {
                 return new Struct()
                     .withValue("token", token)
                     .withValue("academyId", academy.getId())
-                    .withValue("creatorId", classroom.getCreator().getId())
+                    .withValue("creator", classroom.getCreator())
                     .withValue("classroomId", classroom.getId());
             });
             String token = given.valueOf("token");
             Long academyId = given.valueOf("academyId");
-            Long creatorId = given.valueOf("creatorId");
+            Teacher creator = given.valueOf("creator");
             Long classroomId = given.valueOf("classroomId");
 
             // When
@@ -577,7 +581,7 @@ public class ClassroomIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(classroomId))
                 .andExpect(jsonPath("$.name").value("컴퓨터네트워크 최웅철 (화목)"))
-                .andExpect(jsonPath("$.creatorId").value(creatorId))
+                .andExpect(jsonPath("$.creator.id").value(creator.getId()))
                 .andExpect(jsonPath("$.academyId").value(academyId));
 
             // Document
