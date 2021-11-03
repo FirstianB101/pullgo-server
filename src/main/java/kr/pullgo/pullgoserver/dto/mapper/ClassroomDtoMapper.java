@@ -2,11 +2,19 @@ package kr.pullgo.pullgoserver.dto.mapper;
 
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClassroomDtoMapper implements
     DtoMapper<Classroom, ClassroomDto.Create, ClassroomDto.Result> {
+
+    private final TeacherDtoMapper teacherDtoMapper;
+
+    @Autowired
+    public ClassroomDtoMapper(TeacherDtoMapper teacherDtoMapper) {
+        this.teacherDtoMapper = teacherDtoMapper;
+    }
 
     @Override
     public Classroom asEntity(ClassroomDto.Create dto) {
