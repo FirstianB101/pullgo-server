@@ -2,15 +2,28 @@ package kr.pullgo.pullgoserver.dto.mapper;
 
 import static kr.pullgo.pullgoserver.helper.AcademyHelper.anAcademy;
 import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacher;
+import static kr.pullgo.pullgoserver.helper.TeacherHelper.aTeacherResultDto;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
 import kr.pullgo.pullgoserver.dto.ClassroomDto;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
+import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class ClassroomDtoMapperTest {
 
-    private final ClassroomDtoMapper dtoMapper = new ClassroomDtoMapper();
+    @Mock
+    private TeacherDtoMapper teacherDtoMapper;
+
+    @InjectMocks
+    private ClassroomDtoMapper dtoMapper;
 
     @Test
     void asEntity() {
@@ -28,6 +41,10 @@ class ClassroomDtoMapperTest {
 
     @Test
     void asResultDto() {
+        // Given
+        given(teacherDtoMapper.asResultDto(any(Teacher.class)))
+            .willReturn(aTeacherResultDto().withId(2L));
+
         // When
         Classroom entity = Classroom.builder()
             .name("test name")
