@@ -51,7 +51,7 @@ public interface ClassroomDto {
         private String name;
 
         @NotNull
-        private Long creatorId;
+        private TeacherDto.Result creator;
     }
 
 
