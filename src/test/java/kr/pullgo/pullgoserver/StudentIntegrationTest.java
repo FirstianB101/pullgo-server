@@ -775,6 +775,37 @@ public class StudentIntegrationTest {
                 .andExpect(status().isBadRequest());
         }
 
+        @Test
+        void 이미_가입요청한_학원에_중복된_가입요청() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Academy academy = entityHelper.generateAcademy();
+                Student student = entityHelper.generateStudent();
+                student.applyAcademy(academy);
+                String token = authHelper.generateToken(it -> student.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("academyId", academy.getId())
+                    .withValue("studentId", student.getId());
+            });
+            Long academyId = given.valueOf("academyId");
+            Long studentId = given.valueOf("studentId");
+            String token = given.valueOf("token");
+
+            // When
+            String body = toJson(aStudentApplyAcademyDto().withAcademyId(academyId));
+
+            ResultActions actions = mockMvc
+                .perform(post("/students/{id}/apply-academy", studentId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
     }
 
     @Nested
@@ -1015,6 +1046,37 @@ public class StudentIntegrationTest {
                     classroom.addStudent(it);
                     return it;
                 });
+                String token = authHelper.generateToken(it -> student.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("classroomId", classroom.getId())
+                    .withValue("studentId", student.getId());
+            });
+            Long classroomId = given.valueOf("classroomId");
+            Long studentId = given.valueOf("studentId");
+            String token = given.valueOf("token");
+
+            // When
+            String body = toJson(aStudentApplyClassroomDto().withClassroomId(classroomId));
+
+            ResultActions actions = mockMvc
+                .perform(post("/students/{id}/apply-classroom", studentId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void 이미_가입요청한_반에_중복된_가입요청() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+                Student student = entityHelper.generateStudent();
+                student.applyClassroom(classroom);
                 String token = authHelper.generateToken(it -> student.getAccount());
                 return new Struct()
                     .withValue("token", token)
