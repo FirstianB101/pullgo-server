@@ -1,19 +1,19 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
-import static javax.persistence.FetchType.*;
+import static javax.persistence.FetchType.LAZY;
 
 import com.sun.istack.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotEmpty;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
@@ -39,13 +39,13 @@ public class Academy extends TimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @NotEmpty
     private String name;
 
-    @NotNull
+    @NotEmpty
     private String phone;
 
-    @NotNull
+    @NotEmpty
     private String address;
 
     @ToString.Exclude
@@ -60,7 +60,7 @@ public class Academy extends TimeEntity {
     private Set<Student> students = new HashSet<>();
 
     @ToString.Exclude
-    @NotNull
+    @NotEmpty
     @ManyToMany
     private Set<Teacher> teachers = new HashSet<>();
 

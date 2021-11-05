@@ -1,18 +1,17 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
-import static javax.persistence.CascadeType.*;
+import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.FetchType.LAZY;
 
 import com.sun.istack.NotNull;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.NotEmpty;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,7 +36,7 @@ public class Lesson extends TimeEntity {
     @ManyToOne(fetch = LAZY)
     private Classroom classroom;
 
-    @NotNull
+    @NotEmpty
     private String name;
 
     @NotNull
