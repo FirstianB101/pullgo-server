@@ -16,6 +16,7 @@ import javax.persistence.OneToOne;
 import javax.validation.constraints.NotEmpty;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.StudentAlreadyAppliedException;
 import kr.pullgo.pullgoserver.error.exception.StudentAlreadyEnrolledException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -92,7 +93,11 @@ public class Student extends TimeEntity {
     }
 
     public void applyAcademy(Academy academy) {
-        if (academies.contains(academy)) { throw new StudentAlreadyEnrolledException(); }
+        if (academies.contains(academy)) {
+            throw new StudentAlreadyEnrolledException();
+        } else if (appliedAcademies.contains(academy)) {
+            throw new StudentAlreadyAppliedException();
+        }
 
         this.appliedAcademies.add(academy);
         academy.getApplyingStudents().add(this);
@@ -106,7 +111,11 @@ public class Student extends TimeEntity {
     }
 
     public void applyClassroom(Classroom classroom) {
-        if (classrooms.contains(classroom)) { throw new StudentAlreadyEnrolledException(); }
+        if (classrooms.contains(classroom)) {
+            throw new StudentAlreadyEnrolledException();
+        } else if (appliedClassrooms.contains(classroom)) {
+            throw new StudentAlreadyAppliedException();
+        }
 
         this.appliedClassrooms.add(classroom);
         classroom.getApplyingStudents().add(this);
