@@ -1,14 +1,12 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
-import static javax.persistence.CascadeType.*;
-import static javax.persistence.FetchType.*;
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.FetchType.LAZY;
 
 import com.sun.istack.NotNull;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -16,6 +14,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyAppliedException;
 import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyEnrolledException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -75,6 +74,8 @@ public class Teacher extends TimeEntity {
     public void applyAcademy(Academy academy) {
         if (academies.contains(academy)) {
             throw new TeacherAlreadyEnrolledException();
+        } else if (appliedAcademies.contains(academy)) {
+            throw new TeacherAlreadyAppliedException();
         }
 
         this.appliedAcademies.add(academy);
@@ -93,6 +94,8 @@ public class Teacher extends TimeEntity {
     public void applyClassroom(Classroom classroom) {
         if (classrooms.contains(classroom)) {
             throw new TeacherAlreadyEnrolledException();
+        } else if (appliedClassrooms.contains(classroom)) {
+            throw new TeacherAlreadyAppliedException();
         }
 
         this.appliedClassrooms.add(classroom);
