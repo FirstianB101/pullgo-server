@@ -59,14 +59,14 @@ public class ClassroomService {
     public ClassroomDto.Result create(ClassroomDto.Create dto, Authentication authentication) {
         Classroom classroom = dtoMapper.asEntity(dto);
 
-        Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
-        academyAuthorizer.requireMemberTeacher(authentication, academy);
-        academy.addClassroom(classroom);
-
         Teacher creator = repoHelper.findTeacherOrThrow(dto.getCreatorId());
         classroomAuthorizer.requireByOneself(authentication, creator);
         classroom.setCreator(creator);
         classroom.addTeacher(creator);
+
+        Academy academy = repoHelper.findAcademyOrThrow(dto.getAcademyId());
+        academyAuthorizer.requireMemberTeacher(authentication, academy);
+        academy.addClassroom(classroom);
 
         return dtoMapper.asResultDto(classroomRepository.save(classroom));
     }
