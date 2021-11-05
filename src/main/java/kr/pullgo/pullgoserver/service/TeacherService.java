@@ -6,6 +6,7 @@ import kr.pullgo.pullgoserver.dto.TeacherDto;
 import kr.pullgo.pullgoserver.dto.mapper.TeacherDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyAppliedException;
 import kr.pullgo.pullgoserver.error.exception.TeacherAlreadyEnrolledException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
@@ -120,6 +121,8 @@ public class TeacherService {
             teacher.applyAcademy(academy);
         } catch (TeacherAlreadyEnrolledException e) {
             throw errorHelper.badRequest("Already enrolled teacher");
+        } catch (TeacherAlreadyAppliedException e) {
+            throw errorHelper.badRequest("Already applied teacher");
         }
     }
 
@@ -150,6 +153,8 @@ public class TeacherService {
             teacher.applyClassroom(classroom);
         } catch (TeacherAlreadyEnrolledException e) {
             throw errorHelper.badRequest("Already enrolled teacher");
+        } catch (TeacherAlreadyAppliedException e) {
+            throw errorHelper.badRequest("Already applied teacher");
         }
     }
 
