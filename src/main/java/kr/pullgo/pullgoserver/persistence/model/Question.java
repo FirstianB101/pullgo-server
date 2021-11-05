@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.validation.constraints.NotEmpty;
 import kr.pullgo.pullgoserver.persistence.converter.AnswerConverter;
 import kr.pullgo.pullgoserver.persistence.converter.ChoiceConverter;
 import lombok.AccessLevel;
@@ -36,7 +37,7 @@ public class Question extends TimeEntity {
     @ManyToOne(fetch = LAZY)
     private Exam exam;
 
-    @NotNull
+    @NotEmpty
     private String content;
 
     private String pictureUrl;

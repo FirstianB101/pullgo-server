@@ -1,19 +1,19 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
-import static javax.persistence.FetchType.*;
+import static javax.persistence.FetchType.LAZY;
 
 import com.sun.istack.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.NotEmpty;
 import kr.pullgo.pullgoserver.error.exception.AcademyNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.ClassroomNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentAlreadyEnrolledException;
@@ -44,10 +44,10 @@ public class Student extends TimeEntity {
     @ToString.Exclude
     private Account account;
 
-    @NotNull
+    @NotEmpty
     private String parentPhone;
 
-    @NotNull
+    @NotEmpty
     private String schoolName;
 
     private int schoolYear;

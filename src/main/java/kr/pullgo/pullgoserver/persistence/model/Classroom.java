@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotEmpty;
 import kr.pullgo.pullgoserver.error.exception.ExamNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.LessonNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
@@ -37,7 +38,7 @@ public class Classroom extends TimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
+    @NotEmpty
     private String name;
 
     @ToString.Exclude
@@ -46,7 +47,7 @@ public class Classroom extends TimeEntity {
     private Teacher creator;
 
     @ToString.Exclude
-    @NotNull
+    @NotEmpty
     @ManyToMany
     private Set<Teacher> teachers = new HashSet<>();
 
