@@ -3,6 +3,8 @@ package kr.pullgo.pullgoserver.service;
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
+import kr.pullgo.pullgoserver.persistence.model.AttenderState;
+import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
@@ -110,6 +112,13 @@ public class ExamService {
         Exam exam = getOnGoingExam(id);
         examAuthorizer.requireCreator(authentication, exam);
 
+        finishExam(exam);
+    }
+
+    private void finishExam(Exam exam) {
+        exam.getAttenderStates().stream().filter(attenderState ->
+                attenderState.getProgress() == AttendingProgress.ONGOING)
+            .forEach(AttenderState::mark);
         exam.setFinished(true);
     }
 
