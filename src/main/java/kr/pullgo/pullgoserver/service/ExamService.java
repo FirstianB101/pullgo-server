@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
@@ -12,15 +13,20 @@ import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@EnableScheduling
+@Slf4j
 public class ExamService {
 
     private final ExamDtoMapper dtoMapper;
@@ -132,4 +138,18 @@ public class ExamService {
         }
         return exam;
     }
+
+    @Scheduled(cron = "0/10 * * * * *")
+    @Transactional
+    public void examFinishJob() {
+        log.info(
+            "┏################### Cron examFinishJob per 10 sec ###################┓");
+        examRepository.findAll().stream().filter(Exam::isOnGoing).filter(exam ->
+            exam.getExamEndTime().isBefore(LocalDateTime.now())).forEach(
+            ExamService.this::finishExam
+        );
+        log.info(
+            "┗####################################################################   #┛");
+    }
+
 }
