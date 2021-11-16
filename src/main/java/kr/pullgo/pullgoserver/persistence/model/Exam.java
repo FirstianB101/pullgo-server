@@ -15,7 +15,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -121,5 +120,13 @@ public class Exam extends TimeEntity {
                 classroom.addExam(this);
             }
         }
+    }
+
+    public LocalDateTime getExamEndTime() {
+        return endDateTime.plus(timeLimit);
+    }
+
+    public boolean isOnGoing() {
+        return !(isFinished() || isCancelled());
     }
 }
