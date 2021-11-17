@@ -789,9 +789,55 @@ operation::question-update-example[snippets='request-fields,curl-request,http-re
 operation::question-delete-example[snippets='curl-request,http-response']
 
 [[resources_attender-state]]
-== [WIP] AttenderState 리소스
+== AttenderState 리소스
 
-아직 완성되지 않은 API입니다.
+[[resources_attenderState_retrieve]]
+=== AttenderState 조회
+
+`GET /exam/attender-states/{id}` 요청으로 하나의 AttenderState을 조회합니다.
+유효하지 않은 `id` 가 입력되면 `404 Not Found` 에러를 반환합니다.
+
+operation::attenderState-retrieve-example[snippets='response-fields,curl-request,http-response']
+
+[[resources_attenderState_list]]
+=== AttenderState 목록 조회
+
+`GET /exam/attender-states` 요청으로 다수의 AttenderState들을 조회합니다.
+<<overview_paging_and_sorting, Paging 혹은 Sorting>> 요청 패러미터를 추가하면 원하는 방식으로 목록을 조회할 수 있습니다.
+
+operation::attenderState-list-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_attenderState_search]]
+=== AttenderState 목록 검색
+
+<<resources_attenderState_list, AttenderState 목록 조회 API>>에 요청 패러미터를 추가하면 특정 조건을 기준으로 AttenderState을 검색할 수 있습니다.
+
+operation::attenderState-search-example[snippets='request-parameters,curl-request,http-response']
+
+[[resources_attenderState_create]]
+=== AttenderState 생성 (시험 응시 시작)
+
+`POST /exam/attender-states` 요청으로 AttenderState을 생성합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 인 `Attender` 의 엑세스 토큰이 제공되어야 합니다.
+성공 시 생성한 AttenderState을 응답 Body로 전달합니다.
+
+operation::attenderState-create-example[snippets='request-fields,curl-request,http-response']
+
+[[resources_attenderState_delete]]
+=== AttenderState 삭제
+
+`DELETE /exam/attender-states/{id}` 요청으로 AttenderState을 삭제합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 인 `Attender` 의 엑세스 토큰이 제공되어야 합니다.
+
+operation::attenderState-delete-example[snippets='curl-request,http-response']
+
+[[resources_attenderState_submit]]
+=== AttenderState 응시 완료
+
+`POST /exam/attender-states/{id}/submit` 요청으로 A다ttenderState을 응시 완료 상태로 변경합니.
+요청의 `Authorization` 헤더로 요청을 보낸 `Student` 인 `Attender` 의 엑세스 토큰이 제공되어야 합니다.
+
+operation::attenderState-delete-example[snippets='curl-request,http-response']
 
 [[resources_attender-answer]]
 == [WIP] AttenderAnswer 리소스

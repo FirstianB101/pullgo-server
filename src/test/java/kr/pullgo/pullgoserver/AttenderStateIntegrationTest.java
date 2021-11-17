@@ -1,11 +1,18 @@
 package kr.pullgo.pullgoserver;
 
+import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -50,8 +57,20 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+@ExtendWith(RestDocumentationExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 public class AttenderStateIntegrationTest {
+
+    private static final FieldDescriptor DOC_FIELD_ID =
+        fieldWithPath("id").description("응시상태 ID");
+    private static final FieldDescriptor DOC_FIELD_ATTENDER_ID =
+        fieldWithPath("attenderId").description("시험 응시자 이름");
+    private static final FieldDescriptor DOC_FIELD_EXAM_ID =
+        fieldWithPath("examId").description("시험 ID");
+    private static final FieldDescriptor DOC_PROGRESS =
+        fieldWithPath("progress").description("시험 응시 진행상태");
+    private static final FieldDescriptor DOC_SCORE =
+        fieldWithPath("score").description("시험 점수 (정답 백분률)");
 
     private MockMvc mockMvc;
 
@@ -74,11 +93,13 @@ public class AttenderStateIntegrationTest {
     private AuthHelper authHelper;
 
     @BeforeEach
-    void setUp(WebApplicationContext webApplicationContext) throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext,
+        RestDocumentationContextProvider restDocumentation) throws SQLException {
         H2DbCleaner.clean(dataSource);
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
+            .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
     }
 
@@ -112,6 +133,16 @@ public class AttenderStateIntegrationTest {
                 .andExpect(jsonPath("$.examId").value(examId))
                 .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
                 .andExpect(jsonPath("$.score").value(nullValue()));
+
+            // Document
+            actions.andDo(document("attenderState-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_ATTENDER_ID,
+                    DOC_FIELD_EXAM_ID,
+                    DOC_PROGRESS,
+                    DOC_SCORE.optional()
+                )));
         }
 
         @Test
@@ -153,6 +184,14 @@ public class AttenderStateIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     attenderStateAId.intValue(),
                     attenderStateBId.intValue()
+                )));
+
+            // Document
+            actions.andDo(document("attenderState-list-example",
+                requestParameters(
+                    ApiDocumentation.DOC_PARAMETER_PAGE,
+                    ApiDocumentation.DOC_PARAMETER_SIZE,
+                    ApiDocumentation.DOC_PARAMETER_SORT
                 )));
         }
 
@@ -221,6 +260,15 @@ public class AttenderStateIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     attenderStateAId.intValue(),
                     attenderStateBId.intValue()
+                )));
+
+            // Document
+            actions.andDo(document("attenderState-search-example",
+                requestParameters(
+                    parameterWithName("examId")
+                        .description("응시중인 시험 ID").optional(),
+                    parameterWithName("studentId")
+                        .description("시험 응시생 ID").optional()
                 )));
         }
 
@@ -299,6 +347,13 @@ public class AttenderStateIntegrationTest {
             .andExpect(jsonPath("$.examId").value(examId))
             .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
             .andExpect(jsonPath("$.score").value(nullValue()));
+
+        // Document
+        actions.andDo(document("attenderState-create-example",
+            requestFields(
+                DOC_FIELD_ATTENDER_ID,
+                DOC_FIELD_EXAM_ID
+            )));
     }
 
     @Nested
@@ -308,6 +363,12 @@ public class AttenderStateIntegrationTest {
         void submitAttenderState() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
+                Question question1 = entityHelper.generateQuestion(
+                    it -> it.withAnswer(new Answer(5)));
+                Question question2 = entityHelper.generateQuestion(
+                    it -> it.withAnswer(new Answer(1)));
+                Question question3 = entityHelper.generateQuestion(
+                    it -> it.withAnswer(new Answer(2)));
                 Exam exam = entityHelper.generateExam(it ->
                     it.withTimeLimit(Duration.ofHours(1))
                         .withBeginDateTime(LocalDateTime.now().minusHours(3))
@@ -319,6 +380,12 @@ public class AttenderStateIntegrationTest {
                     it.withExamStartTime(LocalDateTime.now())
                         .withExam(exam)
                 );
+                attenderState.addAnswer(entityHelper.generateAttenderAnswer(at
+                    -> at.withQuestion(question2).withAnswer(new Answer(2))));
+                attenderState.addAnswer(entityHelper.generateAttenderAnswer(at
+                    -> at.withQuestion(question3).withAnswer(new Answer(1))));
+                attenderState.addAnswer(entityHelper.generateAttenderAnswer(at
+                    -> at.withQuestion(question1).withAnswer(new Answer(5))));
 
                 String token = authHelper.generateToken(
                     it -> attenderState.getAttender().getAccount());
@@ -346,6 +413,47 @@ public class AttenderStateIntegrationTest {
                 .orElseThrow();
 
             assertThat(resultAttenderState.getProgress()).isEqualTo(AttendingProgress.COMPLETE);
+            assertThat(resultAttenderState.getScore()).isEqualTo(33);
+
+            // Document
+            actions.andDo(document("attenderState-submit-example"));
+        }
+
+        @Test
+        void question이_없는_Eaxm에_submit() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(it ->
+                    it.withTimeLimit(Duration.ofHours(1))
+                        .withBeginDateTime(LocalDateTime.now().minusHours(3))
+                        .withEndDateTime(LocalDateTime.now().plusHours(3))
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(it ->
+                    it.withExamStartTime(LocalDateTime.now())
+                        .withExam(exam)
+                );
+                Student attender = attenderState.getAttender();
+                String token = authHelper.generateToken(it -> attender.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("attenderId", attenderState.getAttender().getId())
+                    .withValue("examId", attenderState.getExam().getId());
+            });
+            String token = given.valueOf("token");
+            Long attenderStateId = given.valueOf("attenderStateId");
+
+            // When
+            ResultActions actions = mockMvc
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(emptyString()));
+
         }
 
         @Test
@@ -542,6 +650,9 @@ public class AttenderStateIntegrationTest {
                 .andExpect(content().string(emptyString()));
 
             assertThat(attenderStateRepository.findById(attenderStateId)).isEmpty();
+
+            // Document
+            actions.andDo(document("attenderState-delete-example"));
         }
 
         @Test
