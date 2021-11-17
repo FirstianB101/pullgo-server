@@ -310,12 +310,13 @@ public class AttenderStateIntegrationTest {
             Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
                     it.withTimeLimit(Duration.ofHours(1))
-                        .withBeginDateTime(LocalDateTime.of(2021, 1, 11, 0, 0))
-                        .withEndDateTime(LocalDateTime.of(2021, 1, 13, 0, 0))
+                        .withBeginDateTime(LocalDateTime.now().minusHours(3))
+                        .withEndDateTime(LocalDateTime.now().plusHours(3))
+                        .withQuestions(Set.of(question1, question2, question3))
                 );
 
                 AttenderState attenderState = entityHelper.generateAttenderState(it ->
-                    it.withExamStartTime(LocalDateTime.of(2021, 1, 12, 0, 0))
+                    it.withExamStartTime(LocalDateTime.now())
                         .withExam(exam)
                 );
 
@@ -390,12 +391,13 @@ public class AttenderStateIntegrationTest {
             Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
                     it.withTimeLimit(Duration.ofHours(1))
-                        .withBeginDateTime(LocalDateTime.of(2021, 1, 9, 0, 0))
-                        .withEndDateTime(LocalDateTime.of(2021, 1, 10, 0, 0))
+                        .withBeginDateTime(LocalDateTime.now().minusHours(3))
+                        .withEndDateTime(LocalDateTime.now().plusHours(3))
+                        .withQuestions(Set.of(entityHelper.generateQuestion()))
                 );
                 AttenderState attenderState = entityHelper.generateAttenderState(it ->
-                    it.withExam(exam)
-                        .withProgress(AttendingProgress.COMPLETE)
+                    it.withExamStartTime(LocalDateTime.now().minusHours(2))
+                        .withExam(exam)
                 );
                 Student attender = attenderState.getAttender();
                 String token = authHelper.generateToken(it -> attender.getAccount());
@@ -482,11 +484,13 @@ public class AttenderStateIntegrationTest {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
-                    it.withBeginDateTime(LocalDateTime.of(2021, 1, 9, 0, 0))
-                        .withEndDateTime(LocalDateTime.of(2021, 1, 10, 0, 0))
+                    it.withTimeLimit(Duration.ofHours(1))
+                        .withBeginDateTime(LocalDateTime.now().minusHours(3))
+                        .withEndDateTime(LocalDateTime.now().plusHours(3))
                 );
                 AttenderState attenderState = entityHelper.generateAttenderState(it ->
                     it.withExam(exam)
+                        .withExamStartTime(LocalDateTime.now().minusHours(2))
                 );
                 Student attender = attenderState.getAttender();
                 String token = authHelper.generateToken(it -> attender.getAccount());
