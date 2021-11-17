@@ -93,7 +93,7 @@ public class AttenderStateService {
         if (presentAttendingProgress != AttendingProgress.ONGOING) {
             throw errorHelper.badRequest("Attender state already " + presentAttendingProgress);
         }
-        if (attenderState.isAfterTimeLimit(attenderState.getExamStartTime())) {
+        if (attenderState.isAfterTimeLimit(LocalDateTime.now())) {
             throw errorHelper.badRequest("Attender state submitted after timeout");
         }
         if (exam.isFinished()) {
@@ -102,7 +102,7 @@ public class AttenderStateService {
         if (exam.isCancelled()) {
             throw errorHelper.badRequest("Attender state already cancelled exam");
         }
-        if (attenderState.isOutOfTimeRange(attenderState.getExamStartTime())) {
+        if (attenderState.isOutOfTimeRange(LocalDateTime.now())) {
             throw errorHelper.badRequest("Attender state submitted after time range");
         }
         try {
