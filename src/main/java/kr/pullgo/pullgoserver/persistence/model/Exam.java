@@ -97,8 +97,19 @@ public class Exam extends TimeEntity {
         this.passScore = passScore;
         this.cancelled = cancelled;
         this.finished = finished;
-        this.questions = questions;
+        setQuestions(questions);
         this.attenderStates = attenderStates;
+    }
+
+    public void setQuestions(Set<Question> questions) {
+        if (this.questions != null) {
+            for (var qustion : this.questions) {
+                removeQuestion(qustion);
+            }
+        }
+        for (var question : questions) {
+            addQuestion(question);
+        }
     }
 
     public void addQuestion(Question question) {
