@@ -110,7 +110,8 @@ public class AttenderStateIntegrationTest {
         void getAttenderState() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
-                AttenderState attenderState = entityHelper.generateAttenderState();
+                AttenderState attenderState = entityHelper.generateAttenderState(
+                    it -> it.withScore(33));
 
                 return new Struct()
                     .withValue("attenderStateId", attenderState.getId())
@@ -132,7 +133,7 @@ public class AttenderStateIntegrationTest {
                 .andExpect(jsonPath("$.attenderId").value(attenderId))
                 .andExpect(jsonPath("$.examId").value(examId))
                 .andExpect(jsonPath("$.progress").value(AttendingProgress.ONGOING.toString()))
-                .andExpect(jsonPath("$.score").value(nullValue()));
+                .andExpect(jsonPath("$.score").value(33));
 
             // Document
             actions.andDo(document("attenderState-retrieve-example",
