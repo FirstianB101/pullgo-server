@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.dto.mapper.AttenderStateDtoMapper;
+import kr.pullgo.pullgoserver.error.exception.AttenderStateSubmitOnNoQuestionsOnExamException;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
@@ -104,7 +105,11 @@ public class AttenderStateService {
         if (attenderState.isOutOfTimeRange(attenderState.getExamStartTime())) {
             throw errorHelper.badRequest("Attender state submitted after time range");
         }
-        attenderState.setProgress(AttendingProgress.COMPLETE);
+        try {
+            attenderState.mark();
+        } catch (AttenderStateSubmitOnNoQuestionsOnExamException e) {
+            throw errorHelper.badRequest("There is no question in exam");
+        }
     }
 
 }

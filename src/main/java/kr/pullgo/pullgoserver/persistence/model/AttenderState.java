@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.persistence.model;
 
+import static java.lang.Math.round;
 import static javax.persistence.FetchType.LAZY;
 
 import com.sun.istack.NotNull;
@@ -16,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import kr.pullgo.pullgoserver.error.exception.AttenderAnswerNotFoundException;
+import kr.pullgo.pullgoserver.error.exception.AttenderStateSubmitOnNoQuestionsOnExamException;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -114,5 +116,18 @@ public class AttenderState extends TimeEntity {
     @Builder
     public AttenderState(LocalDateTime examStartTime) {
         this.examStartTime = examStartTime;
+    }
+
+    public void mark() {
+        if (this.getProgress() == AttendingProgress.ONGOING) {
+            int currectQuestionCount = (int) this.getAnswers().stream().filter(it ->
+                it.getQuestion().getAnswer().equals(it.getAnswer())).count();
+            int totalQuestionCount = this.getExam().getQuestions().size();
+            if (totalQuestionCount == 0)
+                throw new AttenderStateSubmitOnNoQuestionsOnExamException();
+            this.setScore(
+                (int) round(((double) currectQuestionCount / (double) totalQuestionCount) * 100));
+            this.setProgress(AttendingProgress.COMPLETE);
+        }
     }
 }
