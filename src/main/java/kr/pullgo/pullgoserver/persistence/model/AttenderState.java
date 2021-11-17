@@ -78,13 +78,13 @@ public class AttenderState extends TimeEntity {
     }
 
     public boolean isOutOfTimeRange(LocalDateTime now) {
-        return now.isBefore(exam.getBeginDateTime())
-            || now.isAfter(exam.getEndDateTime());
+        return exam.getBeginDateTime().isAfter(now)
+            || exam.getExamEndTime().isBefore(now);
     }
 
     public boolean isAfterTimeLimit(LocalDateTime now) {
         LocalDateTime deadLine = examStartTime.plus(exam.getTimeLimit());
-        return now.isAfter(deadLine);
+        return deadLine.isBefore(now);
     }
 
     public void setAttender(Student attender) {
