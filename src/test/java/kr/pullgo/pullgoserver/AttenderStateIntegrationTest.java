@@ -9,7 +9,6 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -20,24 +19,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Set;
 import javax.sql.DataSource;
+import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
+import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
+import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
+import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -62,6 +69,9 @@ public class AttenderStateIntegrationTest {
 
     @Autowired
     private EntityHelper entityHelper;
+
+    @Autowired
+    private AuthHelper authHelper;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext) throws SQLException {
@@ -254,17 +264,18 @@ public class AttenderStateIntegrationTest {
     }
 
     @Test
-    @WithMockUser(authorities = "ADMIN")
     void postAttenderState() throws Exception {
         // Given
         Struct given = trxHelper.doInTransaction(() -> {
-            Student attenderId = entityHelper.generateStudent();
+            Student attender = entityHelper.generateStudent();
             Exam exam = entityHelper.generateExam();
-
+            String token = authHelper.generateToken(it -> attender.getAccount());
             return new Struct()
+                .withValue("token", token)
                 .withValue("examId", exam.getId())
-                .withValue("attenderId", attenderId.getId());
+                .withValue("attenderId", attender.getId());
         });
+        String token = given.valueOf("token");
         Long attenderId = given.valueOf("attenderId");
         Long examId = given.valueOf("examId");
 
@@ -277,6 +288,7 @@ public class AttenderStateIntegrationTest {
 
         ResultActions actions = mockMvc.perform(post("/exam/attender-states")
             .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer " + token)
             .content(body));
 
         // Then
@@ -293,7 +305,6 @@ public class AttenderStateIntegrationTest {
     class SubmitAttenderState {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void submitAttenderState() throws Exception {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
@@ -308,16 +319,22 @@ public class AttenderStateIntegrationTest {
                         .withExam(exam)
                 );
 
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
                 return new Struct()
+                    .withValue("token", token)
                     .withValue("attenderStateId", attenderState.getId())
                     .withValue("attenderId", attenderState.getAttender().getId())
                     .withValue("examId", attenderState.getExam().getId());
             });
+            String token = given.valueOf("token");
             Long attenderStateId = given.valueOf("attenderStateId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -341,19 +358,26 @@ public class AttenderStateIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void submitAttenderState_BadAttendingProgress_BadRequestStatus() throws Exception {
             // Given
-            Long attenderStateId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 AttenderState attenderState = entityHelper.generateAttenderState(it ->
                     it.withProgress(AttendingProgress.COMPLETE)
                 );
-                return attenderState.getId();
+                Student attender = attenderState.getAttender();
+                String token = authHelper.generateToken(it -> attender.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attendeStateId", attenderState.getId());
             });
+            String token = given.valueOf("token");
+            Long attenderStateId = given.valueOf("attendeStateId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -361,10 +385,9 @@ public class AttenderStateIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void submitAttenderState_AfterTimeLimit_BadRequestStatus() throws Exception {
             // Given
-            Long attenderStateId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
                     it.withTimeLimit(Duration.ofHours(1))
                         .withBeginDateTime(LocalDateTime.of(2021, 1, 9, 0, 0))
@@ -374,13 +397,20 @@ public class AttenderStateIntegrationTest {
                     it.withExam(exam)
                         .withProgress(AttendingProgress.COMPLETE)
                 );
-
-                return attenderState.getId();
+                Student attender = attenderState.getAttender();
+                String token = authHelper.generateToken(it -> attender.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attendeStateId", attenderState.getId());
             });
+            String token = given.valueOf("token");
+            Long attenderStateId = given.valueOf("attendeStateId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -388,23 +418,29 @@ public class AttenderStateIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void submitAttenderState_AlreadyFinishedExam_BadRequestStatus() throws Exception {
             // Given
-            Long attenderStateId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
                     it.withFinished(true)
                 );
                 AttenderState attenderState = entityHelper.generateAttenderState(it ->
                     it.withExam(exam)
                 );
-
-                return attenderState.getId();
+                Student attender = attenderState.getAttender();
+                String token = authHelper.generateToken(it -> attender.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attendeStateId", attenderState.getId());
             });
+            String token = given.valueOf("token");
+            Long attenderStateId = given.valueOf("attendeStateId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -412,23 +448,29 @@ public class AttenderStateIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void submitAttenderState_AlreadyCancelled_BadRequestStatus() throws Exception {
             // Given
-            Long attenderStateId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
                     it.withCancelled(true)
                 );
                 AttenderState attenderState = entityHelper.generateAttenderState(it ->
                     it.withExam(exam)
                 );
-
-                return attenderState.getId();
+                Student attender = attenderState.getAttender();
+                String token = authHelper.generateToken(it -> attender.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attendeStateId", attenderState.getId());
             });
+            String token = given.valueOf("token");
+            Long attenderStateId = given.valueOf("attendeStateId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -436,10 +478,9 @@ public class AttenderStateIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void submitAttenderState_AfterTimeRange_BadRequestStatus() throws Exception {
             // Given
-            Long attenderStateId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
                     it.withBeginDateTime(LocalDateTime.of(2021, 1, 9, 0, 0))
                         .withEndDateTime(LocalDateTime.of(2021, 1, 10, 0, 0))
@@ -447,13 +488,20 @@ public class AttenderStateIntegrationTest {
                 AttenderState attenderState = entityHelper.generateAttenderState(it ->
                     it.withExam(exam)
                 );
-
-                return attenderState.getId();
+                Student attender = attenderState.getAttender();
+                String token = authHelper.generateToken(it -> attender.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attendeStateId", attenderState.getId());
             });
+            String token = given.valueOf("token");
+            Long attenderStateId = given.valueOf("attendeStateId");
 
             // When
             ResultActions actions = mockMvc
-                .perform(post("/exam/attender-states/{id}/submit", attenderStateId));
+                .perform(post("/exam/attender-states/{id}/submit", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -465,17 +513,24 @@ public class AttenderStateIntegrationTest {
     class DeleteAttenderState {
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteAttenderState() throws Exception {
             // Given
-            Long attenderStateId = trxHelper.doInTransaction(() -> {
+            Struct given = trxHelper.doInTransaction(() -> {
                 AttenderState attenderState = entityHelper.generateAttenderState();
-                return attenderState.getId();
+                Student attender = attenderState.getAttender();
+                String token = authHelper.generateToken(it -> attender.getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attendeStateId", attenderState.getId());
             });
+            String token = given.valueOf("token");
+            Long attenderStateId = given.valueOf("attendeStateId");
 
             // When
-            ResultActions actions = mockMvc
-                .perform(delete("/exam/attender-states/{id}", attenderStateId));
+            ResultActions actions = mockMvc.perform(
+                delete("/exam/attender-states/{id}", attenderStateId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
 
             // Then
             actions
@@ -486,7 +541,6 @@ public class AttenderStateIntegrationTest {
         }
 
         @Test
-        @WithMockUser(authorities = "ADMIN")
         void deleteAttenderState_AttenderStateNotFound_NotFoundStatus() throws Exception {
             // When
             ResultActions actions = mockMvc.perform(delete("/exam/attender-states/{id}", 0));
