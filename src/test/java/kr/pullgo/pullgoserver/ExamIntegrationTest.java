@@ -39,6 +39,7 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
+import kr.pullgo.pullgoserver.service.ExamService;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -612,6 +613,9 @@ public class ExamIntegrationTest {
     @Nested
     class FinishExam {
 
+        @Autowired
+        private ExamService examService;
+
         @Test
         @WithMockUser(authorities = "ADMIN")
         void finishExam() throws Exception {
@@ -684,6 +688,42 @@ public class ExamIntegrationTest {
             // Then
             actions
                 .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void examFinishJob수동_호출을_이용한_Exam_종료() {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam examToBeFinished = entityHelper.generateExam(it ->
+                    it.withTimeLimit(Duration.ofHours(1))
+                        .withBeginDateTime(LocalDateTime.now().minusHours(5))
+                        .withEndDateTime(LocalDateTime.now().minusHours(3)));
+                Exam examOnGoing = entityHelper.generateExam(it ->
+                    it.withTimeLimit(Duration.ofHours(1))
+                        .withBeginDateTime(LocalDateTime.now().minusHours(1))
+                        .withEndDateTime(LocalDateTime.now().plusHours(2)));
+                return new Struct()
+                    .withValue("examToBeFinishedId", examToBeFinished.getId())
+                    .withValue("examOnGoingId", examOnGoing.getId());
+            });
+            Long examToBeFinishedId = given.valueOf("examToBeFinishedId");
+            Long examOnGoingId = given.valueOf("examOnGoingId");
+
+            // When
+            examService.examFinishJob();
+
+            // Then
+            boolean doseOldExamFinish = trxHelper.doInTransaction(() -> {
+                Exam exam = examRepository.findById(examToBeFinishedId).orElseThrow();
+                return exam.isFinished();
+            });
+            boolean doseFreshExamOnGoing = trxHelper.doInTransaction(() -> {
+                Exam exam = examRepository.findById(examOnGoingId).orElseThrow();
+                return exam.isOnGoing();
+            });
+
+            assertThat(doseOldExamFinish).isTrue();
+            assertThat(doseFreshExamOnGoing).isTrue();
         }
     }
 
