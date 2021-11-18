@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.dto;
 
 import java.util.Set;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +21,7 @@ public interface AttenderAnswerDto {
         @NotNull
         private Long questionId;
 
-        @NotNull
+        @NotEmpty
         private Set<Integer> answer;
     }
 
@@ -51,7 +52,7 @@ public interface AttenderAnswerDto {
         @NotNull
         private Long questionId;
 
-        @NotNull
+        @NotEmpty
         private Set<Integer> answer;
     }
 
@@ -61,7 +62,7 @@ public interface AttenderAnswerDto {
     @With
     class Put {
 
-        @NotNull
+        @NotEmpty
         private Set<Integer> answer;
 
         public Put(Set<Integer> answer) {

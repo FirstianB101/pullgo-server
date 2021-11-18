@@ -1,6 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,10 +10,10 @@ public interface AuthDto {
     @Builder
     class GenerateToken {
 
-        @NotNull
+        @NotEmpty
         private String username;
 
-        @NotNull
+        @NotEmpty
         private String password;
 
     }
@@ -22,7 +22,7 @@ public interface AuthDto {
     @Builder
     class GenerateTokenResult {
 
-        @NotNull
+        @NotEmpty
         private String token;
 
         private StudentDto.Result student;

@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import kr.pullgo.pullgoserver.persistence.model.UserRole;
 import lombok.Builder;
@@ -13,16 +14,16 @@ public interface AccountDto {
     @With
     class Create {
 
-        @NotNull
+        @NotEmpty
         private String username;
 
-        @NotNull
+        @NotEmpty
         private String password;
 
-        @NotNull
+        @NotEmpty
         private String fullName;
 
-        @NotNull
+        @NotEmpty
         private String phone;
     }
 
@@ -43,16 +44,16 @@ public interface AccountDto {
     @With
     class Result {
 
-        @NotNull
+        @NotEmpty
         private String username;
 
-        @NotNull
+        @NotEmpty
         private String fullName;
 
-        @NotNull
+        @NotEmpty
         private String phone;
 
-        @NotNull
+        @NotEmpty
         private UserRole role;
     }
 
