@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.dto;
 
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -17,15 +18,15 @@ public interface QuestionDto {
         @NotNull
         private Long examId;
 
-        @NotNull
+        @NotEmpty
         private String content;
 
         private String pictureUrl;
 
-        @NotNull
+        @NotEmpty
         private Set<Integer> answer;
 
-        @NotNull
+        @NotEmpty
         private Map<String, String> choice;
     }
 
@@ -54,15 +55,15 @@ public interface QuestionDto {
         @NotNull
         private Long examId;
 
-        @NotNull
+        @NotEmpty
         private String content;
 
         private String pictureUrl;
 
-        @NotNull
+        @NotEmpty
         private Set<Integer> answer;
 
-        @NotNull
+        @NotEmpty
         private Map<String, String> choice;
     }
 }

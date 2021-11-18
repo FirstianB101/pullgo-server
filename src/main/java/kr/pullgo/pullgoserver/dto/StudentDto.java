@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -16,10 +17,10 @@ public interface StudentDto {
         @NotNull
         private AccountDto.Create account;
 
-        @NotNull
+        @NotEmpty
         private String parentPhone;
 
-        @NotNull
+        @NotEmpty
         private String schoolName;
 
         @NotNull
@@ -51,10 +52,10 @@ public interface StudentDto {
         @NotNull
         private AccountDto.Result account;
 
-        @NotNull
+        @NotEmpty
         private String parentPhone;
 
-        @NotNull
+        @NotEmpty
         private String schoolName;
 
         @NotNull

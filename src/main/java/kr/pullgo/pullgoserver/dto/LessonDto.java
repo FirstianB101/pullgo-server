@@ -1,5 +1,6 @@
 package kr.pullgo.pullgoserver.dto;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,7 @@ public interface LessonDto {
         @NotNull
         private Long classroomId;
 
-        @NotNull
+        @NotEmpty
         private String name;
 
         @NotNull
@@ -43,7 +44,7 @@ public interface LessonDto {
         @NotNull
         private Long classroomId;
 
-        @NotNull
+        @NotEmpty
         private String name;
 
         @NotNull

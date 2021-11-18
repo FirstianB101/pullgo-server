@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.dto;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +21,7 @@ public interface ExamDto {
         @NotNull
         private Long creatorId;
 
-        @NotNull
+        @NotEmpty
         private String name;
 
         @NotNull
@@ -65,7 +66,7 @@ public interface ExamDto {
         @NotNull
         private Long creatorId;
 
-        @NotNull
+        @NotEmpty
         private String name;
 
         @NotNull
