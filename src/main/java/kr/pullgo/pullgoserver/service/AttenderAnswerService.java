@@ -102,8 +102,8 @@ public class AttenderAnswerService {
 
     public boolean exists(Long attenderStateId, Long questionId)
         throws ResponseStatusException {
-        return repoHelper.findAttenderStateOrThrow(attenderStateId)
-            .getAnswers().stream().anyMatch(it -> it.getQuestion().getId().equals(questionId));
+        return attenderAnswerRepository.existsByAttenderStateIdAndQuestionId(
+            attenderStateId, questionId);
     }
 
     private void checkAttenderStateValidations(AttenderState attenderState) {
