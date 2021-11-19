@@ -1,11 +1,18 @@
 package kr.pullgo.pullgoserver;
 
+import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static kr.pullgo.pullgoserver.helper.AttenderAnswerHelper.anAttenderAnswerPutDto;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -22,7 +29,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Set;
 import javax.sql.DataSource;
+import kr.pullgo.pullgoserver.docs.ApiDocumentation;
+import kr.pullgo.pullgoserver.dto.AcademyDto;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
+import kr.pullgo.pullgoserver.dto.AttenderAnswerDto.Create;
+import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
@@ -38,16 +49,31 @@ import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+@ExtendWith(RestDocumentationExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 public class AttenderAnswerIntegrationTest {
+
+    private static final FieldDescriptor DOC_FIELD_ID =
+        fieldWithPath("id").description("답안 ID");
+    private static final FieldDescriptor DOC_FIELD_ATTENDER_ID =
+        fieldWithPath("attenderStateId").description("응시 상태 ID");
+    private static final FieldDescriptor DOC_FIELD_EXAM_ID =
+        fieldWithPath("questionId").description("문제 ID");
+    private static final FieldDescriptor DOC_FIELD_ANSWER =
+        fieldWithPath("answer").description("정답 (객관식, 1~5 범위의 정수 배열)");
+
 
     private MockMvc mockMvc;
 
@@ -70,11 +96,13 @@ public class AttenderAnswerIntegrationTest {
     private AuthHelper authHelper;
 
     @BeforeEach
-    void setUp(WebApplicationContext webApplicationContext) throws SQLException {
+    void setUp(WebApplicationContext webApplicationContext,
+        RestDocumentationContextProvider restDocumentation) throws SQLException {
         H2DbCleaner.clean(dataSource);
 
         this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
+            .apply(basicDocumentationConfiguration(restDocumentation))
             .build();
     }
 
@@ -112,6 +140,15 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.questionId").value(questionId))
                 .andExpect(jsonPath("$.attenderStateId").value(attenderStateId));
+
+            // Document
+            actions.andDo(document("attenderAnswer-retrieve-example",
+                responseFields(
+                    DOC_FIELD_ID,
+                    DOC_FIELD_ANSWER,
+                    DOC_FIELD_ATTENDER_ID,
+                    DOC_FIELD_EXAM_ID
+                )));
         }
 
         @Test
@@ -154,6 +191,14 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
                     attenderAnswerAId.intValue(),
                     attenderAnswerBId.intValue()
+                )));
+
+            // Document
+            actions.andDo(document("attenderAnswer-list-example",
+                requestParameters(
+                    ApiDocumentation.DOC_PARAMETER_PAGE,
+                    ApiDocumentation.DOC_PARAMETER_SIZE,
+                    ApiDocumentation.DOC_PARAMETER_SORT
                 )));
         }
 
@@ -222,8 +267,13 @@ public class AttenderAnswerIntegrationTest {
                     attenderAnswerAId.intValue(),
                     attenderAnswerBId.intValue()
                 )));
-        }
 
+            // Document
+            actions.andDo(document("attenderAnswer-search-example",
+                requestParameters(
+                    parameterWithName("attenderStateId").description("응시 상태 ID").optional()
+                )));
+        }
     }
 
     @Nested
@@ -268,6 +318,12 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.attenderStateId").value(attenderStateId))
                 .andExpect(jsonPath("$.questionId").value(questionId));
+
+            // Document
+            actions.andDo(document("attenderAnswer-create-example",
+                requestFields(
+                    DOC_FIELD_ANSWER
+                )));
         }
 
         @Test
@@ -310,6 +366,12 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.attenderStateId").value(attenderStateId))
                 .andExpect(jsonPath("$.questionId").value(questionId));
+
+            // Document
+            actions.andDo(document("attenderAnswer-update-example",
+                requestFields(
+                    DOC_FIELD_ANSWER
+                )));
         }
 
         @Test
@@ -556,6 +618,9 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(content().string(emptyString()));
 
             assertThat(attenderAnswerRepository.findById(attenderAnswerId)).isEmpty();
+
+            // Document
+            actions.andDo(document("attenderAnswer-delete-example"));
         }
 
         @Test
