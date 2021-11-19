@@ -310,9 +310,215 @@ public class AttenderAnswerIntegrationTest {
                 .andExpect(jsonPath("$.answer.[2]").value(3))
                 .andExpect(jsonPath("$.attenderStateId").value(attenderStateId))
                 .andExpect(jsonPath("$.questionId").value(questionId));
-
         }
 
+        @Test
+        void 존재하지_않는_AttenderState로_put() throws Exception {
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState();
+                Question question = entityHelper.generateQuestion();
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("questionId", question.getId());
+            });
+            Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
+
+            AttenderAnswerDto.Put dto = anAttenderAnswerPutDto();
+            String body = toJson(dto);
+
+            // When
+            ResultActions actions = mockMvc.perform(
+                put("/exam/attender-state/{attenderStateId}/answers/{questionId}", 55L, questionId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void 존재하지_않는_Question로_put() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState();
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attenderStateId", attenderState.getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            String token = given.valueOf("token");
+
+            AttenderAnswerDto.Put dto = anAttenderAnswerPutDto();
+            String body = toJson(dto);
+
+            // When
+            ResultActions actions = mockMvc.perform(
+                put("/exam/attender-state/{attenderStateId}/answers/{questionId}", attenderStateId, 0L)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void 응시중이_아닌_AttenderState로_put() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                AttenderState attenderState = entityHelper.generateAttenderState(
+                    it->it.withProgress(AttendingProgress.COMPLETE)
+                );
+                Question question = entityHelper.generateQuestion();
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("questionId", question.getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
+
+            AttenderAnswerDto.Put dto = anAttenderAnswerPutDto();
+            String body = toJson(dto);
+
+            // When
+            ResultActions actions = mockMvc.perform(
+                put("/exam/attender-state/{attenderStateId}/answers/{questionId}", attenderStateId,
+                    questionId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void 응시_시간_초과후_put() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(
+                    it->it.withTimeLimit(Duration.ofMinutes(15))
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(
+                    it->it.withExam(exam)
+                        .withExamStartTime(LocalDateTime.now().minusMinutes(30))
+                );
+                Question question = entityHelper.generateQuestion();
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("questionId", question.getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
+
+            AttenderAnswerDto.Put dto = anAttenderAnswerPutDto();
+            String body = toJson(dto);
+
+            // When
+            ResultActions actions = mockMvc.perform(
+                put("/exam/attender-state/{attenderStateId}/answers/{questionId}", attenderStateId,
+                    questionId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void 이미_끝난_시험에_put() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(
+                    it->it.withFinished(true)
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(
+                    it->it.withExam(exam)
+                );
+                Question question = entityHelper.generateQuestion();
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("questionId", question.getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
+
+            AttenderAnswerDto.Put dto = anAttenderAnswerPutDto();
+            String body = toJson(dto);
+
+            // When
+            ResultActions actions = mockMvc.perform(
+                put("/exam/attender-state/{attenderStateId}/answers/{questionId}", attenderStateId,
+                    questionId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void 이미_취소된_시험에_put() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam(
+                    it->it.withCancelled(true)
+                );
+                AttenderState attenderState = entityHelper.generateAttenderState(
+                    it->it.withExam(exam)
+                );
+                Question question = entityHelper.generateQuestion();
+                String token = authHelper.generateToken(
+                    it -> attenderState.getAttender().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("attenderStateId", attenderState.getId())
+                    .withValue("questionId", question.getId());
+            });
+            Long attenderStateId = given.valueOf("attenderStateId");
+            Long questionId = given.valueOf("questionId");
+            String token = given.valueOf("token");
+
+            AttenderAnswerDto.Put dto = anAttenderAnswerPutDto();
+            String body = toJson(dto);
+
+            // When
+            ResultActions actions = mockMvc.perform(
+                put("/exam/attender-state/{attenderStateId}/answers/{questionId}", attenderStateId,
+                    questionId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token)
+                    .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isBadRequest());
+        }
     }
 
     @Nested
