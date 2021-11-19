@@ -834,10 +834,10 @@ operation::attenderState-delete-example[snippets='curl-request,http-response']
 [[resources_attenderState_submit]]
 === AttenderState 응시 완료
 
-`POST /exam/attender-states/{id}/submit` 요청으로 A다ttenderState을 응시 완료 상태로 변경합니.
+`POST /exam/attender-states/{id}/submit` 요청으로 AttenderState을 응시 완료 상태로 변경합니다.
 요청의 `Authorization` 헤더로 요청을 보낸 `Student` 인 `Attender` 의 엑세스 토큰이 제공되어야 합니다.
 
-operation::attenderState-delete-example[snippets='curl-request,http-response']
+operation::attenderState-submit-example[snippets='curl-request,http-response']
 
 [[resources_attender-answer]]
 == [WIP] AttenderAnswer 리소스

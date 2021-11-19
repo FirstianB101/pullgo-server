@@ -143,13 +143,13 @@ public class ExamService {
     @Transactional
     public void examFinishJob() {
         log.info(
-            "┏################### Cron examFinishJob per 10 sec ###################┓");
+            "\n┏################### Cron examFinishJob per 10 sec ###################┓");
         examRepository.findAll().stream().filter(Exam::isOnGoing).filter(exam ->
             exam.getExamEndTime().isBefore(LocalDateTime.now())).forEach(
             ExamService.this::finishExam
         );
         log.info(
-            "┗####################################################################   #┛");
+            "\n┗########################################################################┛");
     }
 
 }

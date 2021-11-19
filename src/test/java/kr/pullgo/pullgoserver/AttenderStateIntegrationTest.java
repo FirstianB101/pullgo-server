@@ -64,7 +64,7 @@ public class AttenderStateIntegrationTest {
     private static final FieldDescriptor DOC_FIELD_ID =
         fieldWithPath("id").description("응시상태 ID");
     private static final FieldDescriptor DOC_FIELD_ATTENDER_ID =
-        fieldWithPath("attenderId").description("시험 응시자 이름");
+        fieldWithPath("attenderId").description("시험 응시자 ID");
     private static final FieldDescriptor DOC_FIELD_EXAM_ID =
         fieldWithPath("examId").description("시험 ID");
     private static final FieldDescriptor DOC_PROGRESS =
