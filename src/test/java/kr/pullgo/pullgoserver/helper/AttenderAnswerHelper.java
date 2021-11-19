@@ -30,6 +30,12 @@ public class AttenderAnswerHelper {
             .build();
     }
 
+    public static AttenderAnswerDto.Put anAttenderAnswerPutDto() {
+        return AttenderAnswerDto.Put.builder()
+            .answer(ARBITRARY_ANSWER)
+            .build();
+    }
+
     public static AttenderAnswerDto.Update anAttenderAnswerUpdateDto() {
         return AttenderAnswerDto.Update.builder()
             .answer(ARBITRARY_ANSWER)
