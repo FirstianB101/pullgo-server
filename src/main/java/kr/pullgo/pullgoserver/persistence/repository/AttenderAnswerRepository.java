@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AttenderAnswerRepository extends BaseRepository<AttenderAnswer, Long> {
 
+    boolean existsByAttenderStateIdAndQuestionId(Long attenderStateId, Long QuestionId);
 }
