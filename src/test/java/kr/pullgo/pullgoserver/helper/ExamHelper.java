@@ -12,9 +12,9 @@ public class ExamHelper {
 
     private static final String ARBITRARY_NAME = "기말시험";
     private static final LocalDateTime ARBITRARY_BEGIN_DATE_TIME =
-        LocalDateTime.of(2021, 1, 28, 0, 0);
+        LocalDateTime.now().minusHours(1);
     private static final LocalDateTime ARBITRARY_END_DATE_TIME =
-        LocalDateTime.of(2021, 1, 29, 0, 0);
+        LocalDateTime.now().plusHours(3);
     private static final Duration ARBITRARY_TIME_LIMIT = Duration.ofHours(1);
 
     public static Exam anExam() {
