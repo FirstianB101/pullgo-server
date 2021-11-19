@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static kr.pullgo.pullgoserver.helper.AttenderAnswerHelper.anAttenderAnswerPutDto;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
@@ -17,6 +18,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.dto.AttenderAnswerDto;
@@ -27,6 +30,8 @@ import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderAnswer;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
+import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
+import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderAnswerRepository;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
@@ -242,9 +247,7 @@ public class AttenderAnswerIntegrationTest {
             String token = given.valueOf("token");
 
             // When
-            AttenderAnswerDto.Create dto = AttenderAnswerDto.Create.builder()
-                .attenderStateId(attenderStateId)
-                .questionId(questionId)
+            AttenderAnswerDto.Put dto = AttenderAnswerDto.Put.builder()
                 .answer(Set.of(1, 2, 3))
                 .build();
             String body = toJson(dto);
