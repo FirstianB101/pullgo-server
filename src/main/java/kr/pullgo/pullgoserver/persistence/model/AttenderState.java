@@ -120,13 +120,13 @@ public class AttenderState extends TimeEntity {
 
     public void mark() {
         if (this.getProgress() == AttendingProgress.ONGOING) {
-            int currectQuestionCount = (int) this.getAnswers().stream().filter(it ->
+            int currentQuestionCount = (int) this.getAnswers().stream().filter(it ->
                 it.getQuestion().getAnswer().equals(it.getAnswer())).count();
             int totalQuestionCount = this.getExam().getQuestions().size();
             if (totalQuestionCount == 0)
                 throw new AttenderStateSubmitOnNoQuestionsOnExamException();
             this.setScore(
-                (int) round(((double) currectQuestionCount / (double) totalQuestionCount) * 100));
+                (int) round(((double) currentQuestionCount / (double) totalQuestionCount) * 100));
             this.setProgress(AttendingProgress.COMPLETE);
         }
     }
