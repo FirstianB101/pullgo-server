@@ -4,6 +4,7 @@ import java.util.List;
 import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.AttenderStateDto;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
+import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.service.AttenderStateService;
 import kr.pullgo.pullgoserver.service.spec.AttenderStateSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class AttenderStateController {
     public List<AttenderStateDto.Result> search(
         @RequestParam(required = false) Long studentId,
         @RequestParam(required = false) Long examId,
+        @RequestParam(required = false) AttendingProgress progress,
         Pageable pageable
     ) {
         Specification<AttenderState> spec = null;
@@ -52,6 +54,9 @@ public class AttenderStateController {
         }
         if (examId != null) {
             spec = AttenderStateSpecs.belongsToExam(examId).and(spec);
+        }
+        if (progress != null){
+            spec = AttenderStateSpecs.progress(progress).and(spec);
         }
 
         return attenderStateService.search(spec, pageable);
