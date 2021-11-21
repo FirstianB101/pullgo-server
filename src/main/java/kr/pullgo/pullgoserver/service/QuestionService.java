@@ -50,6 +50,13 @@ public class QuestionService {
         return dtoMapper.asResultDto(questionRepository.save(question));
     }
 
+    @Transactional
+    public void create(List<QuestionDto.Create> dtos, Authentication authentication) {
+        for (var dto: dtos){
+            create(dto, authentication);
+        }
+    }
+
     @Transactional(readOnly = true)
     public QuestionDto.Result read(Long id) {
         Question entity = repoHelper.findQuestionOrThrow(id);
