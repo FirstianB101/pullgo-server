@@ -45,6 +45,8 @@ public class ExamController {
         @RequestParam(required = false) Long classroomId,
         @RequestParam(required = false) Long creatorId,
         @RequestParam(required = false) Long studentId,
+        @RequestParam(required = false) Boolean finished,
+        @RequestParam(required = false) Boolean cancelled,
         Pageable pageable
     ) {
         Specification<Exam> spec = null;
@@ -57,7 +59,12 @@ public class ExamController {
         if (studentId != null) {
             spec = ExamSpecs.isAssignedTo(studentId).and(spec);
         }
-
+        if (finished != null) {
+            spec = ExamSpecs.isItFinished(finished).and(spec);
+        }
+        if (cancelled != null) {
+            spec = ExamSpecs.isItCancelled(cancelled).and(spec);
+        }
         return examService.search(spec, pageable);
     }
 
