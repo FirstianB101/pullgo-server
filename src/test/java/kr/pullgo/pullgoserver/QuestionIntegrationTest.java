@@ -78,6 +78,8 @@ public class QuestionIntegrationTest {
         fieldWithPath("content").description("문제 내용");
     private static final FieldDescriptor DOC_FIELD_EXAM_ID =
         fieldWithPath("examId").description("소속된 시험 ID");
+    private static final FieldDescriptor DOC_FIELD_QUESTIONS =
+        subsectionWithPath(".[*]").type("Question").description("Question 생성 필요필드와 동일");
 
     private MockMvc mockMvc;
 
@@ -197,6 +199,12 @@ public class QuestionIntegrationTest {
                 .andExpect(status().isCreated());
 
             assertThat(questionRepository.findAll().size()).isEqualTo(4);
+
+            // Document
+            actions.andDo(document("questions-create-example",
+                requestFields(
+                    DOC_FIELD_QUESTIONS
+                )));
         }
 
         @Test

@@ -771,6 +771,13 @@ operation::question-search-example[snippets='request-parameters,curl-request,htt
 
 operation::question-create-example[snippets='request-fields,curl-request,http-response']
 
+=== Question 다중생성
+
+`POST /exam/questions/bulk` 요청으로 Question들을 생성합니다.
+요청의 `Authorization` 헤더로 요청을 보낸 `Teacher` 의 엑세스 토큰이 제공되어야 합니다.
+
+operation::questions-create-example[snippets='request-fields,curl-request,http-response']
+
 [[resources_question_upate]]
 === Question 수정
 
