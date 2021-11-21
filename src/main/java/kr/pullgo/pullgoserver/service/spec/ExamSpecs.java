@@ -31,4 +31,11 @@ public class ExamSpecs {
         };
     }
 
+    public static Specification<Exam> isItFinished(Boolean finished) {
+        return (root, query, builder) -> builder.equal(root.get("finished"), finished);
+    }
+
+    public static Specification<Exam> isItCancelled(Boolean cancelled) {
+        return (root, query, builder) -> builder.equal(root.get("cancelled"), cancelled);
+    }
 }
