@@ -269,7 +269,9 @@ public class AttenderStateIntegrationTest {
                     parameterWithName("examId")
                         .description("응시중인 시험 ID").optional(),
                     parameterWithName("studentId")
-                        .description("시험 응시생 ID").optional()
+                        .description("시험 응시생 ID").optional(),
+                    parameterWithName("progress")
+                        .description("응시 상태").optional()
                 )));
         }
 
@@ -310,6 +312,45 @@ public class AttenderStateIntegrationTest {
                 )));
         }
 
+        @Test
+        void searchAttenderStatesByProgress() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+
+                AttenderState attenderStateA = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                        .withProgress(AttendingProgress.ONGOING)
+                );
+                AttenderState attenderStateB = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                        .withProgress(AttendingProgress.ONGOING)
+                );
+                AttenderState attenderStateC = entityHelper.generateAttenderState(it ->
+                    it.withExam(exam)
+                        .withProgress(AttendingProgress.COMPLETE)
+                );
+
+                return new Struct()
+                    .withValue("attenderStateAId", attenderStateA.getId())
+                    .withValue("attenderStateBId", attenderStateB.getId());
+            });
+            Long attenderStateAId = given.valueOf("attenderStateAId");
+            Long attenderStateBId = given.valueOf("attenderStateBId");
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exam/attender-states")
+                .param("progress", AttendingProgress.ONGOING.name()));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    attenderStateAId.intValue(),
+                    attenderStateBId.intValue()
+                )));
+        }
     }
 
     @Nested
