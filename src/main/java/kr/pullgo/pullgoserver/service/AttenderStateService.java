@@ -46,6 +46,12 @@ public class AttenderStateService {
     @Transactional
     public AttenderStateDto.Result create(AttenderStateDto.Create dto,
         Authentication authentication) {
+
+        if (attenderStateRepository.existsFindByAttenderIdAndExamId(dto.getAttenderId(),
+            dto.getExamId())){
+            throw errorHelper.badRequest("Attender State already exists");
+        }
+
         AttenderState attenderState = AttenderState.builder()
             .examStartTime(LocalDateTime.now())
             .build();
@@ -56,6 +62,9 @@ public class AttenderStateService {
         attenderState.setAttender(dtoAttender);
 
         Exam dtoExam = repoHelper.findExamOrThrow(dto.getExamId());
+        if (dtoExam.getQuestions().isEmpty()){
+            throw errorHelper.badRequest("There is no question in exam");
+        }
         attenderState.setExam(dtoExam);
 
         return dtoMapper.asResultDto(attenderStateRepository.save(attenderState));
