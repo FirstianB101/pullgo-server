@@ -40,6 +40,13 @@ public class QuestionController {
         return questionService.create(dto, authentication);
     }
 
+    @PostMapping("/exam/questions/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void post(@Valid @RequestBody List<QuestionDto.Create> dtos,
+        Authentication authentication) {
+        questionService.create(dtos, authentication);
+    }
+
     @GetMapping("/exam/questions")
     public List<QuestionDto.Result> search(
         @RequestParam(required = false) Long examId,
