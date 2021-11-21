@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver;
 
 import static kr.pullgo.pullgoserver.docs.ApiDocumentation.basicDocumentationConfiguration;
+import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestionCreateDto;
 import static kr.pullgo.pullgoserver.helper.QuestionHelper.aQuestionUpdateDto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -28,11 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
+import kr.pullgo.pullgoserver.dto.QuestionDto.Create;
 import kr.pullgo.pullgoserver.dto.QuestionDto.Update;
 import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
@@ -107,58 +110,126 @@ public class QuestionIntegrationTest {
             .build();
     }
 
-    @Test
-    void postQuestion() throws Exception {
-        // Given
-        Struct given = trxHelper.doInTransaction(() -> {
-            Exam exam = entityHelper.generateExam();
-            String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
-            return new Struct()
-                .withValue("token", token)
-                .withValue("examId", exam.getId());
-        });
-        String token = given.valueOf("token");
-        Long examId = given.valueOf("examId");
+    @Nested
+    class PostQuestion{
 
-        // When
-        QuestionDto.Create dto = QuestionDto.Create.builder()
-            .content("4보다 작은 자연수는?")
-            .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
-            .answer(Set.of(1, 2, 3))
-            .choice(Map.of(
-                "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"))
-            .examId(examId)
-            .build();
-        String body = toJson(dto);
+        @Test
+        void postQuestion() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("examId", exam.getId());
+            });
+            String token = given.valueOf("token");
+            Long examId = given.valueOf("examId");
 
-        ResultActions actions = mockMvc.perform(post("/exam/questions")
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("Authorization", "Bearer " + token)
-            .content(body));
+            // When
+            QuestionDto.Create dto = QuestionDto.Create.builder()
+                .content("4보다 작은 자연수는?")
+                .pictureUrl("https://i.imgur.com/JOKsNeT.jpg")
+                .answer(Set.of(1, 2, 3))
+                .choice(Map.of(
+                    "1", "1", "2", "2", "3", "3", "4", "4", "5", "5"))
+                .examId(examId)
+                .build();
+            String body = toJson(dto);
 
-        // Then
-        actions
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").isNumber())
-            .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
-            .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
-            .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
-            .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
-            .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
-            .andExpect(jsonPath("$.examId").value(examId));
+            ResultActions actions = mockMvc.perform(post("/exam/questions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
 
-        // Document
-        actions.andDo(document("question-create-example",
-            requestFields(
-                DOC_FIELD_ANSWER,
-                DOC_FIELD_MULTIPLE_CHOICE,
-                DOC_FIELD_PICTURE_URL.optional(),
-                DOC_FIELD_CONTENT,
-                DOC_FIELD_EXAM_ID
-            )));
+            // Then
+            actions
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.content").value("4보다 작은 자연수는?"))
+                .andExpect(jsonPath("$.pictureUrl").value("https://i.imgur.com/JOKsNeT.jpg"))
+                .andExpect(jsonPath("$.answer").value(containsInAnyOrder(1, 2, 3)))
+                .andExpect(jsonPath("$.choice").value(hasEntry("1", "1")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("2", "2")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("3", "3")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("4", "4")))
+                .andExpect(jsonPath("$.choice").value(hasEntry("5", "5")))
+                .andExpect(jsonPath("$.examId").value(examId));
+
+            // Document
+            actions.andDo(document("question-create-example",
+                requestFields(
+                    DOC_FIELD_ANSWER,
+                    DOC_FIELD_MULTIPLE_CHOICE,
+                    DOC_FIELD_PICTURE_URL.optional(),
+                    DOC_FIELD_CONTENT,
+                    DOC_FIELD_EXAM_ID
+                )));
+        }
+
+        @Test
+        void postQuestions() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("examId", exam.getId());
+            });
+            String token = given.valueOf("token");
+            Long examId = given.valueOf("examId");
+
+            // When
+            List<Create> dtos = List.of(
+                aQuestionCreateDto().withExamId(examId), aQuestionCreateDto().withExamId(examId),
+                aQuestionCreateDto().withExamId(examId), aQuestionCreateDto().withExamId(examId));
+
+            String body = toJson(dtos);
+
+            ResultActions actions = mockMvc.perform(post("/exam/questions/bulk")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isCreated());
+
+            assertThat(questionRepository.findAll().size()).isEqualTo(4);
+        }
+
+        @Test
+        void 일부_존재하지_않는_Exam_으로_보내는_다중생성_실패() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("examId", exam.getId());
+            });
+            String token = given.valueOf("token");
+            Long examId = given.valueOf("examId");
+
+            // When
+            List<Create> dtos = List.of(
+                aQuestionCreateDto().withExamId(examId), aQuestionCreateDto().withExamId(5L),
+                aQuestionCreateDto().withExamId(examId), aQuestionCreateDto().withExamId(examId));
+
+            String body = toJson(dtos);
+
+            ResultActions actions = mockMvc.perform(post("/exam/questions/bulk")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+
+            assertThat(questionRepository.findAll()).isEmpty();
+        }
     }
 
     @Nested
