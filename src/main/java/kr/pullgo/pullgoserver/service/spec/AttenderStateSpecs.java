@@ -2,6 +2,7 @@ package kr.pullgo.pullgoserver.service.spec;
 
 import javax.persistence.criteria.Join;
 import kr.pullgo.pullgoserver.persistence.model.AttenderState;
+import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,4 +23,7 @@ public class AttenderStateSpecs {
         };
     }
 
+    public static Specification<AttenderState> progress(AttendingProgress progress) {
+        return (root, query, builder) -> builder.equal(root.get("progress"), progress);
+    }
 }
