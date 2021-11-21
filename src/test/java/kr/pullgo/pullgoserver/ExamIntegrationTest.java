@@ -288,7 +288,11 @@ public class ExamIntegrationTest {
                     parameterWithName("creatorId")
                         .description("생성한 선생님 ID").optional(),
                     parameterWithName("studentId")
-                        .description("시험 응시생(소속된 반의 수강생) ID").optional()
+                        .description("시험 응시생(소속된 반의 수강생) ID").optional(),
+                    parameterWithName("finished")
+                        .description("종료된 시험").optional(),
+                    parameterWithName("cancelled")
+                        .description("취소된 시험").optional()
                 )));
         }
 
@@ -362,6 +366,79 @@ public class ExamIntegrationTest {
                 )));
         }
 
+        @Test
+        void searchExamsByFinished() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+
+                Exam examA = entityHelper.generateExam(it -> it.withClassroom(classroom)
+                    .withFinished(false));
+                Exam examB = entityHelper.generateExam(it -> it.withClassroom(classroom)
+                    .withFinished(true));
+                Exam examC = entityHelper.generateExam(it -> it.withClassroom(classroom)
+                    .withFinished(true));
+                entityHelper.generateExam();
+
+                return new Struct()
+                    .withValue("examAId", examA.getId())
+                    .withValue("examBId", examB.getId())
+                    .withValue("examCId", examC.getId());
+            });
+            Long examBId = given.valueOf("examBId");
+            Long examCId = given.valueOf("examCId");
+
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exams")
+                .param("finished", String.valueOf(true)));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    examBId.intValue(),
+                    examCId.intValue()
+                )));
+        }
+
+        @Test
+        void searchExamsByCancelled() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+
+                Exam examA = entityHelper.generateExam(it -> it.withClassroom(classroom)
+                    .withCancelled(false));
+                Exam examB = entityHelper.generateExam(it -> it.withClassroom(classroom)
+                    .withCancelled(true));
+                Exam examC = entityHelper.generateExam(it -> it.withClassroom(classroom)
+                    .withCancelled(true));
+                entityHelper.generateExam();
+
+                return new Struct()
+                    .withValue("examAId", examA.getId())
+                    .withValue("examBId", examB.getId())
+                    .withValue("examCId", examC.getId());
+            });
+            Long examBId = given.valueOf("examBId");
+            Long examCId = given.valueOf("examCId");
+
+
+            // When
+            ResultActions actions = mockMvc.perform(get("/exams")
+                .param("cancelled", String.valueOf(true)));
+
+            // Then
+            actions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(hasSize(2)))
+                .andExpect(jsonPath("$.[*].id").value(containsInAnyOrder(
+                    examBId.intValue(),
+                    examCId.intValue()
+                )));
+        }
     }
 
     @Test
