@@ -485,6 +485,84 @@ public class QuestionIntegrationTest {
                 .andExpect(status().isNotFound());
         }
 
+        @Test
+        void patchQuestions() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                Question question1 = entityHelper.generateQuestion(it -> it.withExam(exam));
+                Question question2 = entityHelper.generateQuestion(it -> it.withExam(exam));
+                Question question3 = entityHelper.generateQuestion(it -> it.withExam(exam));
+                Question question4 = entityHelper.generateQuestion(it -> it.withExam(exam));
+
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("question1Id", question1.getId())
+                    .withValue("question2Id", question2.getId())
+                    .withValue("question3Id", question3.getId())
+                    .withValue("question4Id", question4.getId());
+            });
+            String token = given.valueOf("token");
+            Long question1Id = given.valueOf("question1Id");
+            Long question2Id = given.valueOf("question2Id");
+            Long question3Id = given.valueOf("question3Id");
+            Long question4Id = given.valueOf("question4Id");
+
+            // When
+            Map<Long, QuestionDto.Update> dtos = Map.of(
+                question1Id, aQuestionUpdateDto(), question2Id, aQuestionUpdateDto(),
+                question3Id, aQuestionUpdateDto(), question4Id, aQuestionUpdateDto());
+
+            String body = toJson(dtos);
+
+            ResultActions actions = mockMvc.perform(patch("/exam/questions/bulk")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isOk());
+        }
+
+        @Test
+        void 일부_존재하지_않는_Question_으로_보내는_다중수정_실패() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Exam exam = entityHelper.generateExam();
+                Question question1 = entityHelper.generateQuestion(it -> it.withExam(exam));
+                Question question2 = entityHelper.generateQuestion(it -> it.withExam(exam));
+                Question question3 = entityHelper.generateQuestion(it -> it.withExam(exam));
+
+                String token = authHelper.generateToken(it -> exam.getCreator().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("question1Id", question1.getId())
+                    .withValue("question2Id", question2.getId())
+                    .withValue("question3Id", question3.getId());
+            });
+            String token = given.valueOf("token");
+            Long question1Id = given.valueOf("question1Id");
+            Long question2Id = given.valueOf("question2Id");
+            Long question3Id = given.valueOf("question3Id");
+
+            // When
+            Map<Long, QuestionDto.Update> dtos = Map.of(
+                question1Id, aQuestionUpdateDto(), question2Id, aQuestionUpdateDto(),
+                question3Id, aQuestionUpdateDto(), 5L, aQuestionUpdateDto());
+
+            String body = toJson(dtos);
+
+            ResultActions actions = mockMvc.perform(patch("/exam/questions/bulk")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + token)
+                .content(body));
+
+            // Then
+            actions
+                .andExpect(status().isNotFound());
+        }
     }
 
     @Nested
