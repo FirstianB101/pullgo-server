@@ -71,7 +71,8 @@ public class QuestionIntegrationTest {
     private static final FieldDescriptor DOC_FIELD_ANSWER =
         fieldWithPath("answer").description("정답 (객관식, 1~5 범위의 정수 배열)");
     private static final FieldDescriptor DOC_FIELD_MULTIPLE_CHOICE =
-        subsectionWithPath("choice").type("MultipleChoice").description("객관식 보기 (1~5 범위의 정수, 보기 내용)");
+        subsectionWithPath("choice").type("MultipleChoice")
+            .description("객관식 보기 (1~5 범위의 정수, 보기 내용)");
     private static final FieldDescriptor DOC_FIELD_PICTURE_URL =
         fieldWithPath("pictureUrl").description("첨부된 사진의 URL");
     private static final FieldDescriptor DOC_FIELD_CONTENT =
@@ -80,6 +81,10 @@ public class QuestionIntegrationTest {
         fieldWithPath("examId").description("소속된 시험 ID");
     private static final FieldDescriptor DOC_FIELD_QUESTIONS =
         subsectionWithPath(".[*]").type("Question").description("Question 생성 필요필드와 동일");
+    private static final FieldDescriptor DOC_FIELD_PATCH_QUESTIONS_ID =
+        subsectionWithPath("*").type("Long").description("Question 의 ID");
+    private static final FieldDescriptor DOC_FIELD_PATCH_QUESTIONS =
+        subsectionWithPath("*.*").type("Question").description("Question 수정 필드와 동일");
 
     private MockMvc mockMvc;
 
@@ -524,6 +529,13 @@ public class QuestionIntegrationTest {
             // Then
             actions
                 .andExpect(status().isOk());
+
+            // Document
+            actions.andDo(document("questions-update-example",
+                requestFields(
+                    DOC_FIELD_PATCH_QUESTIONS_ID,
+                    DOC_FIELD_PATCH_QUESTIONS
+                )));
         }
 
         @Test
