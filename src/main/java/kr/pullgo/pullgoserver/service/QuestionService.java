@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.service;
 
 import java.util.List;
+import java.util.Map;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.dto.mapper.QuestionDtoMapper;
 import kr.pullgo.pullgoserver.persistence.model.Answer;
@@ -88,6 +89,14 @@ public class QuestionService {
             entity.setMultipleChoice(new MultipleChoice(dto.getChoice()));
         }
         return dtoMapper.asResultDto(questionRepository.save(entity));
+    }
+
+    @Transactional
+    public void update(Map<Long, QuestionDto.Update> dtos,
+        Authentication authentication) {
+        for (var id : dtos.keySet()) {
+            update(id, dtos.get(id), authentication);
+        }
     }
 
     @Transactional

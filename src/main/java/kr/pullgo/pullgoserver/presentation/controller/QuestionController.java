@@ -1,6 +1,7 @@
 package kr.pullgo.pullgoserver.presentation.controller;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.QuestionDto;
 import kr.pullgo.pullgoserver.persistence.model.Question;
@@ -77,4 +78,9 @@ public class QuestionController {
         return questionService.update(id, dto, authentication);
     }
 
+    @PatchMapping("/exam/questions/bulk")
+    public void patch(
+        @Valid @RequestBody Map<Long, QuestionDto.Update> dtos, Authentication authentication) {
+        questionService.update(dtos, authentication);
+    }
 }
