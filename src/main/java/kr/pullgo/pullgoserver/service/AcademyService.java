@@ -6,6 +6,7 @@ import kr.pullgo.pullgoserver.dto.mapper.AcademyDtoMapper;
 import kr.pullgo.pullgoserver.error.exception.StudentNotFoundException;
 import kr.pullgo.pullgoserver.error.exception.TeacherNotFoundException;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
+import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
@@ -117,6 +118,16 @@ public class AcademyService {
         for (Teacher teacher : academy.getApplyingTeachers()) {
             teacher.removeAppliedAcademy(academy);
             teacherRepository.save(teacher);
+        }
+        for (Classroom classroom : academy.getClassrooms()) {
+            for (Student student : classroom.getApplyingStudents()) {
+                student.removeAppliedClassroom(classroom);
+                studentRepository.save(student);
+            }
+            for (Teacher teacher : classroom.getApplyingTeachers()) {
+                teacher.removeAppliedClassroom(classroom);
+                teacherRepository.save(teacher);
+            }
         }
 
         academyRepository.delete(academy);
