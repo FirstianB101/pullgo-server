@@ -33,10 +33,12 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 import kr.pullgo.pullgoserver.docs.ApiDocumentation;
 import kr.pullgo.pullgoserver.dto.AcademyDto;
+import kr.pullgo.pullgoserver.helper.AuthHelper;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.helper.Struct;
 import kr.pullgo.pullgoserver.helper.TransactionHelper;
 import kr.pullgo.pullgoserver.persistence.model.Academy;
+import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.AcademyRepository;
@@ -88,6 +90,9 @@ public class AcademyIntegrationTest {
 
     @Autowired
     private EntityHelper entityHelper;
+
+    @Autowired
+    private AuthHelper authHelper;
 
     @BeforeEach
     void setUp(
@@ -663,6 +668,44 @@ public class AcademyIntegrationTest {
 
             // Document
             actions.andDo(document("academy-delete-example"));
+        }
+
+        @Test
+        void 학원산하_반에_대한_가입요청을_받지않고_학원_삭제() throws Exception {
+            // Given
+            Struct given = trxHelper.doInTransaction(() -> {
+                Classroom classroom = entityHelper.generateClassroom();
+
+                entityHelper.generateTeacher(it -> {
+                    it.applyClassroom(classroom);
+                    return it;
+                });
+                entityHelper.generateStudent(it -> {
+                    it.applyClassroom(classroom);
+                    return it;
+                });
+                Academy academy = classroom.getAcademy();
+
+                String token = authHelper.generateToken(it -> academy.getOwner().getAccount());
+                return new Struct()
+                    .withValue("token", token)
+                    .withValue("academyId", academy.getId());
+            });
+            String token = given.valueOf("token");
+            Long academyId = given.valueOf("academyId");
+
+            // When
+            ResultActions actions = mockMvc
+                .perform(delete("/academies/{id}", academyId)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + token));
+
+            // Then
+            actions
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(emptyString()));
+
+            assertThat(academyRepository.findById(academyId)).isEmpty();
         }
 
         @Test
