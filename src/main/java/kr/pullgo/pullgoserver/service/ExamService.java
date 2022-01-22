@@ -11,22 +11,18 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
+import kr.pullgo.pullgoserver.service.cron.CronJob;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@EnableScheduling
-@Slf4j
 public class ExamService {
 
     private final ExamDtoMapper dtoMapper;
@@ -34,18 +30,21 @@ public class ExamService {
     private final RepositoryHelper repoHelper;
     private final ServiceErrorHelper errorHelper;
     private final ExamAuthorizer examAuthorizer;
+    public final CronJob cronJob;
+    private final String CRON_NAME = "exam";
 
     @Autowired
     public ExamService(ExamDtoMapper dtoMapper,
         ExamRepository examRepository,
         RepositoryHelper repoHelper,
         ServiceErrorHelper errorHelper,
-        ExamAuthorizer examAuthorizer) {
+        ExamAuthorizer examAuthorizer, CronJob cronJob) {
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
         this.repoHelper = repoHelper;
         this.errorHelper = errorHelper;
         this.examAuthorizer = examAuthorizer;
+        this.cronJob = cronJob;
     }
 
     @Transactional
@@ -59,7 +58,14 @@ public class ExamService {
         Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
         classroom.addExam(exam);
 
-        return dtoMapper.asResultDto(examRepository.save(exam));
+        exam = examRepository.save(exam);
+        Long id = exam.getId();
+        cronJob.register(id, () -> {
+            finishExam(id);
+            cronJob.remove(id, CRON_NAME);
+        }, exam.getExamEndTime(), CRON_NAME);
+
+        return dtoMapper.asResultDto(exam);
     }
 
     @Transactional(readOnly = true)
@@ -94,6 +100,12 @@ public class ExamService {
         if (dto.getPassScore() != null) {
             entity.setPassScore(dto.getPassScore());
         }
+        cronJob.remove(id, CRON_NAME);
+        cronJob.register(id, () -> {
+            finishExam(id);
+            cronJob.remove(id, CRON_NAME);
+        }, entity.getExamEndTime(), CRON_NAME);
+
         return dtoMapper.asResultDto(examRepository.save(entity));
     }
 
@@ -102,6 +114,7 @@ public class ExamService {
         Exam entity = repoHelper.findExamOrThrow(id);
         examAuthorizer.requireCreator(authentication, entity);
 
+        cronJob.remove(id, CRON_NAME);
         examRepository.delete(entity);
     }
 
@@ -110,6 +123,7 @@ public class ExamService {
         Exam exam = getOnGoingExam(id);
         examAuthorizer.requireCreator(authentication, exam);
 
+        cronJob.remove(id, CRON_NAME);
         exam.setCancelled(true);
     }
 
@@ -139,17 +153,21 @@ public class ExamService {
         return exam;
     }
 
-    @Scheduled(cron = "0/10 * * * * *")
     @Transactional
-    public void examFinishJob() {
-        log.info(
-            "\n┏###################################### Cron examFinishJob per 10 sec ######################################┓");
+    public void allExamFinish() {
         examRepository.findAll().stream().filter(Exam::isOnGoing).filter(exam ->
             exam.getExamEndTime().isBefore(LocalDateTime.now())).forEach(
             ExamService.this::finishExam
         );
-        log.info(
-            "\n┗###########################################################################################################┛");
+    }
+
+    @Transactional
+    public void finishExam(Long id) {
+        Exam exam = repoHelper.findExamOrThrow(id);
+        exam.getAttenderStates().stream().filter(attenderState ->
+                attenderState.getProgress() == AttendingProgress.ONGOING)
+            .forEach(AttenderState::mark);
+        exam.setFinished(true);
     }
 
 }
