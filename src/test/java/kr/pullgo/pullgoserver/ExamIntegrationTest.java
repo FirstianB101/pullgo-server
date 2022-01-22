@@ -768,7 +768,7 @@ public class ExamIntegrationTest {
         }
 
         @Test
-        void examFinishJob수동_호출을_이용한_Exam_종료() {
+        void allExamFinish수동_호출을_이용한_Exam_종료() {
             // Given
             Struct given = trxHelper.doInTransaction(() -> {
                 Exam examToBeFinished = entityHelper.generateExam(it ->
@@ -787,7 +787,7 @@ public class ExamIntegrationTest {
             Long examOnGoingId = given.valueOf("examOnGoingId");
 
             // When
-            examService.examFinishJob();
+            examService.allExamFinish();
 
             // Then
             boolean doseOldExamFinish = trxHelper.doInTransaction(() -> {
