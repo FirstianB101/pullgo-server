@@ -6,18 +6,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import kr.pullgo.pullgoserver.config.aop.SchedulingConfig;
 import kr.pullgo.pullgoserver.helper.EntityHelper;
 import kr.pullgo.pullgoserver.persistence.repository.AttenderStateRepository;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.persistence.repository.QuestionRepository;
 import kr.pullgo.pullgoserver.service.JwtService;
+import kr.pullgo.pullgoserver.service.cron.CronJob;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
 @DataJpaTest
-@Import({EntityHelper.class, JwtService.class, ObjectMapper.class})
+@Import({EntityHelper.class, JwtService.class, ObjectMapper.class, CronJob.class,
+    SchedulingConfig.class})
 class ExamTest {
 
     @Autowired
