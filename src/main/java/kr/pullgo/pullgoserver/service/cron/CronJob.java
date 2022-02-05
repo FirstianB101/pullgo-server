@@ -27,10 +27,23 @@ public class CronJob {
     }
 
     public void register(Long id, Runnable runnable, LocalDateTime endTime, String msg) {
-        ScheduledFuture<?> task = scheduler.schedule(runnable, Timestamp.valueOf(endTime));
+        ScheduledFuture<?> task = scheduler.schedule(getRunnable(id, runnable, msg),
+            Timestamp.valueOf(endTime));
         scheduledTasks.put(id, task);
         log.info("regiser " + msg + " timer, id: [" + id + "], until :" + endTime + '\n');
+        log.info("present time : " + LocalDateTime.now() + '\n');
     }
+
+
+    public Runnable getRunnable(Long id, Runnable runnable, String msg) {
+        return () -> {
+            log.info(
+                "start [" + msg + "] - [" + id + "] cronjob, at: " + LocalDateTime.now() + "\n");
+            runnable.run();
+            remove(id, msg);
+        };
+    }
+
 
     public void remove(Long id, String msg) {
         scheduledTasks.get(id).cancel(true);
