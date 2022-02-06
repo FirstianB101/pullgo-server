@@ -1,11 +1,8 @@
-package kr.pullgo.pullgoserver.service;
+package kr.pullgo.pullgoserver.service.exam;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
-import kr.pullgo.pullgoserver.persistence.model.AttenderState;
-import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
@@ -13,7 +10,6 @@ import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
 import kr.pullgo.pullgoserver.service.cron.CronJob;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
-import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -117,57 +113,4 @@ public class ExamService {
         cronJob.remove(id, CRON_NAME);
         examRepository.delete(entity);
     }
-
-    @Transactional
-    public void cancelExam(Long id, Authentication authentication) {
-        Exam exam = getOnGoingExam(id);
-        examAuthorizer.requireCreator(authentication, exam);
-
-        cronJob.remove(id, CRON_NAME);
-        exam.setCancelled(true);
-    }
-
-    @Transactional
-    public void finishExam(Long id, Authentication authentication) {
-        Exam exam = getOnGoingExam(id);
-        examAuthorizer.requireCreator(authentication, exam);
-
-        finishExam(exam);
-    }
-
-    private void finishExam(Exam exam) {
-        exam.getAttenderStates().stream().filter(attenderState ->
-                attenderState.getProgress() == AttendingProgress.ONGOING)
-            .forEach(AttenderState::mark);
-        exam.setFinished(true);
-    }
-
-    private Exam getOnGoingExam(Long id) {
-        Exam exam = repoHelper.findExamOrThrow(id);
-        if (exam.isFinished()) {
-            throw errorHelper.badRequest("Exam already finished");
-        }
-        if (exam.isCancelled()) {
-            throw errorHelper.badRequest("Exam already cancelled");
-        }
-        return exam;
-    }
-
-    @Transactional
-    public void allExamFinish() {
-        examRepository.findAll().stream().filter(Exam::isOnGoing).filter(exam ->
-            exam.getExamEndTime().isBefore(LocalDateTime.now())).forEach(
-            ExamService.this::finishExam
-        );
-    }
-
-    @Transactional
-    public void finishExam(Long id) {
-        Exam exam = repoHelper.findExamOrThrow(id);
-        exam.getAttenderStates().stream().filter(attenderState ->
-                attenderState.getProgress() == AttendingProgress.ONGOING)
-            .forEach(AttenderState::mark);
-        exam.setFinished(true);
-    }
-
 }
