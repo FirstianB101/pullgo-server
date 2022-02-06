@@ -26,7 +26,7 @@ import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
-import kr.pullgo.pullgoserver.service.cron.CronJob;
+import kr.pullgo.pullgoserver.service.exam.ExamManagement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -36,13 +36,13 @@ import org.springframework.stereotype.Component;
 public class EntityHelper {
 
     private final EntityManager em;
-    private final CronJob cronJob;
-    private final String ARBITRARY_CRON = "ARBITRARY_CRON";
+    private final ExamManagement examManagement;
 
     @Autowired
-    public EntityHelper(EntityManager em, CronJob cronJob) {
+    public EntityHelper(EntityManager em,
+        ExamManagement examManagement) {
         this.em = em;
-        this.cronJob = cronJob;
+        this.examManagement = examManagement;
     }
 
     public Account generateAccount() {
@@ -197,11 +197,7 @@ public class EntityHelper {
 
         em.persist(exam);
 
-        Long id = exam.getId();
-        cronJob.register(id, () -> {
-            log.info(ARBITRARY_CRON);
-            cronJob.remove(id, ARBITRARY_CRON);
-        }, exam.getExamEndTime(), ARBITRARY_CRON);
+        examManagement.registerCronJob(exam);
         return exam;
     }
 

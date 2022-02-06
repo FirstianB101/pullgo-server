@@ -8,7 +8,6 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
-import kr.pullgo.pullgoserver.service.cron.CronJob;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,23 +23,20 @@ public class ExamService {
     private final ExamDtoMapper dtoMapper;
     private final ExamRepository examRepository;
     private final RepositoryHelper repoHelper;
-    private final ServiceErrorHelper errorHelper;
     private final ExamAuthorizer examAuthorizer;
-    public final CronJob cronJob;
-    private final String CRON_NAME = "exam";
+    private final ExamManagement manageMent;
 
     @Autowired
     public ExamService(ExamDtoMapper dtoMapper,
         ExamRepository examRepository,
         RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper,
-        ExamAuthorizer examAuthorizer, CronJob cronJob) {
+        ExamAuthorizer examAuthorizer,
+        ExamManagement manageMent) {
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
         this.repoHelper = repoHelper;
-        this.errorHelper = errorHelper;
         this.examAuthorizer = examAuthorizer;
-        this.cronJob = cronJob;
+        this.manageMent = manageMent;
     }
 
     @Transactional
@@ -55,11 +51,8 @@ public class ExamService {
         classroom.addExam(exam);
 
         exam = examRepository.save(exam);
-        Long id = exam.getId();
-        cronJob.register(id, () -> {
-            finishExam(id);
-            cronJob.remove(id, CRON_NAME);
-        }, exam.getExamEndTime(), CRON_NAME);
+
+        manageMent.registerCronJob(exam);
 
         return dtoMapper.asResultDto(exam);
     }
@@ -96,11 +89,8 @@ public class ExamService {
         if (dto.getPassScore() != null) {
             entity.setPassScore(dto.getPassScore());
         }
-        cronJob.remove(id, CRON_NAME);
-        cronJob.register(id, () -> {
-            finishExam(id);
-            cronJob.remove(id, CRON_NAME);
-        }, entity.getExamEndTime(), CRON_NAME);
+        manageMent.removeCronJob(entity);
+        manageMent.registerCronJob(entity);
 
         return dtoMapper.asResultDto(examRepository.save(entity));
     }
@@ -110,7 +100,7 @@ public class ExamService {
         Exam entity = repoHelper.findExamOrThrow(id);
         examAuthorizer.requireCreator(authentication, entity);
 
-        cronJob.remove(id, CRON_NAME);
+        manageMent.removeCronJob(entity);
         examRepository.delete(entity);
     }
 }
