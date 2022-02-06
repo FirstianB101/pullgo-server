@@ -39,8 +39,6 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
-import kr.pullgo.pullgoserver.service.ExamService;
-import kr.pullgo.pullgoserver.service.cron.CronJob;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -100,8 +98,6 @@ public class ExamIntegrationTest {
     @Autowired
     private EntityHelper entityHelper;
 
-    @Autowired
-    private CronJob cronJob;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -694,8 +690,6 @@ public class ExamIntegrationTest {
     @Nested
     class FinishExam {
 
-        @Autowired
-        private ExamService examService;
 
         @Test
         @WithMockUser(authorities = "ADMIN")
@@ -769,105 +763,6 @@ public class ExamIntegrationTest {
             // Then
             actions
                 .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        void allExamFinish수동_호출을_이용한_Exam_종료() {
-            // Given
-            Struct given = trxHelper.doInTransaction(() -> {
-                Exam examToBeFinished = entityHelper.generateExam(it ->
-                    it.withTimeLimit(Duration.ofHours(1))
-                        .withBeginDateTime(LocalDateTime.now().minusHours(5))
-                        .withEndDateTime(LocalDateTime.now().minusHours(3)));
-                Exam examOnGoing = entityHelper.generateExam(it ->
-                    it.withTimeLimit(Duration.ofHours(1))
-                        .withBeginDateTime(LocalDateTime.now().minusHours(1))
-                        .withEndDateTime(LocalDateTime.now().plusHours(2)));
-                return new Struct()
-                    .withValue("examToBeFinishedId", examToBeFinished.getId())
-                    .withValue("examOnGoingId", examOnGoing.getId());
-            });
-            Long examToBeFinishedId = given.valueOf("examToBeFinishedId");
-            Long examOnGoingId = given.valueOf("examOnGoingId");
-
-            // When
-            examService.allExamFinish();
-
-            // Then
-            boolean doseOldExamFinish = trxHelper.doInTransaction(() -> {
-                Exam exam = examRepository.findById(examToBeFinishedId).orElseThrow();
-                return exam.isFinished();
-            });
-            boolean doseFreshExamOnGoing = trxHelper.doInTransaction(() -> {
-                Exam exam = examRepository.findById(examOnGoingId).orElseThrow();
-                return exam.isOnGoing();
-            });
-
-            assertThat(doseOldExamFinish).isTrue();
-            assertThat(doseFreshExamOnGoing).isTrue();
-        }
-
-        @Test
-        void examFinish수동_호출을_이용한_Exam_종료() {
-            // Given
-            Struct given = trxHelper.doInTransaction(() -> {
-                Exam examToBeFinished1 = entityHelper.generateExam(it ->
-                    it.withTimeLimit(Duration.ofSeconds(1))
-                        .withBeginDateTime(LocalDateTime.now().minusSeconds(6))
-                        .withEndDateTime(LocalDateTime.now().minusSeconds(2)));
-                Exam examToBeFinished2 = entityHelper.generateExam(it ->
-                    it.withTimeLimit(Duration.ofSeconds(1))
-                        .withBeginDateTime(LocalDateTime.now().minusSeconds(6))
-                        .withEndDateTime(LocalDateTime.now().minusSeconds(3)));
-                Exam examOnGoing = entityHelper.generateExam(it ->
-                    it.withTimeLimit(Duration.ofHours(1))
-                        .withBeginDateTime(LocalDateTime.now().minusHours(1))
-                        .withEndDateTime(LocalDateTime.now().plusHours(2)));
-                return new Struct()
-                    .withValue("examToBeFinished1EndTime", examToBeFinished1.getExamEndTime())
-                    .withValue("examToBeFinished1Id", examToBeFinished1.getId())
-                    .withValue("examToBeFinished2EndTime", examToBeFinished2.getExamEndTime())
-                    .withValue("examToBeFinished2Id", examToBeFinished2.getId())
-                    .withValue("examOnGoingId", examOnGoing.getId());
-            });
-            LocalDateTime examToBeFinished1EndTime = given.valueOf("examToBeFinished1EndTime");
-            Long examToBeFinished1Id = given.valueOf("examToBeFinished1Id");
-            LocalDateTime examToBeFinished2EndTime = given.valueOf("examToBeFinished2EndTime");
-            Long examToBeFinished2Id = given.valueOf("examToBeFinished2Id");
-            Long examOnGoingId = given.valueOf("examOnGoingId");
-
-            // When
-            trxHelper.doInTransaction(() -> {
-                cronJob.register(examToBeFinished1Id, () -> {
-                        examService.finishExam(examToBeFinished1Id);
-                        cronJob.remove(examToBeFinished1Id, "exam test 1");
-                    }, examToBeFinished1EndTime,
-                    "exam test 1");
-                cronJob.register(examToBeFinished2Id, () -> {
-                        examService.finishExam(examToBeFinished2Id);
-                        cronJob.remove(examToBeFinished2Id, "exam test 2");
-                    }, examToBeFinished2EndTime,
-                    "exam test 2");
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-
-            // Then
-            boolean doseOldExamFinish = trxHelper.doInTransaction(() -> {
-                Exam exam = examRepository.findById(examToBeFinished1Id).orElseThrow();
-                Exam exam2 = examRepository.findById(examToBeFinished2Id).orElseThrow();
-                return exam.isFinished() && exam2.isFinished();
-            });
-            boolean doseFreshExamOnGoing = trxHelper.doInTransaction(() -> {
-                Exam exam = examRepository.findById(examOnGoingId).orElseThrow();
-                return exam.isOnGoing();
-            });
-
-            assertThat(doseOldExamFinish).isTrue();
-            assertThat(doseFreshExamOnGoing).isTrue();
         }
     }
 
