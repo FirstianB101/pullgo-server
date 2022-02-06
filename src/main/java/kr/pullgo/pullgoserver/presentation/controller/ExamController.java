@@ -4,7 +4,8 @@ import java.util.List;
 import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
-import kr.pullgo.pullgoserver.service.ExamService;
+import kr.pullgo.pullgoserver.service.exam.ExamManagement;
+import kr.pullgo.pullgoserver.service.exam.ExamService;
 import kr.pullgo.pullgoserver.service.spec.ExamSpecs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -27,10 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExamController {
 
     private final ExamService examService;
+    private final ExamManagement examManagement;
 
     @Autowired
-    public ExamController(ExamService examService) {
+    public ExamController(ExamService examService,
+        ExamManagement examManagement) {
         this.examService = examService;
+        this.examManagement = examManagement;
     }
 
     @PostMapping("/exams")
@@ -88,12 +92,12 @@ public class ExamController {
     @PostMapping("/exams/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancel(@PathVariable Long id, Authentication authentication) {
-        examService.cancelExam(id, authentication);
+        examManagement.cancelExam(id, authentication);
     }
 
     @PostMapping("/exams/{id}/finish")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void finish(@PathVariable Long id, Authentication authentication) {
-        examService.finishExam(id, authentication);
+        examManagement.finishExam(id, authentication);
     }
 }
