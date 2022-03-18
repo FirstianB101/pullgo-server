@@ -24,19 +24,22 @@ public class ExamService {
     private final ExamRepository examRepository;
     private final RepositoryHelper repoHelper;
     private final ExamAuthorizer examAuthorizer;
-    private final ExamManagement manageMent;
+    private final ExamLifeCycleService examLifeCycleService;
+    private final ExamCronJobService examCronJobService;
 
     @Autowired
     public ExamService(ExamDtoMapper dtoMapper,
         ExamRepository examRepository,
         RepositoryHelper repoHelper,
         ExamAuthorizer examAuthorizer,
-        ExamManagement manageMent) {
+        ExamLifeCycleService examLifeCycleService,
+        ExamCronJobService examCronJobService) {
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
         this.repoHelper = repoHelper;
         this.examAuthorizer = examAuthorizer;
-        this.manageMent = manageMent;
+        this.examLifeCycleService = examLifeCycleService;
+        this.examCronJobService = examCronJobService;
     }
 
     @Transactional
@@ -52,7 +55,7 @@ public class ExamService {
 
         exam = examRepository.save(exam);
 
-        manageMent.registerCronJob(exam);
+        examCronJobService.registerExamCronJob(exam, examLifeCycleService::finishExam);
 
         return dtoMapper.asResultDto(exam);
     }
@@ -89,8 +92,8 @@ public class ExamService {
         if (dto.getPassScore() != null) {
             entity.setPassScore(dto.getPassScore());
         }
-        manageMent.removeCronJob(entity);
-        manageMent.registerCronJob(entity);
+        examCronJobService.removeExamCronJob(entity);
+        examCronJobService.registerExamCronJob(entity, examLifeCycleService::finishExam);
 
         return dtoMapper.asResultDto(examRepository.save(entity));
     }
@@ -100,7 +103,7 @@ public class ExamService {
         Exam entity = repoHelper.findExamOrThrow(id);
         examAuthorizer.requireCreator(authentication, entity);
 
-        manageMent.removeCronJob(entity);
+        examCronJobService.removeExamCronJob(entity);
         examRepository.delete(entity);
     }
 }

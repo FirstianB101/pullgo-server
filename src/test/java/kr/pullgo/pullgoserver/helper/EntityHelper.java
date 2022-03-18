@@ -26,7 +26,8 @@ import kr.pullgo.pullgoserver.persistence.model.Question;
 import kr.pullgo.pullgoserver.persistence.model.Schedule;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
-import kr.pullgo.pullgoserver.service.exam.ExamManagement;
+import kr.pullgo.pullgoserver.service.exam.ExamCronJobService;
+import kr.pullgo.pullgoserver.service.exam.ExamLifeCycleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -36,13 +37,16 @@ import org.springframework.stereotype.Component;
 public class EntityHelper {
 
     private final EntityManager em;
-    private final ExamManagement examManagement;
+    private final ExamLifeCycleService examLifeCycleService;
+    private final ExamCronJobService examCronJobService;
 
     @Autowired
     public EntityHelper(EntityManager em,
-        ExamManagement examManagement) {
+        ExamLifeCycleService examLifeCycleService,
+        ExamCronJobService examCronJobService) {
         this.em = em;
-        this.examManagement = examManagement;
+        this.examLifeCycleService = examLifeCycleService;
+        this.examCronJobService = examCronJobService;
     }
 
     public Account generateAccount() {
@@ -197,7 +201,7 @@ public class EntityHelper {
 
         em.persist(exam);
 
-        examManagement.registerCronJob(exam);
+        examCronJobService.registerExamCronJob(exam, examLifeCycleService::finishExam);
         return exam;
     }
 
