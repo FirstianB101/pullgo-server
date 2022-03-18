@@ -35,7 +35,7 @@ public class CronJob {
     }
 
 
-    public Runnable getRunnable(Long id, Runnable runnable, String msg) {
+    private Runnable getRunnable(Long id, Runnable runnable, String msg) {
         return () -> {
             log.info(
                 "start [" + msg + "] - [" + id + "] cronjob, at: " + LocalDateTime.now() + "\n");
