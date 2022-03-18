@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ExamService {
+public class ExamCrudService {
 
     private final ExamDtoMapper dtoMapper;
     private final ExamRepository examRepository;
@@ -28,7 +28,7 @@ public class ExamService {
     private final ExamCronJobService examCronJobService;
 
     @Autowired
-    public ExamService(ExamDtoMapper dtoMapper,
+    public ExamCrudService(ExamDtoMapper dtoMapper,
         ExamRepository examRepository,
         RepositoryHelper repoHelper,
         ExamAuthorizer examAuthorizer,

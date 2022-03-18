@@ -41,7 +41,7 @@ public class ExamController {
     @ResponseStatus(HttpStatus.CREATED)
     public ExamDto.Result post(@Valid @RequestBody ExamDto.Create dto,
         Authentication authentication) {
-        return examService.create(dto, authentication);
+        return examCrudService.create(dto, authentication);
     }
 
     @GetMapping("/exams")
@@ -69,24 +69,24 @@ public class ExamController {
         if (cancelled != null) {
             spec = ExamSpecs.isItCancelled(cancelled).and(spec);
         }
-        return examService.search(spec, pageable);
+        return examCrudService.search(spec, pageable);
     }
 
     @GetMapping("/exams/{id}")
     public ExamDto.Result get(@PathVariable Long id) {
-        return examService.read(id);
+        return examCrudService.read(id);
     }
 
     @DeleteMapping("/exams/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id, Authentication authentication) {
-        examService.delete(id, authentication);
+        examCrudService.delete(id, authentication);
     }
 
     @PatchMapping("/exams/{id}")
     public ExamDto.Result patch(@PathVariable Long id, @Valid @RequestBody ExamDto.Update dto,
         Authentication authentication) {
-        return examService.update(id, dto, authentication);
+        return examCrudService.update(id, dto, authentication);
     }
 
     @PostMapping("/exams/{id}/cancel")
