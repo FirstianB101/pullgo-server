@@ -1,52 +1,32 @@
-package kr.pullgo.pullgoserver.service;
+package kr.pullgo.pullgoserver.service.exam;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.dto.mapper.ExamDtoMapper;
-import kr.pullgo.pullgoserver.persistence.model.AttenderState;
-import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Classroom;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
-import kr.pullgo.pullgoserver.service.helper.ServiceErrorHelper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@EnableScheduling
-@Slf4j
-public class ExamService {
+@RequiredArgsConstructor
+public class ExamCrudService {
 
     private final ExamDtoMapper dtoMapper;
     private final ExamRepository examRepository;
     private final RepositoryHelper repoHelper;
-    private final ServiceErrorHelper errorHelper;
     private final ExamAuthorizer examAuthorizer;
-
-    @Autowired
-    public ExamService(ExamDtoMapper dtoMapper,
-        ExamRepository examRepository,
-        RepositoryHelper repoHelper,
-        ServiceErrorHelper errorHelper,
-        ExamAuthorizer examAuthorizer) {
-        this.dtoMapper = dtoMapper;
-        this.examRepository = examRepository;
-        this.repoHelper = repoHelper;
-        this.errorHelper = errorHelper;
-        this.examAuthorizer = examAuthorizer;
-    }
+    private final ExamFinishService examFinishService;
+    private final ExamCronJobService examCronJobService;
 
     @Transactional
     public ExamDto.Result create(ExamDto.Create dto, Authentication authentication) {
@@ -59,7 +39,11 @@ public class ExamService {
         Classroom classroom = repoHelper.findClassroomOrThrow(dto.getClassroomId());
         classroom.addExam(exam);
 
-        return dtoMapper.asResultDto(examRepository.save(exam));
+        exam = examRepository.save(exam);
+
+        examCronJobService.registerExamCronJob(exam, examFinishService::finishExam);
+
+        return dtoMapper.asResultDto(exam);
     }
 
     @Transactional(readOnly = true)
@@ -94,6 +78,9 @@ public class ExamService {
         if (dto.getPassScore() != null) {
             entity.setPassScore(dto.getPassScore());
         }
+        examCronJobService.removeExamCronJob(entity);
+        examCronJobService.registerExamCronJob(entity, examFinishService::finishExam);
+
         return dtoMapper.asResultDto(examRepository.save(entity));
     }
 
@@ -102,54 +89,7 @@ public class ExamService {
         Exam entity = repoHelper.findExamOrThrow(id);
         examAuthorizer.requireCreator(authentication, entity);
 
+        examCronJobService.removeExamCronJob(entity);
         examRepository.delete(entity);
     }
-
-    @Transactional
-    public void cancelExam(Long id, Authentication authentication) {
-        Exam exam = getOnGoingExam(id);
-        examAuthorizer.requireCreator(authentication, exam);
-
-        exam.setCancelled(true);
-    }
-
-    @Transactional
-    public void finishExam(Long id, Authentication authentication) {
-        Exam exam = getOnGoingExam(id);
-        examAuthorizer.requireCreator(authentication, exam);
-
-        finishExam(exam);
-    }
-
-    private void finishExam(Exam exam) {
-        exam.getAttenderStates().stream().filter(attenderState ->
-                attenderState.getProgress() == AttendingProgress.ONGOING)
-            .forEach(AttenderState::mark);
-        exam.setFinished(true);
-    }
-
-    private Exam getOnGoingExam(Long id) {
-        Exam exam = repoHelper.findExamOrThrow(id);
-        if (exam.isFinished()) {
-            throw errorHelper.badRequest("Exam already finished");
-        }
-        if (exam.isCancelled()) {
-            throw errorHelper.badRequest("Exam already cancelled");
-        }
-        return exam;
-    }
-
-    @Scheduled(cron = "0/10 * * * * *")
-    @Transactional
-    public void examFinishJob() {
-        log.info(
-            "\n┏###################################### Cron examFinishJob per 10 sec ######################################┓");
-        examRepository.findAll().stream().filter(Exam::isOnGoing).filter(exam ->
-            exam.getExamEndTime().isBefore(LocalDateTime.now())).forEach(
-            ExamService.this::finishExam
-        );
-        log.info(
-            "\n┗###########################################################################################################┛");
-    }
-
 }
