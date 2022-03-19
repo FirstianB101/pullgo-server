@@ -4,10 +4,11 @@ import java.util.List;
 import javax.validation.Valid;
 import kr.pullgo.pullgoserver.dto.ExamDto;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
+import kr.pullgo.pullgoserver.service.exam.ExamCancelService;
 import kr.pullgo.pullgoserver.service.exam.ExamCrudService;
-import kr.pullgo.pullgoserver.service.exam.ExamLifeCycleService;
+import kr.pullgo.pullgoserver.service.exam.ExamFinishService;
 import kr.pullgo.pullgoserver.service.spec.ExamSpecs;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -25,17 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
+@RequiredArgsConstructor
 public class ExamController {
 
     private final ExamCrudService examCrudService;
-    private final ExamLifeCycleService examLifeCycleService;
-
-    @Autowired
-    public ExamController(ExamCrudService examCrudService,
-        ExamLifeCycleService examLifeCycleService) {
-        this.examCrudService = examCrudService;
-        this.examLifeCycleService = examLifeCycleService;
-    }
+    private final ExamFinishService examFinishService;
+    private final ExamCancelService examCancelService;
 
     @PostMapping("/exams")
     @ResponseStatus(HttpStatus.CREATED)
@@ -92,12 +88,12 @@ public class ExamController {
     @PostMapping("/exams/{id}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancel(@PathVariable Long id, Authentication authentication) {
-        examLifeCycleService.cancelExam(id, authentication);
+        examCancelService.cancelExam(id, authentication);
     }
 
     @PostMapping("/exams/{id}/finish")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void finish(@PathVariable Long id, Authentication authentication) {
-        examLifeCycleService.finishExam(id, authentication);
+        examFinishService.finishExam(id, authentication);
     }
 }

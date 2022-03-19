@@ -24,7 +24,7 @@ public class ExamCrudService {
     private final ExamRepository examRepository;
     private final RepositoryHelper repoHelper;
     private final ExamAuthorizer examAuthorizer;
-    private final ExamLifeCycleService examLifeCycleService;
+    private final ExamFinishService examFinishService;
     private final ExamCronJobService examCronJobService;
 
     @Autowired
@@ -32,13 +32,13 @@ public class ExamCrudService {
         ExamRepository examRepository,
         RepositoryHelper repoHelper,
         ExamAuthorizer examAuthorizer,
-        ExamLifeCycleService examLifeCycleService,
+        ExamFinishService examFinishService,
         ExamCronJobService examCronJobService) {
         this.dtoMapper = dtoMapper;
         this.examRepository = examRepository;
         this.repoHelper = repoHelper;
         this.examAuthorizer = examAuthorizer;
-        this.examLifeCycleService = examLifeCycleService;
+        this.examFinishService = examFinishService;
         this.examCronJobService = examCronJobService;
     }
 
@@ -55,7 +55,7 @@ public class ExamCrudService {
 
         exam = examRepository.save(exam);
 
-        examCronJobService.registerExamCronJob(exam, examLifeCycleService::finishExam);
+        examCronJobService.registerExamCronJob(exam, examFinishService::finishExam);
 
         return dtoMapper.asResultDto(exam);
     }
@@ -93,7 +93,7 @@ public class ExamCrudService {
             entity.setPassScore(dto.getPassScore());
         }
         examCronJobService.removeExamCronJob(entity);
-        examCronJobService.registerExamCronJob(entity, examLifeCycleService::finishExam);
+        examCronJobService.registerExamCronJob(entity, examFinishService::finishExam);
 
         return dtoMapper.asResultDto(examRepository.save(entity));
     }
