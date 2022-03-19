@@ -7,6 +7,10 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
@@ -39,6 +43,7 @@ import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.persistence.model.Student;
 import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
+import kr.pullgo.pullgoserver.service.cron.CronJob;
 import kr.pullgo.pullgoserver.util.H2DbCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -46,6 +51,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
@@ -98,6 +104,8 @@ public class ExamIntegrationTest {
     @Autowired
     private EntityHelper entityHelper;
 
+    @MockBean
+    private CronJob cronJob;
 
     @BeforeEach
     void setUp(WebApplicationContext webApplicationContext,
@@ -116,6 +124,10 @@ public class ExamIntegrationTest {
         @Test
         void getExam() throws Exception {
             // Given
+            doNothing().when(cronJob).register(
+                anyLong(), any(Runnable.class),
+                any(LocalDateTime.class), anyString());
+
             Struct given = trxHelper.doInTransaction(() -> {
                 Exam exam = entityHelper.generateExam(it ->
                     it.withName("3월 모의고사")
