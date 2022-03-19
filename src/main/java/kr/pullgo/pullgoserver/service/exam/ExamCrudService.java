@@ -9,7 +9,7 @@ import kr.pullgo.pullgoserver.persistence.model.Teacher;
 import kr.pullgo.pullgoserver.persistence.repository.ExamRepository;
 import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
 import kr.pullgo.pullgoserver.service.helper.RepositoryHelper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class ExamCrudService {
 
     private final ExamDtoMapper dtoMapper;
@@ -26,21 +27,6 @@ public class ExamCrudService {
     private final ExamAuthorizer examAuthorizer;
     private final ExamFinishService examFinishService;
     private final ExamCronJobService examCronJobService;
-
-    @Autowired
-    public ExamCrudService(ExamDtoMapper dtoMapper,
-        ExamRepository examRepository,
-        RepositoryHelper repoHelper,
-        ExamAuthorizer examAuthorizer,
-        ExamFinishService examFinishService,
-        ExamCronJobService examCronJobService) {
-        this.dtoMapper = dtoMapper;
-        this.examRepository = examRepository;
-        this.repoHelper = repoHelper;
-        this.examAuthorizer = examAuthorizer;
-        this.examFinishService = examFinishService;
-        this.examCronJobService = examCronJobService;
-    }
 
     @Transactional
     public ExamDto.Result create(ExamDto.Create dto, Authentication authentication) {

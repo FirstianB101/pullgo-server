@@ -6,27 +6,18 @@ import kr.pullgo.pullgoserver.persistence.model.AttenderState;
 import kr.pullgo.pullgoserver.persistence.model.AttendingProgress;
 import kr.pullgo.pullgoserver.persistence.model.Exam;
 import kr.pullgo.pullgoserver.service.authorizer.ExamAuthorizer;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class ExamFinishService {
 
     private final ExamAuthorizer examAuthorizer;
     private final ExamCronJobService examCronJobService;
     private final OnGoingExamFindService onGoingExamFindService;
-
-    @Autowired
-    public ExamFinishService(
-        ExamAuthorizer examAuthorizer,
-        ExamCronJobService examCronJobService,
-        OnGoingExamFindService onGoingExamFindService) {
-        this.examAuthorizer = examAuthorizer;
-        this.examCronJobService = examCronJobService;
-        this.onGoingExamFindService = onGoingExamFindService;
-    }
 
     @PostConstruct
     public void init() {
