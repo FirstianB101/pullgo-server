@@ -77,9 +77,9 @@ public class ApiDocumentation {
         RestDocumentationContextProvider restDocumentation) {
         var baseUriOperationPreprocessor = new BaseUriOperationPreprocessor()
             .scheme("https")
-            .host("api.pullgo.kr")
+            .host("pullgo.firstian.kr")
             .removePort()
-            .basePath("/v1");
+            .basePath("/api/v1");
         return documentationConfiguration(restDocumentation)
             .operationPreprocessors()
             .withRequestDefaults(baseUriOperationPreprocessor)
