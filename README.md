@@ -26,7 +26,7 @@
 
 ## Documentation
 
-* REST API 가이드: https://api.pullgo.kr/v1/docs/api-guide.html
+* REST API 가이드: https://pullgo.firstian.kr/doc/
 
 ## Issues
 
